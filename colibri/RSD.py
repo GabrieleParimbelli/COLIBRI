@@ -8,15 +8,11 @@ import colibri.nonlinear as NL
 from six.moves import xrange
 
 
-# RSD class
-# Computes the multipoles of P(k, mu) given a galaxy power spectrum in input
-# according to the dispersion model
-
 
 class RSD(gc.galaxy):
 	"""
 	The ``RSD`` class inherits all the functions from the :func:`~colibri.galaxy.galaxy` class and
-	therefore from the :func:``~colibri.halo.halo` one.
+	therefore from the :func:`~colibri.halo.halo` one.
 	It computes the galaxy redshift-space power spectrum in the Halo Occupation Distribution (HOD)
 	prescription through the Kaiser effect and the dispersion model (both Gaussian and Lorentzian damping
 	functions are provided).
