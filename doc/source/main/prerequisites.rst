@@ -1,7 +1,7 @@
 .. _prerequisites:
 
-Prerequisites
-=============
+Prerequisites and installation
+==============================
 
 The only mandatory requirements needed for COLIBRÌ are the usual Python packages such as NumPy and SciPy (better if updated versions).
 
@@ -28,10 +28,8 @@ Here we report briefly what the various packages are needed for.
 
 * Cython is just needed to compile the Python wrapper of Class: thus if you do not want to install Class, Cython is not necessary as well.
 
-Installation
-=============
 
-Clone the GitHub repository from `<https://github.com/GabrieleParimbelli/COLIBRI>`_ , enter in the directory and run.::
+To install **COLIBRI**, clone the GitHub repository from `<https://github.com/GabrieleParimbelli/COLIBRI>`_ , enter in the directory and run.::
 
     python setup.py install --user
 
