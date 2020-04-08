@@ -1,9 +1,11 @@
 .. _prerequisites:
 
-Prerequisites and installation
-==============================
+Prerequisites
+=============
 
-The only mandatory requirements needed for COLIBRÌ are the usual Python packages such as NumPy and SciPy are installed (better if updated versions).
+The only mandatory requirements needed for COLIBRÌ are the usual Python packages such as NumPy and SciPy (better if updated versions).
+
+
 However, some of the routines require some external libraries and Boltzmann solvers to be installed.
 The list that follows itemizes all the packages needed to let all the routines work.
 
@@ -25,6 +27,9 @@ Here we report briefly what the various packages are needed for.
 * CAMB and/or Class are needed to compute power spectra given a cosmological model. These packages are required in many routines across all the COLIBRÌ files. If you wish, you can install only one of the two, although it is a good thing to have them both also for comparisons.
 
 * Cython is just needed to compile the Python wrapper of Class: thus if you do not want to install Class, Cython is not necessary as well.
+
+Installation
+=============
 
 Clone the GitHub repository from `<https://github.com/GabrieleParimbelli/COLIBRI>`_ , enter in the directory and run.::
 
