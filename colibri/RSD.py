@@ -15,8 +15,8 @@ from six.moves import xrange
 
 class RSD(gc.galaxy):
 	"""
-	The ``RSD`` class inherits all the functions from the :func:`galaxy.galaxy` class and therefore from
-	the :func:`halo.halo` one.
+	The ``RSD`` class inherits all the functions from the :func:`~colibri.galaxy.galaxy` class and
+	therefore from the :func:``~colibri.halo.halo` one.
 	It computes the galaxy redshift-space power spectrum in the Halo Occupation Distribution (HOD)
 	prescription through the Kaiser effect and the dispersion model (both Gaussian and Lorentzian damping
 	functions are provided).
@@ -70,7 +70,7 @@ class RSD(gc.galaxy):
 	:param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`~colibri.cosmology.cosmo` documentation).
 	:type cosmology: ``cosmo`` instance, default = ``cosmology.cosmo()``
 
-	:return: The initialization automatically calls a ``galaxy`` instance (see :func:`galaxy.galaxy`) and therefore all the quantities described there are also available here. Also, the key ``['galaxies']['redshift space']`` is added to the ``self.Pk`` dictionary.
+	:return: The initialization automatically calls a ``galaxy`` instance (see :func:`~colibri.galaxy.galaxy`) and therefore all the quantities described there are also available here. Also, the key ``['galaxies']['redshift space']`` is added to the ``self.Pk`` dictionary.
 	"""
 	#-----------------------------------------------------------------------------------------
 	# INITIALIZATION FUNCTION
