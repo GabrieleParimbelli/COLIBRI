@@ -6,4 +6,5 @@ colibri/perturbation_theory.py
 tests/test_spt.py
 tests/test_temporary.py
 build/
-
+dist/
+colibri.egg-info/

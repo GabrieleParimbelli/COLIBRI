@@ -79,7 +79,7 @@ class Mock(MagicMock):
     @classmethod
     def __getattr__(cls, name):
         return MagicMock()
-MOCK_MODULES = ['scipy', 'numpy', 'pandas']
+MOCK_MODULES = ['scipy', 'pandas']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 
