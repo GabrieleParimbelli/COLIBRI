@@ -14,7 +14,7 @@ setup(
     description='Python libraries for cosmology.',
     long_description=open('README.rst').read(),
     install_requires=[
-        "numpy >= 1.16",
-        "scipy >= 1.0",
+        "numpy >= 1.14",
+        "scipy >= 0.16",
     ],
 )

@@ -428,7 +428,7 @@ class weak_lensing():
 			window_function_IA_tmp = n_z(self.z_windows, **args)*self.Hubble_windows/const.c/norm_const[galaxy_bin]
 			# Interpolate (the Akima interpolator avoids oscillations around the zero due to the cubic spline)
 			self.window_function.append(si.Akima1DInterpolator(self.z_windows, window_function_tmp))
-			self.window_function_IA.append(si.interp1d(self.z_integration, n_z(self.z_integration, **args)*self.Hubble/const.c/norm_const[galaxy_bin], 'linear'))		
+			self.window_function_IA.append(si.interp1d(self.z_integration, n_z(self.z_integration, **args)*self.Hubble/const.c/norm_const[galaxy_bin], 'cubic'))		
 
 
 	#-----------------------------------------------------------------------------------------
