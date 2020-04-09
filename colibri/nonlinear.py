@@ -556,6 +556,7 @@ class halofit_operator():
 		return hmf
 
 
+
 ###########################################################################################
 # nonlinear: computing the non-linear matter power spectrum in massive neutrino cosmologies
 ###########################################################################################
@@ -624,51 +625,84 @@ class nonlinear_pk(cc.cosmo):
 		# Initialize cosmology
 		self.cosmology = cosmology
 
+		# Fractions
+
+		fcb = self.cosmology.f_cb
+		fnu = self.cosmology.f_nu_tot
+
 		# Redshift and scales at which all must be computed
 		self.z    = np.atleast_1d(z)
 		self.k    = np.atleast_1d(k)
 		self.nz   = len(self.z)
 		self.nk   = len(self.k)
 
+		# Temporary scales used to compute a convergent power spectrum (they will be interpolated later)
+		self.k_tmp = np.logspace(-4., 2., 501)
+
+		# Kind of interpolation
+		if self.nz>3: kind_of_interpolation = 'cubic'
+		else:         kind_of_interpolation = 'linear'
+
 		# Compute linear auto- and cross-spectra
 		if code in ['camb', 'Camb', 'CAMB']:
-			self.pk_l    = self.cosmology.camb_XPk(k = self.k, z = self.z, nonlinear = False, var_1 = ['cb','nu'], var_2 = ['cb','nu'], **kwargs_code)[1]
-			self.pk_cbcb = self.pk_l['cb-cb']
-			self.pk_cbnu = self.pk_l['cb-nu']
-			self.pk_nunu = self.pk_l['nu-nu']
+			pk_l    = self.cosmology.camb_XPk(k = self.k_tmp, z = self.z, nonlinear = False, var_1 = ['cb','nu'], var_2 = ['cb','nu'], **kwargs_code)[1]
+			pk_cbcb = pk_l['cb-cb']
+			pk_cbnu = pk_l['cb-nu']
+			pk_nunu = pk_l['nu-nu']
 		elif code in ['class', 'Class', 'CLASS']:
-			self.pk_l    = self.cosmology.class_XPk(k = self.k, z = self.z, nonlinear = False, var_1 = ['cb','nu'], var_2 = ['cb','nu'], **kwargs_code)[1]
-			self.pk_cbcb = self.pk_l['cb-cb']
-			self.pk_cbnu = self.pk_l['cb-nu']
-			self.pk_nunu = self.pk_l['nu-nu']
+			pk_l    = self.cosmology.class_XPk(k = self.k_tmp, z = self.z, nonlinear = False, var_1 = ['cb','nu'], var_2 = ['cb','nu'], **kwargs_code)[1]
+			pk_cbcb = pk_l['cb-cb']
+			pk_cbnu = pk_l['cb-nu']
+			pk_nunu = pk_l['nu-nu']
 		elif code in ['EH', 'eh', 'EisensteinHu', 'Eisenstein-Hu']:
-			self.pk_l    = self.cosmology.EisensteinHu_Pk(k = self.k, z = self.z, **kwargs_code)[1]
-			self.pk_cbcb = self.pk_l
-			self.pk_cbnu = np.zeros_like(self.pk_l)
-			self.pk_nunu = np.zeros_like(self.pk_l)
+			pk_l    = self.cosmology.EisensteinHu_Pk(k = self.k_tmp, z = self.z, **kwargs_code)[1]
+			pk_cbcb = pk_l
+			pk_cbnu = np.zeros_like(pk_l)
+			pk_nunu = np.zeros_like(pk_l)
 		else:
 			raise NameError("Code not recognized. Choose among 'CAMB', 'CLASS' and 'EH'.")
 
 		# Smooth BAO if required
 		if BAO_smearing:
-			self.pk_nw = [self.cosmology.remove_bao(self.k, self.pk_cbcb[i]) for i in range(self.nz)]
-			sv2        = [1./(6.*np.pi**2.)*np.trapz(self.k*self.pk_cbcb[i], x = np.log(self.k)) for i in range(self.nz)]
-			self.pk_dw = [(self.pk_cbcb[i]-self.pk_nw[i])*np.exp(-self.k**2.*sv2[i]) + self.pk_nw[i] for i in range(self.nz)]
+			pk_nw = [self.cosmology.remove_bao(k_tmp, pk_cbcb[i]) for i in range(self.nz)]
+			sv2   = [1./(6.*np.pi**2.)*np.trapz(k_tmp*pk_cbcb[i], x = np.log(self.k_tmp)) for i in range(self.nz)]
+			pk_dw = [(pk_cbcb[i]-pk_nw[i])*np.exp(-k**2.*sv2[i]) + pk_nw[i] for i in range(self.nz)]
 		else:
-			self.pk_nw = self.pk_cbcb
-			self.pk_dw = self.pk_cbcb
+			pk_nw = pk_cbcb
+			pk_dw = pk_cbcb
 
 		# Use halofit operator on P_{cb-cb}(k)
-		HO = halofit_operator(z = self.z, k = self.k, pk = self.pk_cbcb, field = 'cb', BAO_smearing = BAO_smearing, cosmology = self.cosmology)
+		HO = halofit_operator(z = self.z, k = self.k_tmp, pk = pk_cbcb, field = 'cb', BAO_smearing = BAO_smearing, cosmology = self.cosmology)
 
 		# Set nonlinear quantities, de-wiggled and no-wiggle power spectra
-		self.pk_nl_cbcb   = HO.pk_nl     # Non-linear cb-cb power spectrum
-		self.pk_nw_cbcb   = HO.pk_nw     # No wiggles linear cb-cb power spectrum
-		self.pk_dw_cbcb   = HO.pk_dw     # De-wiggled linear cb-cb power spectrum
-		self.pk_nl        = self.cosmology.f_cb**2.*self.pk_nl_cbcb + 2.*self.cosmology.f_nu_tot*self.cosmology.f_cb*self.pk_cbnu + self.cosmology.f_nu_tot**2.*self.pk_nunu	# Non-linear total matter power spectrum
+		pk_nl_cbcb   = HO.pk_nl     # Non-linear cb-cb power spectrum
+		pk_nw_cbcb   = HO.pk_nw     # No wiggles linear cb-cb power spectrum
+		pk_dw_cbcb   = HO.pk_dw     # De-wiggled linear cb-cb power spectrum
+		pk_nl        = fcb**2.*pk_nl_cbcb + 2.*fnu*fcb*pk_cbnu + fnu**2.*pk_nunu	# Non-linear total matter power spectrum
 
+		# Interpolate everything
+		pk_cbcb_int    = si.interp2d(self.k_tmp, self.z, pk_cbcb,    kind_of_interpolation)
+		pk_cbnu_int    = si.interp2d(self.k_tmp, self.z, pk_cbnu,    kind_of_interpolation)
+		pk_nunu_int    = si.interp2d(self.k_tmp, self.z, pk_nunu,    kind_of_interpolation)
+		pk_nw_int      = si.interp2d(self.k_tmp, self.z, pk_nw_cbcb, kind_of_interpolation)
+		pk_dw_int      = si.interp2d(self.k_tmp, self.z, pk_dw_cbcb, kind_of_interpolation)
+		pk_nl_cbcb_int = si.interp2d(self.k_tmp, self.z, pk_nl_cbcb, kind_of_interpolation)
+		pk_nl_int      = si.interp2d(self.k_tmp, self.z, pk_nl,      kind_of_interpolation)
 
+		# Evaluate interpolations at required values of scales
+		self.pk_cbcb    = pk_cbcb_int   (self.k, self.z)
+		self.pk_cbnu    = pk_cbnu_int   (self.k, self.z)
+		self.pk_nunu    = pk_nunu_int   (self.k, self.z)
+		self.pk_nw      = pk_nw_int     (self.k, self.z)
+		self.pk_dw      = pk_dw_int     (self.k, self.z)
+		self.pk_nl_cbcb = pk_nl_cbcb_int(self.k, self.z)
+		self.pk_nl      = pk_nl_int     (self.k, self.z)
 
+		# Interpolate linear power spectrum (as dictionary)
+		self.pk_l = {}
+		self.pk_l['cb-cb'] = self.pk_cbcb
+		self.pk_l['cb-nu'] = self.pk_cbnu
+		self.pk_l['nu-nu'] = self.pk_nunu
 
 
 
