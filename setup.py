@@ -3,7 +3,7 @@
 from setuptools import setup, Extension, find_packages
 
 setup(
-    name='colibri',
+    name='colibri-cosmology',
     version='0.1.0',
     author='Gabriele Parimbelli',
     author_email='g.parimbelli90@gmail.com',
