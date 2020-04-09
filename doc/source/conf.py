@@ -73,7 +73,7 @@ exclude_patterns = []
 
 # Import Mock classes to avoid import errors on libraries that depend on C modules
 # (this basically avoids that when other files import e.g. `cosmology` the compilation
-#  does not get stuck in some `import numpy` command)
+#  does not get stuck in some `import numpy` or similar command)
 from unittest.mock import MagicMock
 class Mock(MagicMock):
     @classmethod
