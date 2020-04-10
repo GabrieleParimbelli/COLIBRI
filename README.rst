@@ -10,10 +10,10 @@ Presentation
 These files are built especially for large-scale structure purposes.
 
 COLIBRÌ is compatible with both Python 2 and 3.
-Furthermore, it can interact with the Boltzmann solvers `CAMB <https://camb.info/>`_ (by Antony Lewis and Anthony Challinor) and `Class <http://class-code.net/>`_ (by Julien Lesgourgues).
+Furthermore, it can interact with the Boltzmann solvers `CAMB <https://camb.info/>`__ (by Antony Lewis and Anthony Challinor) and `Class <http://class-code.net/>`__ (by Julien Lesgourgues).
 
 
-FYI, "colibrì" is the Italian for `"hummingbird" <https://en.wikipedia.org/wiki/Hummingbird>`_.
+FYI, "colibrì" is the Italian for `"hummingbird" <https://en.wikipedia.org/wiki/Hummingbird>`__.
 
 Prerequisites and installation
 ==============================
@@ -22,13 +22,13 @@ COLIBRÌ themselves do not need to be installed and they work properly provided 
 However, some of the routines require some external libraries and Boltzmann solvers to be installed.
 The list that follows itemizes all the packages needed to let all the routines work.
 
-* **FFTLog** by Dieter Werthmüller. This package is a Python wrapper for the FFTLog by Andrew Hamilton and allows to compute Fourier transforms of a log-spaced array. Download `FFTLog <https://github.com/prisae/fftlog>`_ and unzip the folder. When in the folder compile with ``python setup.py install --user`` (the system may not recognize the `ü` on the name of the author, if so just remove it).
+* **FFTLog** by Dieter Werthmüller. This package is a Python wrapper for the FFTLog by Andrew Hamilton and allows to compute Fourier transforms of a log-spaced array. Download `FFTLog <https://github.com/prisae/fftlog>`__ and unzip the folder. When in the folder compile with ``python setup.py install --user`` (the system may not recognize the `ü` on the name of the author, if so just remove it).
 
-* **Cython**: C compiler for Python. Its presence is needed for the compilation of CLASS (see below). The installation can be done both using ``pip install Cython`` or from source, downloading it from `here <https://cython.org/>`_, unzipping the folder, go into it and then running ``python setup.py install --user``. Important: if one follows the latter way, the folder `cython-master` contains another folder named in the same way. This must not happen, since the paths may not be recognized. Just move everything in the outer of the two folders and delete the inner one. 
+* **Cython**: C compiler for Python. Its presence is needed for the compilation of CLASS (see below). The installation can be done both using ``pip install Cython`` or from source, downloading it from `here <https://cython.org/>`__, unzipping the folder, go into it and then running ``python setup.py install --user``. Important: if one follows the latter way, the folder `cython-master` contains another folder named in the same way. This must not happen, since the paths may not be recognized. Just move everything in the outer of the two folders and delete the inner one. 
 
-* the Python wrapper of the Cosmic Linear Anisotropy Solving System (**Class**) by Julien Lesgourgues. Download `Class <http://class-code.net/>`_, untar and compile with ``make`` only (not ``make class`` otherwise the Python wrapper will not work). Go now to the *python* folder inside `Class` and run ``python setup.py install --user``. This will build the `classy` file: check that everything has gone fine by typing in terminal ``python -c "from classy import Class"``. If nothing is returned then everything is ok.
+* the Python wrapper of the Cosmic Linear Anisotropy Solving System (**Class**) by Julien Lesgourgues. Download `Class <http://class-code.net/>`__, untar and compile with ``make`` only (not ``make class`` otherwise the Python wrapper will not work). Go now to the *python* folder inside `Class` and run ``python setup.py install --user``. This will build the `classy` file: check that everything has gone fine by typing in terminal ``python -c "from classy import Class"``. If nothing is returned then everything is ok.
 
-* the Python wrapper of the Code for Anisotropies in the Microwave Background (**CAMB**) by Antony Lewis and Anthony Challinor. Clone `CAMB <https://github.com/cmbant/CAMB>`_ or install it using `pip <https://camb.readthedocs.io/en/latest/>`_. In order for COLIBRÌ to work, a version > 1.0 of CAMB is required. Notice that to install this, a gfortran compiler > 6 is needed.
+* the Python wrapper of the Code for Anisotropies in the Microwave Background (**CAMB**) by Antony Lewis and Anthony Challinor. Clone `CAMB <https://github.com/cmbant/CAMB>`__ or install it using `pip <https://camb.readthedocs.io/en/latest/>`__. In order for COLIBRÌ to work, a version > 1.0 of CAMB is required. Notice that to install this, a gfortran compiler > 6 is needed.
 
 The importation of these packages is always conditional in COLIBRÌ: if they are not found they are not imported. Thus, no error will be returned until a function that requires some of them is called.
 However, we strongly recommend to install all these 4 packages (for convenience and future employment of the user).
@@ -80,26 +80,26 @@ Also, from a Python program:
 The main file of COLIBRÌ is without doubt the ``cosmology.py`` file.
 This file contains one Python class, named ``cosmology.cosmo()``, in whose initialization the cosmological parameters must be provided (otherwise the default values will be loaded).
 This class has all the routines necessary to compute distances, ages, density parameters, halo mass functions, void size functions and power spectra.
-For the latter, both Boltzmann solvers **CAMB** and **Class** can be used, provided their Python wrapper is correctly compiled, as well as the Eisenstein-Hu formula (see `arXiv:9710252 <https://arxiv.org/abs/astro-ph/9710252>`_).
+For the latter, both Boltzmann solvers **CAMB** and **Class** can be used, provided their Python wrapper is correctly compiled, as well as the Eisenstein-Hu formula (see `arXiv:9710252 <https://arxiv.org/abs/astro-ph/9710252>`__).
 
 `nonlinear` module
 ^^^^^^^^^^^^^^^^^^
 
 There are two classes, one called ``halofit_operator`` , which transforms a linear input power spectrum to its non-linear counterpart, and the other called ``nonlinear_pk`` , that directly computes the nonlinear total matter power spectrum given a set of cosmological parameters.
-Both these classes use the Halofit model by Mead `et al.` (see `arXiv:1505.07833 <https://arxiv.org/abs/1505.07833>`_ and `arXiv:1602.02154 <https://arxiv.org/abs/1602.02154>`_), taking as inputs redshift, scales, power spectrum and a cosmology.
-The latter class uses the so-called `cold dark matter prescription` (see e.g. `arXiv:1311.0866 <https://arxiv.org/abs/1311.0866>`_, `arXiv:1311.1212 <https://arxiv.org/abs/1311.1212>`_, `arXiv:1311.1514 <https://arxiv.org/abs/1311.1514>`_ ), where the Halofit operator is applied only to the cold dark matter+baryons linear component, while the neutrino and the cross part are added linearly afterwards.
+Both these classes use the Halofit model by Mead `et al.` (see `arXiv:1505.07833 <https://arxiv.org/abs/1505.07833>`__ and `arXiv:1602.02154 <https://arxiv.org/abs/1602.02154>`__), taking as inputs redshift, scales, power spectrum and a cosmology.
+The latter class uses the so-called `cold dark matter prescription` (see e.g. `arXiv:1311.0866 <https://arxiv.org/abs/1311.0866>`__, `arXiv:1311.1212 <https://arxiv.org/abs/1311.1212>`__, `arXiv:1311.1514 <https://arxiv.org/abs/1311.1514>`__ ), where the Halofit operator is applied only to the cold dark matter+baryons linear component, while the neutrino and the cross part are added linearly afterwards.
 
 `weak_lensing` module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``weak_lensing`` class inside this file is finalized to compute the shear power spectrum and correlation functions in the flat sky and Limber's approximations. In this file are provided the routines to compute non-linear power spectra, example functions for galaxy distributions (although different ones can be defined by the user outside the class) and window functions. The possibility to add the intrinsic alignment effect (see `arXiv:0406275 <https://arxiv.org/abs/astro-ph/0406275>`_) is included.
+The ``weak_lensing`` class inside this file is finalized to compute the shear power spectrum and correlation functions in the flat sky and Limber's approximations. In this file are provided the routines to compute non-linear power spectra, example functions for galaxy distributions (although different ones can be defined by the user outside the class) and window functions. The possibility to add the intrinsic alignment effect (see `arXiv:0406275 <https://arxiv.org/abs/astro-ph/0406275>`__) is included.
 
 `halo_class`, `galaxy_class`, `RSD_class`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This three files are linked with each other. The basis is ``halo_class.py`` : it contains the class ``halo`` which computes the non-linear matter power spectrum according to the pure halo model (see for instance `Cooray & Sheth (2001) <https://arxiv.org/abs/astro-ph/0206508>`_).
+This three files are linked with each other. The basis is ``halo_class.py`` : it contains the class ``halo`` which computes the non-linear matter power spectrum according to the pure halo model (see for instance `Cooray & Sheth (2001) <https://arxiv.org/abs/astro-ph/0206508>`__).
 While this is known to return a poor description of the matter clustering, the class has routines able to compute properly halo mass functions and halo biases.
-In the file ``galaxy_class.py`` the class ``galaxy`` is implemented, which uses the Halo Occupation Distribution (see e.g. `arXiv:0408564 <https://arxiv.org/pdf/astro-ph/0408564.pdf>`_ prescription to predict the galaxy power spectrum in real space.
+In the file ``galaxy_class.py`` the class ``galaxy`` is implemented, which uses the Halo Occupation Distribution (see e.g. `arXiv:0408564 <https://arxiv.org/pdf/astro-ph/0408564.pdf>`__ prescription to predict the galaxy power spectrum in real space.
 Conversely, the redshift-space power spectrum is provided by the class ``RSD`` in the file ``RSD_class.py``: currently the dispersion model is implemented (with both Gaussian and Lorentzian dampings) as well as a halo model based prescription.
 
 `fourier` module
