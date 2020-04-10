@@ -1,7 +1,7 @@
 .. _prerequisites:
 
-Prerequisites and installation
-==============================
+Prerequisites
+=============
 
 The only mandatory requirements needed for COLIBRÌ are the usual Python packages such as NumPy and SciPy (better if updated versions).
 
@@ -28,13 +28,19 @@ Here we report briefly what the various packages are needed for.
 
 * Cython is just needed to compile the Python wrapper of Class: thus if you do not want to install Class, Cython is not necessary as well.
 
+Prerequisites
+=============
 
-To install **COLIBRI**, clone the GitHub repository from `<https://github.com/GabrieleParimbelli/COLIBRI>`_ , enter in the directory and run.::
+**COLIBRÌ** is available on pip.
+To install it is sufficient to run.::
+
+    pip install colibri-cosmology
+
+In alternative, you can clone the GitHub repository `<https://github.com/GabrieleParimbelli/COLIBRI>`_ , enter in the ``COLIBRI`` directory and run.::
 
     python setup.py install --user
 
-
-Alternatively, you can add the libraries to your `PYTHONPATH` editing your `.bashrc` file.::
+A third way consists of cloning the repository and add the libraries to your `PYTHONPATH` editing your `.bashrc` file.::
 
     export PYTHONPATH="${PYTHONPATH}:/path/to/COLIBRI/"
 
