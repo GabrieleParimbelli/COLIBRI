@@ -41,9 +41,21 @@ Here we report briefly what the various packages are needed for.
 
 * Cython is just needed to compile the Python wrapper of Class: thus if you do not want to install Class, Cython is not necessary as well.
 
-Once you have downloaded COLIBRÌ and installed all the packages, add the libraries to your `PYTHONPATH` editing your `.bashrc` file.::
+Installation
+=============
 
-    export PYTHONPATH="${PYTHONPATH}:/path/to/COLIBRI"
+**COLIBRÌ** is available on `pip <https://pypi.org/project/colibri-cosmology/>`__.
+To install it is sufficient to run::
+
+    pip install colibri-cosmology
+
+In alternative, you can clone the GitHub repository `<https://github.com/GabrieleParimbelli/COLIBRI>`__ , enter in the ``COLIBRI`` directory and run::
+
+    python setup.py install --user
+
+A third way consists of cloning the repository and add the libraries to your ``PYTHONPATH`` editing your ``.bashrc`` file.::
+
+    export PYTHONPATH="${PYTHONPATH}:/path/to/COLIBRI/"
 
 So, set your preferences and get started!
 

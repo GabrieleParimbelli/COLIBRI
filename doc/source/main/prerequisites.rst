@@ -31,7 +31,7 @@ Here we report briefly what the various packages are needed for.
 Installation
 =============
 
-**COLIBRÌ** is available on pip.
+**COLIBRÌ** is available on `pip <https://pypi.org/project/colibri-cosmology/>`__.
 To install it is sufficient to run::
 
     pip install colibri-cosmology
