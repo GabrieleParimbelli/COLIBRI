@@ -1,5 +1,4 @@
 #from distutils.core import setup
-#import setuptools
 from setuptools import setup, Extension, find_packages
 
 setup(
@@ -13,8 +12,10 @@ setup(
     license='doc/source/license/license.rst',
     description='Python libraries for cosmology.',
     long_description=open('README.rst').read(),
+    long_description_content_type="text/x-rst",
     install_requires=[
         "numpy >= 1.14",
         "scipy >= 0.16",
     ],
+	python_requires='>=2.7',
 )
