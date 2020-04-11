@@ -8,3 +8,4 @@ tests/test_temporary.py
 build/
 dist/
 colibri_cosmology.egg-info/
+.pypirc

@@ -106,13 +106,13 @@ The latter class uses the so-called `cold dark matter prescription` (see e.g. `a
 
 The ``weak_lensing`` class inside this file is finalized to compute the shear power spectrum and correlation functions in the flat sky and Limber's approximations. In this file are provided the routines to compute non-linear power spectra, example functions for galaxy distributions (although different ones can be defined by the user outside the class) and window functions. The possibility to add the intrinsic alignment effect (see `arXiv:0406275 <https://arxiv.org/abs/astro-ph/0406275>`__) is included.
 
-`halo_class`, `galaxy_class`, `RSD_class`
+`halo`, `galaxy`, `RSD`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This three files are linked with each other. The basis is ``halo_class.py`` : it contains the class ``halo`` which computes the non-linear matter power spectrum according to the pure halo model (see for instance `Cooray & Sheth (2001) <https://arxiv.org/abs/astro-ph/0206508>`__).
+This three files are linked with each other. The basis is ``halo.py`` : it contains the class ``halo`` which computes the non-linear matter power spectrum according to the pure halo model (see for instance `Cooray & Sheth (2001) <https://arxiv.org/abs/astro-ph/0206508>`__).
 While this is known to return a poor description of the matter clustering, the class has routines able to compute properly halo mass functions and halo biases.
-In the file ``galaxy_class.py`` the class ``galaxy`` is implemented, which uses the Halo Occupation Distribution (see e.g. `arXiv:0408564 <https://arxiv.org/pdf/astro-ph/0408564.pdf>`__ prescription to predict the galaxy power spectrum in real space.
-Conversely, the redshift-space power spectrum is provided by the class ``RSD`` in the file ``RSD_class.py``: currently the dispersion model is implemented (with both Gaussian and Lorentzian dampings) as well as a halo model based prescription.
+In the file ``galaxy.py`` the class ``galaxy`` is implemented, which uses the Halo Occupation Distribution (see e.g. `arXiv:0408564 <https://arxiv.org/pdf/astro-ph/0408564.pdf>`__ prescription to predict the galaxy power spectrum in real space.
+Conversely, the redshift-space power spectrum is provided by the class ``RSD`` in the file ``RSD.py``: currently the dispersion model is implemented (with both Gaussian and Lorentzian dampings) as well as a halo model based prescription.
 
 `fourier` module
 ^^^^^^^^^^^^^^^^
@@ -140,6 +140,6 @@ The file contains (as is obvious) useful functions such as extrapolation of arra
 Tests
 ^^^^^
 
-Together with the files, a folder containing some useful and explanatory tests is provided. Each of them is adequately commented, so check them out and run them!
+Together with the files, a folder named ``tests`` containing some useful and explanatory tests is provided. Each of them is adequately commented, so check them out and run them!
 
 

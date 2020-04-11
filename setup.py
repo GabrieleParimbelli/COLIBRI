@@ -20,6 +20,7 @@ setup(
     long_description=long_description,
     long_description_content_type='text/x-rst',
     py_modules=['six', 'numpy', 'scipy', 'matplotlib'],
+	python_requires='>=2.7',
     install_requires=[
         "numpy >= 1.14",
         "scipy >= 0.16",
@@ -37,5 +38,5 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-	python_requires='>=2.7',
+    options = {'bdist_wheel':{'universal':'1'}},	# Generate wheel for both Python 2 and 3
 )
