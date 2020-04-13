@@ -19,8 +19,8 @@ To start, initialize a :func:`~colibri.cosmology.cosmo` instance and assign it t
 
 .. code-block:: python
 
- import cosmology as cc
- import weak_lensing as wlc
+ import colibri.cosmology as cc
+ import colibri.weak_lensing as wlc
  C = cc.cosmo()
  S = wlc.weak_lensing(cosmology = C, z_limits = (0., 5.))
 

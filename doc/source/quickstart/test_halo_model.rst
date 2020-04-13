@@ -16,8 +16,8 @@ Let us start defining a :func:`~colibri.halo.halo` instance:
 
 .. code-block:: python
 
- import cosmology as cc
- import halo as hc
+ import colibri.cosmology as cc
+ import colibri.halo as hc
 
  # Define a halo instance
  H = hc.halo(z = [0., 1., 2.],              # 3 redshifts
@@ -60,8 +60,8 @@ First, we define a :func:`~colibri.galaxy.galaxy` instance:
 
 .. code-block:: python
 
- import cosmology as cc
- import galaxy as gc
+ import colibri.cosmology as cc
+ import colibri.galaxy as gc
 
  # Define a halo instance
  G = gc.galaxy(z = [0., 1., 2.],              # 3 redshifts
@@ -133,8 +133,8 @@ The ``RSD`` instance is called as follows:
 
 .. code-block:: python
 
- import cosmology as cc
- import RSD as rsd
+ import colibri.cosmology as cc
+ import colibri.RSD as rsd
 
  Z = rsd.RSD(z            = [0., 1., 2.],                    # Redshifts
              k            = np.geomspace(0.0005, 10., 101),  # Scales in h/Mpc

@@ -19,8 +19,8 @@ We first define a ``cosmo`` instance, without massive neutrinos to have a direct
 
 .. code-block:: python
 
- import cosmology as cc
- import nonlinear as NL
+ import colibri.cosmology as cc
+ import colibri.nonlinear as NL
 
 
  C = cc.cosmo(Omega_m = 0.3089,

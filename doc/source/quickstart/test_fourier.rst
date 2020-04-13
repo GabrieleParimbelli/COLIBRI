@@ -20,9 +20,9 @@ To compute that, we just need a few lines
 .. code-block:: python
 
  import numpy as np
- import cosmology as cc
+ import colibri.cosmology as cc
  import matplotlib.pyplot as plt
- import fourier as FF
+ import colibri.fourier as FF
 
  C = cc.cosmo()
 

@@ -14,7 +14,7 @@ Let us start by importing all the necessary libraries and the ``cosmology`` libr
 
 .. code-block:: python
 
- import cosmology as cc
+ import colibri.cosmology as cc
  import matplotlib.pyplot as plt
  import numpy as np
 
