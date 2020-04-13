@@ -10,7 +10,7 @@ If desired, there is a file in the folder ``tests`` named ``test_cosmology.py`` 
 Print cosmological parameters
 -------------------------------
 
-Let us start by importing all the necessary libraries and the ``cosmology`` library.
+Let us start by importing all the necessary libraries and the :func:`~colibri.cosmology` library.
 
 .. code-block:: python
 

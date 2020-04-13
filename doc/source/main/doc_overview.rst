@@ -29,7 +29,7 @@ Also, from a Python (2.x in this case) program:
 `cosmology` module
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-The main file of COLIBRÌ is without doubt the ``cosmology.py`` file.
+The main file of COLIBRÌ is without doubt the ``colibri.cosmology.py`` file.
 This file contains one Python class, named :func:`~colibri.cosmology.cosmo()`, in whose initialization the cosmological parameters must be provided (otherwise the default values will be loaded).
 This class has all the routines necessary to compute distances, ages, density parameters, halo mass functions, void size functions and power spectra.
 For the latter, both Boltzmann solvers **CAMB** and **Class** can be used, provided their Python wrapper is correclty compiled (see :ref:`prerequisites`), as well as the Eisenstein-Hu formula (see `arXiv:9710252 <https://arxiv.org/abs/astro-ph/9710252>`_).
@@ -80,6 +80,8 @@ The file contains (as is obvious) useful functions such as extrapolation of arra
 Tests
 ^^^^^
 
-Together with the files, a folder containing some useful and explanatory tests is provided. Each of them is adequately commented, so check them out and run them!
+If the code has been cloned from GitHub, together with the files, a folder containing some useful and explanatory tests is provided. Each of them is adequately commented, so check them out and run them!
+
+Otherwise, you may want to go the :ref:`cosmology_test` section.
 
 
