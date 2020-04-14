@@ -216,3 +216,35 @@ def smooth(y, box_pts):
 	y_smooth = np.convolve(y, box, mode='same')
 	return y_smooth
 
+#-------------------------------------------------------------------------------
+# NYQUIST FREQUENCY
+#-------------------------------------------------------------------------------
+def Nyquist_frequency(boxsize, grid):
+	"""
+	This routine returns the Nyquist frequency of a cosmological box where the density field is computed with a grid of a certain size.
+
+	:type boxsize: float
+	:param boxsize: Size of the cubic box in :math:`\mathrm{Mpc}/h`.
+
+	:type grid: int
+	:param grid: Thickness of grid.
+
+	:return: float
+	"""
+	return np.pi/(boxsize/grid)
+
+
+#-------------------------------------------------------------------------------
+# FUNDAMENTAL FREQUENCY
+#-------------------------------------------------------------------------------
+def fundamental_frequency(boxsize):
+	"""
+	This routine returns the fundamental frequency of a cosmological box where the density field is computed with a grid of a certain size.
+
+	:type boxsize: float
+	:param boxsize: Size of the cubic box in :math:`\mathrm{Mpc}/h`.
+
+	:return: float
+	"""
+	return 2.*np.pi/boxsize
+

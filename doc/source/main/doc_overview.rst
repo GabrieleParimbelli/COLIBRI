@@ -3,7 +3,7 @@
 Overview of the modules
 ==============================
 
-COLIBRÌ consists of simple Python files. One, named ``constants.py`` is just a collection of physical constants, useful numbers and conversion factors between different units of measurement. A second one, ``useful_functions.py`` contains some routines of everyday life for a cosmologist. The file ``fourier.py`` contains routines to perform Fourier and Hankel transforms. The remaining ones each contain one or more Python classes. Moreover also a folder ``tests`` is provided, which contains test functions for the libraries and providing some example of how to use them.
+COLIBRÌ consists of simple Python files. One, named ``constants.py`` is just a collection of physical constants, useful numbers and conversion factors between different units of measurement. A second one, ``useful_functions.py`` contains some routines of everyday life for a cosmologist. The file ``fourier.py`` contains routines to perform Fourier and Hankel transforms. The remaining ones each contain one or more Python classes. Moreover, in the GitHub code, a folder ``tests`` is provided, which contains test functions for the libraries and providing some example of how to use them.
 
 In the following sections we briefly present the codes.
 The documentation for both classes and built-in methods is also inside the code itself and can be found using the following Python commands.
@@ -29,7 +29,7 @@ Also, from a Python (2.x in this case) program:
 `cosmology` module
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-The main file of COLIBRÌ is without doubt the ``colibri.cosmology.py`` file.
+The main file of COLIBRÌ is without doubt the ``cosmology.py`` file.
 This file contains one Python class, named :func:`~colibri.cosmology.cosmo()`, in whose initialization the cosmological parameters must be provided (otherwise the default values will be loaded).
 This class has all the routines necessary to compute distances, ages, density parameters, halo mass functions, void size functions and power spectra.
 For the latter, both Boltzmann solvers **CAMB** and **Class** can be used, provided their Python wrapper is correclty compiled (see :ref:`prerequisites`), as well as the Eisenstein-Hu formula (see `arXiv:9710252 <https://arxiv.org/abs/astro-ph/9710252>`_).
