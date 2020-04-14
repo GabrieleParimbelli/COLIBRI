@@ -6,7 +6,7 @@ with open('README.rst') as f:
 
 setup(
     name='colibri-cosmology',
-    version='0.1.1',
+    version='0.1.2',
     author='Gabriele Parimbelli',
     author_email='g.parimbelli90@gmail.com',
     packages=find_packages(),
