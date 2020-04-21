@@ -141,9 +141,9 @@ q         = 1.60217663e-19	# Electron/proton charge in C
 #-------------------------------
 # Neutrino properties
 #-------------------------------
-Delta_m21_squared       = 7.53e-5	# Difference of squared masses [eV^2 
+Delta_m21_squared       = 7.53e-5	# Difference of squared masses [eV^2] 
 Delta_m32_squared_IH    = -2.56e-3	# Difference of squared masses [eV^2 
-Delta_m32_squared_NH    = 2.51e-3	# Difference of squared masses [eV^2 
+Delta_m32_squared_NH    = 2.51e-3	# Difference of squared masses [eV^2] 
 sin_theta_21_squared    = 0.307	# Sine squared of mixing angle
 sin_theta_23_squared_IH = 0.592	# Sine squared of mixing angle, inverted hierarchy (S = 1.1)	
 sin_theta_23_squared_NH = 0.597	# Sine squared of mixing angle, normal hierarchy (S = 1.1)		
@@ -153,47 +153,47 @@ sin_theta_13_squared    = 2.12e-2	# Sine squared of mixing angle
 #-------------------------------
 # Constants of physics
 #-------------------------------
-G         = 4.299e-9		# Newton's gravitational constant in units of [Mpc/M_sun (km/s)^2 
-eps_0     = 8.85418781762e-12	# Vacuum permittivity in [F/m = C/V m 
-mu_0      = 1.25663706144e-6	# Magnetic permeability in [H/m = T m^2/A = V s/A 
-kB        = 8.614e-5		# Boltzmann constant in [eV/K 
-c         = 2.99792458e5	# Speed of light in [km/s 
-hP        = 4.135668e-15	# Planck constant in units of [eV s 
-sSB       = 5.6704e-8		# Stefan-Boltzmann constant [W/m^2 K^4 
-N_A       = 6.022140857e23	# Avogadro constant [mol^-1 
+G         = 4.299e-9		# Newton's gravitational constant in units of [Mpc/M_sun (km/s)^2]
+eps_0     = 8.85418781762e-12	# Vacuum permittivity in [F/m = C/V m] 
+mu_0      = 1.25663706144e-6	# Magnetic permeability in [H/m = T m^2/A = V s/A] 
+kB        = 8.614e-5		# Boltzmann constant in [eV/K] 
+c         = 2.99792458e5	# Speed of light in [km/s] 
+hP        = 4.135668e-15	# Planck constant in units of [eV s] 
+sSB       = 5.6704e-8		# Stefan-Boltzmann constant [W/m^2 K^4] 
+N_A       = 6.022140857e23	# Avogadro constant [mol^-1] 
 PI        = math.pi			# pi = 3.14159265...
 
 #-------------------------------
 # Derived constants
 #-------------------------------
 e2        = q**2./(4.*PI*eps_0)		# Electron/proton charge (squared!) in CGS units
-hPb       = hP/(2.*PI)				# Reduced Planck constant in [eV s  ('h bar')
-hPJ       = hP*eV					# Planck constant in [J s 
-hPJb      = hPb*eV				# Reduced Planck constant in [J s  ('h bar')
-sSB_eV    = sSB/eV				# Stefan-Boltzmann constant [eV/s m^2 K^4 
-alpha_BB  = 4.*sSB/(c*km_to_m)		# Constant for blackbody energy density [J/m^3 K^4 
-R         = kB*eV*N_A				# Perfect gas constant [J/mol K 
+hPb       = hP/(2.*PI)				# Reduced Planck constant in [eV s]  ('h bar')
+hPJ       = hP*eV					# Planck constant in [J s] 
+hPJb      = hPb*eV				# Reduced Planck constant in [J s]  ('h bar')
+sSB_eV    = sSB/eV				# Stefan-Boltzmann constant [eV/s m^2 K^4] 
+alpha_BB  = 4.*sSB/(c*km_to_m)		# Constant for blackbody energy density [J/m^3 K^4] 
+R         = kB*eV*N_A				# Perfect gas constant [J/mol K] 
 alpha_EM  = e2/(hPJb*c*km_to_m)		# Fine structure constant
-lambda_e  = hP*c*km_to_m/me			# Compton wavelength for electron in [m 
-r_e       = alpha_EM*lambda_e/(2.*PI)	# Electron classical radius in [m 
-sigma_T   = 8.*PI/3.*r_e**2.			# Thomson scattering cross section in [m^2 
-rhoch2    = (3.*100.**2.)/(8*PI*G)  	# Critical density of the Universe [h^2 Msun/Mpc^3 
+lambda_e  = hP*c*km_to_m/me			# Compton wavelength for electron in [m] 
+r_e       = alpha_EM*lambda_e/(2.*PI)	# Electron classical radius in [m] 
+sigma_T   = 8.*PI/3.*r_e**2.			# Thomson scattering cross section in [m^2] 
+rhoch2    = (3.*100.**2.)/(8*PI*G)  	# Critical density of the Universe [h^2 Msun/Mpc^3] 
 
 #-------------------------------
 # Planck units
 #-------------------------------
-l_Pl      = 1.616252e-35 	# Planck length [m 
-t_Pl      = 5.39124e-44		# Planck time [s 
-m_Pl      = 2.17644e-5		# Planck mass [g 
-T_Pl      = 1.416785e32		# Planck temperatur [K 
-q_Pl      = 1.87554587e-18	# Planck charge [C 
+l_Pl      = 1.616252e-35 	# Planck length [m] 
+t_Pl      = 5.39124e-44		# Planck time [s] 
+m_Pl      = 2.17644e-5		# Planck mass [g] 
+T_Pl      = 1.416785e32		# Planck temperature [K] 
+q_Pl      = 1.87554587e-18	# Planck charge [C] 
 
 #-------------------------------
 # Solar units
 #-------------------------------
-Msun      = 1.989e33		# Solar mass [g 
-Rsun      = 6.957e10		# Solar radius [cm 
-Tsun      = 5772.		# Solar surface temperature [K 
-Lsun      = 3.848e33		# Solar luminosity [erg/s 
+Msun      = 1.989e33		# Solar mass [g] 
+Rsun      = 6.957e10		# Solar radius [cm] 
+Tsun      = 5772.		# Solar surface temperature [K] 
+Lsun      = 3.848e33		# Solar luminosity [erg/s] 
 
 

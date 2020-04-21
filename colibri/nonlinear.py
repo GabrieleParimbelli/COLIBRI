@@ -664,9 +664,9 @@ class nonlinear_pk(cc.cosmo):
 
 		# Smooth BAO if required
 		if BAO_smearing:
-			pk_nw = [self.cosmology.remove_bao(k_tmp, pk_cbcb[i]) for i in range(self.nz)]
-			sv2   = [1./(6.*np.pi**2.)*np.trapz(k_tmp*pk_cbcb[i], x = np.log(self.k_tmp)) for i in range(self.nz)]
-			pk_dw = [(pk_cbcb[i]-pk_nw[i])*np.exp(-k**2.*sv2[i]) + pk_nw[i] for i in range(self.nz)]
+			pk_nw = [self.cosmology.remove_bao(self.k_tmp, pk_cbcb[i]) for i in range(self.nz)]
+			sv2   = [1./(6.*np.pi**2.)*np.trapz(self.k_tmp*pk_cbcb[i], x = np.log(self.k_tmp)) for i in range(self.nz)]
+			pk_dw = [(pk_cbcb[i]-pk_nw[i])*np.exp(-self.k_tmp**2.*sv2[i]) + pk_nw[i] for i in range(self.nz)]
 		else:
 			pk_nw = pk_cbcb
 			pk_dw = pk_cbcb
