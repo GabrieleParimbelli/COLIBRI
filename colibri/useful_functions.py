@@ -248,3 +248,29 @@ def fundamental_frequency(boxsize):
 	"""
 	return 2.*np.pi/boxsize
 
+
+#-------------------------------------------------------------------------------
+# FULL SKY
+#-------------------------------------------------------------------------------
+def full_sky():
+	"""
+	Total square degrees in the full sky.
+
+	:return: float
+	"""
+	return 4.*np.pi*(180./np.pi)**2.
+
+#-------------------------------------------------------------------------------
+# SKY FRACTION
+#-------------------------------------------------------------------------------
+def sky_fraction(area):
+	"""
+	Returns the sky fraction given the survey size in square degrees.
+
+	:type area: float
+	:param area: Survey area in square degrees.
+
+	:return: float
+	"""
+	return area/full_sky()
+

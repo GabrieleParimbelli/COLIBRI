@@ -770,6 +770,28 @@ class cosmo:
 		R = self.R_bg(z)
 		return const.c/np.sqrt(3.*(1.+R))
 
+	#-------------------------------------------------------------------------------
+	# NEUTRINO THERMAL VELOCITY
+	#-------------------------------------------------------------------------------
+	def neutrino_thermal_velocity(self, z):
+		"""
+		Thermal velocity in km/s of each neutrino species at a given redshift.
+		Approximation valid only at :math:`z \ll z_\mathrm{nr}`
+
+		:param z: Redshifts.
+		:type z: array
+
+		:return: array.
+		"""
+		vel = np.zeros(self.N_nu)
+		for i in xrange(self.N_nu):
+			if self.M_nu[i] == 0. :
+				vel[i] = const.c
+			else:
+				fac    = 5./3.*5.*ss.zeta(5.)/ss.zeta(3.)
+				vel[i] = fac**.5*(const.kB*self.T_nu/self.M_nu[i])*(1.+z)*const.c
+		return vel
+
 
 	#-------------------------------------------------------------------------------
 	# DRAG EPOCH
