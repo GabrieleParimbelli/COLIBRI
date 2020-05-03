@@ -537,7 +537,7 @@ class halofit_operator():
 		"""
 		This routine returns the Sheth-Tormen halo mass function at the points specified by the array ``self.mass`` in the initialization.
 
-		:return: array in :math:`h^4 \ Mpc^{-3} \ M_\odot^{-1}` of size ``(len(self.z), len(self.mass))``, where ``self.mass`` is given in :func:`~colibri.nonlinear.halofit_operator`.
+		:return: array in :math:`h^4 \ \mathrm{Mpc}^{-3} \ M_\odot^{-1}` of size ``(len(self.z), len(self.mass))``, where ``self.mass`` is given in :func:`~colibri.nonlinear.halofit_operator`.
 		"""	
 		m    = self.mass
 		hmf  = np.zeros((self.nz, self.nm))
