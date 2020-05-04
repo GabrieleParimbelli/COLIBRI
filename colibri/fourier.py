@@ -558,7 +558,7 @@ def FFT_iso_3D(r, f , N = 4096):
 	r_t = 10.**(logrc + (np.arange(1, N+1) - nc)*dlogr)
 
 	# Initialise function
-	funct = si.interp1d(r, f, kind = "cubic")
+	funct = si.interp1d(r, f, kind = "cubic", fill_value = "extrapolate")
 	ar    = funct(r_t)*(2.*np.pi*r_t)**1.5
 
 	# Initialization of transform
@@ -625,7 +625,7 @@ def iFFT_iso_3D(k, f, N = 4096):
 	k_t   = 10.**(logkc + (np.arange(1, N+1) - nc)*dlogk)
 
 	# Initialise function
-	funct = si.interp1d(k, f, kind = "cubic")
+	funct = si.interp1d(k, f, kind = "cubic", fill_value = "extrapolate")
 	ak    = funct(k_t)*k_t**1.5
 	
 	# Initialization of transform
@@ -698,7 +698,7 @@ def Hankel(r, f , N = 4096, order = 0.5):
 
 
 	# Initialise function (add r_t extra factor because of log-spacing)
-	funct = si.interp1d(r, f, kind = "cubic")
+	funct = si.interp1d(r, f, kind = "cubic", fill_value = "extrapolate")
 	ar    = funct(r_t)*r_t
 
 	# Initialization of transform
@@ -774,7 +774,7 @@ def iHankel(k, f, N = 4096, order = 0.5):
 	k_t   = 10.**(logkc + (np.arange(1, N+1) - nc)*dlogk)
 
 	# Initialise function (add k_t extra factor because of log-spacing)
-	funct = si.interp1d(k, f, kind = "cubic")
+	funct = si.interp1d(k, f, kind = "cubic", fill_value = "extrapolate")
 	ak    = funct(k_t)*k_t
 
 	# Initialization of transform
