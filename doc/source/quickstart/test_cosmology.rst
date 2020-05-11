@@ -167,7 +167,7 @@ the quantity ``pk_camb`` is a dictionary with keys ``['cb-cb']``, ``['nu-nu']``,
 The file named ``test_pk.py`` in the ``tests`` folder contains different well-documented examples of how this can be done.
 This is an example of computing the linear total matter power spectrum at :math:`z=0` with 3 different methods
 
-.. image:: ../_static/linear_spectrum.png
+.. image:: ../_static/linear_spectra.png
    :width: 700
 
 
