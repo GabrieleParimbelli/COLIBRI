@@ -138,9 +138,6 @@ class halo:
 		"""
 		if self.code == 'camb':
 			k, Pk_L = self.cosmology.camb_Pk(z = self.z, k = self.k)
-		elif self.code == 'xcamb':
-			k, Pk_L = self.cosmology.camb_XPk(z = self.z, k = self.k)
-			Pk_L = Pk_L[0,0,0]
 		elif self.code == 'eh':
 			k, Pk_L = self.cosmology.EisensteinHu_Pk(z = self.z, k = self.k)
 		elif self.code == 'class':

@@ -106,7 +106,7 @@ def extrapolate_log(x, y, xmin, xmax):
 	high_fit = np.polyfit(np.log(x[-2:]), np.log(y[-2:]), 1)
 
 	# New arrays to which extrapolate
-	lnx_low  = np.arange(np.log(xmin), np.log(x[1]), dlnx)
+	lnx_low  = np.arange(np.log(xmin), np.log(x[0]), dlnx)
 	lny_low  = np.polyval(low_fit, lnx_low)
 	lnx_high = np.arange(np.log(x[-1]*dx), np.log(xmax), dlnx) 
 	lny_high = np.polyval(high_fit, lnx_high)
@@ -273,4 +273,102 @@ def sky_fraction(area):
 	:return: float
 	"""
 	return area/full_sky()
+
+
+#-----------------------------------------------------------------------------------------
+# BARYON FEEDBACK
+#-----------------------------------------------------------------------------------------
+def feedback_suppression(k, z, log_Mc, eta_b, z_c):
+	"""
+	Suppression of the matter power spectrum according to the Baryon Correction Model
+	(Schneider et al., 2015).
+
+	.. warning::
+
+	 This function also exists in the class :func:`~colibri.cosmology.cosmo()`.
+
+	:param k: Scales in units of :math:`h/\mathrm{Mpc}`.
+	:type k: array
+
+	:param z: Redshifts.
+	:type z: array
+
+	:param log_Mc: Feedback mass: all halos below the mass of 10.**log_Mc are stripped of their gas.
+	:type log_Mc: float>12.1
+
+	:param eta_b: Ratio between the thermal velocity of the gas and the escape velocity from the halo.
+	:type eta_b: float
+
+	:param z_c: Scale redshift of feedback.
+	:type z_c: float
+
+
+	:return: 2D array of shape ``(len(z), len(k))``
+	"""
+	K,Z = np.meshgrid(k,z)
+
+	# Model is valid only for eta_b > 0
+	if eta_b <= 0.: raise ValueError("eta_b must be grater than 0.")
+
+	# Stellar component
+	ks = 55.
+	stellar = 1. + (K/ks)**2.
+	
+	# Baryon suppression
+	B0 = 0.105*log_Mc - 1.27
+	assert B0>0., "log_Mc must be grater than 12.096"
+	B = B0*1./(1.+(Z/z_c)**2.5)
+
+	k_g = 0.7*((1.-B)**4.)*eta_b**(-1.6)
+	scale_ratio = K/k_g
+
+	suppression = B/(1.+scale_ratio**3.)+(1.-B)
+
+	return suppression*stellar
+
+#-------------------------------------------------------------------------------
+# WDM suppression
+#-------------------------------------------------------------------------------
+def WDM_suppression(k, z, M_wdm, Omega_cdm, h, nonlinear = False):
+	"""
+	Suppression of the matter power spectrum due to (thermal) warm dark matter. In the linear
+	case, the formula by https://arxiv.org/pdf/astro-ph/0501562.pdf is followed;
+	otherwise the formula by https://arxiv.org/pdf/1107.4094.pdf is used.
+	The linear formula is an approximation strictly valid only at :math:`k < 5-10 \ h/\mathrm{Mpc}`.
+	The nonlinear formula has an accuracy of 2% level at :math:`z < 3` and for masses larger than 0.5 keV.
+
+	.. warning::
+
+	 This function also exists in the class :func:`~colibri.cosmology.cosmo()`, where ``Omega_cdm`` and ``h`` are set to the values fixed at initialization of the class.
+
+	:param k: Scales in units of :math:`h/\mathrm{Mpc}`.
+	:type k: array
+
+	:param z: Redshifts.
+	:type z: array
+
+	:param M_wdm: Mass of the warm dark matter particle in keV.
+	:type M_wdm: float
+
+	:param Omega_cdm: Total matter density parameter today
+	:type Omega_cdm: float
+
+	:param h: Hubble constant in units of 100 km/s/Mpc
+	:type h: float
+
+	:param nonlinear: Whether to return non-linear transfer function.
+	:type nonlinear: boolean, default = False
+
+	:return: 2D array of shape ``(len(z), len(k))``
+	"""
+	K,Z = np.meshgrid(k,z)
+	if not nonlinear:
+		alpha_linear = 0.049*M_wdm**(-1.11)*(Omega_cdm/0.25)**0.11*(h/0.7)**1.22 # Mpc/h
+		nu           = 1.12
+		return (1.+(alpha_linear*K)**(2.*nu))**(-5./nu)
+
+	else:
+		nu, l, s = 3., 0.6, 0.4
+		alpha    = 0.0476*(1./M_wdm)**1.85*((1.+Z)/2.)**1.3 # Mpc/h
+		return (1.+(alpha*K)**(nu*l))**(-s/nu)
 

@@ -2619,11 +2619,11 @@ class cosmo:
 					try:                 TF['d_nu'] = np.sum(self.M_nu[self.M_nu!=0.]*T_nu.T, axis = 1)/np.sum(self.M_nu)
 					except np.AxisError: TF['d_nu'] = np.zeros(len(k_T))
 					# Interpolation of matter T(k)
-					tm_int   = si.interp1d(k_T, T_m, kind = 'cubic')
+					tm_int   = si.interp1d(k_T, T_m, kind = 'cubic', fill_value = "extrapolate")
 					transf_m = tm_int(k)			
 					# Interpolate them to required k
-					t1_int = si.interp1d(k_T, TF[components[c1]], kind = 'cubic')
-					t2_int = si.interp1d(k_T, TF[components[c2]], kind = 'cubic')
+					t1_int = si.interp1d(k_T, TF[components[c1]], kind = 'cubic', fill_value = "extrapolate")
+					t2_int = si.interp1d(k_T, TF[components[c2]], kind = 'cubic', fill_value = "extrapolate")
 					transf_1 = t1_int(k)
 					transf_2 = t2_int(k)
 					# Rescaling
