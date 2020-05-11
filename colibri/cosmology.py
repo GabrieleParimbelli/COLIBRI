@@ -2043,6 +2043,10 @@ class cosmo:
 		The linear formula is an approximation strictly valid only at :math:`k < 5-10 \ h/\mathrm{Mpc}`.
 		The nonlinear formula has an accuracy of 2% level at :math:`z < 3` and for masses larger than 0.5 keV.
 
+		.. warning::
+
+		 This function returns the total suppression in power. To obtain the suppression in the transfer function, take the square root of the output.
+
 		:param k: Scales in units of :math:`h/\mathrm{Mpc}`.
 		:type k: array
 
@@ -2061,7 +2065,7 @@ class cosmo:
 		if not nonlinear:
 			alpha_linear = 0.049*M_wdm**(-1.11)*(self.Omega_cdm/0.25)**0.11*(self.h/0.7)**1.22 # Mpc/h
 			nu           = 1.12
-			return (1.+(alpha_linear*K)**(2.*nu))**(-5./nu)
+			return (1.+(alpha_linear*K)**(2.*nu))**(-10./nu)
 
 		else:
 			nu, l, s = 3., 0.6, 0.4

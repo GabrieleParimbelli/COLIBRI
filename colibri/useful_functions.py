@@ -341,6 +341,10 @@ def WDM_suppression(k, z, M_wdm, Omega_cdm, h, nonlinear = False):
 
 	 This function also exists in the class :func:`~colibri.cosmology.cosmo()`, where ``Omega_cdm`` and ``h`` are set to the values fixed at initialization of the class.
 
+	.. warning::
+
+	 This function returns the total suppression in power. To obtain the suppression in the transfer function, take the square root of the output.
+
 	:param k: Scales in units of :math:`h/\mathrm{Mpc}`.
 	:type k: array
 
@@ -365,7 +369,7 @@ def WDM_suppression(k, z, M_wdm, Omega_cdm, h, nonlinear = False):
 	if not nonlinear:
 		alpha_linear = 0.049*M_wdm**(-1.11)*(Omega_cdm/0.25)**0.11*(h/0.7)**1.22 # Mpc/h
 		nu           = 1.12
-		return (1.+(alpha_linear*K)**(2.*nu))**(-5./nu)
+		return (1.+(alpha_linear*K)**(2.*nu))**(-10./nu)
 
 	else:
 		nu, l, s = 3., 0.6, 0.4
