@@ -190,7 +190,7 @@ class halofit_operator():
 			try:               M_1 = 10.**(scipy.optimize.root(sig_int_2, 13.-1.75*(1+self.z[i]))['x'][0])
 			except ValueError: M_1 = 10.**(13.-1.75*(1+self.z[i])) # "interpolated value"
 			# Spline the sigma^2(M) function and take derivative at M_1
-			s2_spl      = si.UnivariateSpline(self.lnmass, np.log(self.sig2[i]), k = 4, s = 0)
+			s2_spl      = si.InterpolatedUnivariateSpline(self.lnmass, np.log(self.sig2[i]), k = 4)
 			spl_logder  = s2_spl.derivative()
 			logder      = spl_logder(np.log(M_1))
 			# effective spectral index
