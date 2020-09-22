@@ -18,7 +18,7 @@ FYI, "colibrì" is the Italian for `"hummingbird" <https://en.wikipedia.org/wiki
 Prerequisites and installation
 ==============================
 
-COLIBRÌ themselves do not need to be installed and they work properly provided that the usual Python packages such as NumPy and SciPy are installed.
+COLIBRÌ work properly provided that the usual Python packages such as NumPy and SciPy are installed.
 However, some of the routines require some external libraries and Boltzmann solvers to be installed.
 The list that follows itemizes all the packages needed to let all the routines work.
 
