@@ -37,9 +37,10 @@ For the latter, both Boltzmann solvers **CAMB** and **Class** can be used, provi
 `nonlinear` module
 ^^^^^^^^^^^^^^^^^^
 
-There are two classes, one called :func:`~colibri.nonlinear.halofit_operator` , which transforms a linear input power spectrum to its non-linear counterpart, and the other called :func:`~colibri.nonlinear.nonlinear_pk` , that directly computes the nonlinear total matter power spectrum given a set of cosmological parameters.
+There are three classes, one called :func:`~colibri.nonlinear.HMcode2016` , which transforms a linear input power spectrum to its non-linear counterpart, and the other called :func:`~colibri.nonlinear.nonlinear_pk` , that directly computes the nonlinear total matter power spectrum given a set of cosmological parameters.
 Both these classes use the Halofit model by Mead `et al.` (see `arXiv:1505.07833 <https://arxiv.org/abs/1505.07833>`_ and `arXiv:1602.02154 <https://arxiv.org/abs/1602.02154>`_), taking as inputs redshift, scales, power spectrum and a cosmology.
-The latter class uses the so-called `cold dark matter prescription` (see e.g. `arXiv:1311.0866 <https://arxiv.org/abs/1311.0866>`_, `arXiv:1311.1212 <https://arxiv.org/abs/1311.1212>`_, `arXiv:1311.1514 <https://arxiv.org/abs/1311.1514>`_ ), where the Halofit operator is applied only to the cold dark matter+baryons linear component, while the neutrino and the cross part are added linearly afterwards.
+The second class is called :func:`~colibri.nonlinear.HMcode2020` and does the same thing, except following `arXiv:2009.01858 <https://arxiv.org/abs/2009.01858>`_
+The last class uses the so-called `cold dark matter prescription` (see e.g. `arXiv:1311.0866 <https://arxiv.org/abs/1311.0866>`_, `arXiv:1311.1212 <https://arxiv.org/abs/1311.1212>`_, `arXiv:1311.1514 <https://arxiv.org/abs/1311.1514>`_ ), where the Halofit operator is applied only to the cold dark matter+baryons linear component, while the neutrino and the cross part are added linearly afterwards.
 
 `weak_lensing` module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^

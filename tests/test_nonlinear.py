@@ -45,7 +45,8 @@ print(">> Non-linear power spectrum computed with CAMB halofit")
 # Compute at first the linear power spectrum (in LCDM 'cb' and 'tot' is the same)
 k_l, pk_l    = C.camb_Pk(z = zz, k = kk, var_1 = 'cb', var_2 = 'cb')
 # Compute non-linear power spectrum
-do_nonlinear = NL.halofit_operator(z = zz, k = k_l, pk = pk_l, field = 'cb', BAO_smearing = False, cosmology = C)
+do_nonlinear = NL.HMcode2016(z = zz, k = k_l, pk = pk_l, field = 'cb', BAO_smearing = False, cosmology = C)
+#do_nonlinear = NL.HMcode2020(z = zz, k = k_l, pk = pk_l, field = 'cb', BAO_smearing = False, cosmology = C)
 # Take spectra
 pk_hf        = do_nonlinear.pk_nl
 print(">> Non-linear power spectrum computed with 'halofit_operator' module")

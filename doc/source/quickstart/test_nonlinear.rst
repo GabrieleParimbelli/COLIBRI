@@ -11,9 +11,9 @@ In time, there have been different versions, from the first one of `arXiv:020766
 These operators are typically applied to the total matter power spectrum: however it has been shown (see e.g. `arXiv:1311.0866 <https://arxiv.org/abs/1311.0866>`_, `arXiv:1311.1212 <https://arxiv.org/abs/1311.1212>`_, `arXiv:1311.1514 <https://arxiv.org/abs/1311.1514>`_ ) that in massive neutrino cosmologies the fundamental field relevant for clustering is the cold dark matter plus baryons (CDM+b, exluding neutrinos).
 Therefore, the Halofit operator should be applied to the CDM+b part only.
 
-This is why the :func:`nonlinear.halofit_operator` class reproduces the Halofit version by Mead (`arXiv:1505.07833 <https://arxiv.org/abs/1505.07833>`_ with the :math:`\Lambda\mathrm{CDM}` corrections applied in `arXiv:1602.02154 <https://arxiv.org/abs/1602.02154>`_ ).
+This is why the :func:`nonlinear.HMcode2016` class reproduces the Halofit version by Mead (`arXiv:1505.07833 <https://arxiv.org/abs/1505.07833>`_ with the :math:`\Lambda\mathrm{CDM}` corrections applied in `arXiv:1602.02154 <https://arxiv.org/abs/1602.02154>`_ ).
 
-We provide a file in ``tests`` named ``test_nonlinear.py`` that compares the Halofit provided by CAMB with the one implemented in the classes :func:`nonlinear.halofit_operator` and :func:`nonlinear.nonlinear_pk`.
+We provide a file in ``tests`` named ``test_nonlinear.py`` that compares the Halofit provided by CAMB with the one implemented in the classes :func:`nonlinear.HMcode2016` and :func:`nonlinear.nonlinear_pk`.
 
 We first define a ``cosmo`` instance, without massive neutrinos to have a direct comparison with the Halofit implemented in CAMB:
 
@@ -37,11 +37,11 @@ We compute at this point the power spectrum with three different methods
  # 1) Compute the non-linear power spectrum with CAMB (use Mead halofit)
  k_camb, pk_camb = C.camb_Pk(k = kk, z = zz, nonlinear = True, halofit = 'mead')
 
- # 2) Use the `halofit_operator' class, which takes as arguments
+ # 2) Use the `HMcode2016' class, which takes as arguments
  # Compute at first the linear power spectrum (in LCDM 'cb' and 'tot' is the same)
  k_l, pk_l    = C.camb_Pk(z = zz, k = kk, var_1 = 'cb', var_2 = 'cb')
  # Compute non-linear power spectrum
- do_nonlinear = NL.halofit_operator(z = zz, k = k_l, pk = pk_l,
+ do_nonlinear = NL.HMcode2016(z = zz, k = k_l, pk = pk_l,
                                     field = 'cb', BAO_smearing = False, cosmology = C)
  # Take spectra
  pk_hf        = do_nonlinear.pk_nl
