@@ -772,7 +772,7 @@ class HMcode2020():
 		for iz in xrange(self.nz):
 			for ik in xrange(self.nk):
 				integrand            = ((self.mass/self.rho_field)**2.*hmf[iz]*u[iz,:,ik]**2.)*self.mass
-				self.pk_1h[iz,ik] = np.trapz(integrand, x = np.log(self.mass))
+				self.pk_1h[iz,ik] = np.trapz(integrand, x = np.log(self.mass))*(1.-self.cosmology.f_nu_tot)**2.
 			self.pk_1h[iz]  *= (self.k/self.k_star[iz])**4/(1.+(self.k/self.k_star[iz])**4)
 			self.pk_2h[iz]   = self.pk_dw[iz]*(1.-self.fdamp[iz]*(self.k/self.k_damp[iz])**self.nd/(1.+(self.k/self.k_damp[iz])**self.nd))
 			self.pk_nl[iz]   = (self.pk_1h[iz]**self.alpha[iz] + self.pk_2h[iz]**self.alpha[iz])**(1./self.alpha[iz])
@@ -1160,6 +1160,15 @@ class HMcode2020():
 		return hmf
 
 
+
+
+
+
+
+
+
+
+
 ###########################################################################################
 # nonlinear: computing the non-linear matter power spectrum in massive neutrino cosmologies
 ###########################################################################################
@@ -1184,6 +1193,9 @@ class nonlinear_pk(cc.cosmo):
 
 	:param kwargs_code: Keyword arguments to pass to :func:`~colibri.cosmology.cosmo.camb_XPk`, :func:`~colibri.cosmology.cosmo.class_XPk` or :func:`~colibri.cosmology.cosmo.EisensteinHu_Pk`.
 	:type kwargs_code: dictionary, default = {}
+
+	:param halofit: Version of halofit to use: currently available 'HMcode2016', 'HMcode2020'
+	:type halofit: string, default = 'HMcode2016'
 
 	:param BAO_smearing: Whether to damp the BAO feature due to non-linearities.
 	:type BAO_smearing: boolean, default = True
@@ -1218,6 +1230,7 @@ class nonlinear_pk(cc.cosmo):
 	             k = np.logspace(-4., 2., 1001),    # Scales for P(k)
 	             code = 'camb',                     # Choose among camb or class
 	             kwargs_code = {},                  # keyword arguments for camb/class/eh
+	             halofit = 'HMcode2016',			# Halofit model to choose
 	             BAO_smearing = True,               # Introduce BAO damping
 	             cosmology = cc.cosmo()):           # Cosmo instance
 		# Assertion on k
@@ -1228,8 +1241,10 @@ class nonlinear_pk(cc.cosmo):
 		# Initialize cosmology
 		self.cosmology = cosmology
 
-		# Fractions
+		# Initialize model
+		self.halofit = halofit
 
+		# Fractions
 		fcb = self.cosmology.f_cb
 		fnu = self.cosmology.f_nu_tot
 
@@ -1275,7 +1290,12 @@ class nonlinear_pk(cc.cosmo):
 			pk_dw = pk_cbcb
 
 		# Use halofit operator on P_{cb-cb}(k)
-		HO = HMcode2016(z = self.z, k = self.k_tmp, pk = pk_cbcb, field = 'cb', BAO_smearing = BAO_smearing, cosmology = self.cosmology)
+		if self.halofit == 'HMcode2016':
+			HO = HMcode2016(z = self.z, k = self.k_tmp, pk = pk_cbcb, field = 'cb', BAO_smearing = BAO_smearing, cosmology = self.cosmology)
+		elif self.halofit == 'HMcode2020':
+			HO = HMcode2020(z = self.z, k = self.k_tmp, pk = pk_cbcb, field = 'cb', BAO_smearing = BAO_smearing, cosmology = self.cosmology)
+		else:
+			raise ValueError('model not recognized')
 
 		# Set nonlinear quantities, de-wiggled and no-wiggle power spectra
 		pk_nl_cbcb   = HO.pk_nl     # Non-linear cb-cb power spectrum

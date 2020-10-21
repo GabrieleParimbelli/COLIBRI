@@ -10,7 +10,7 @@ colors = ['b','r','g','m','gray','c']
 #=================
 # This code computes the non-linear matter power spectrum with different methods
 # 1) the Halofit operator defined in CAMB
-# 2) the Halofit operator defined in the `halofit_operator' class in the `nonlinear.py' module
+# 2) the Halofit operator defined in the `HMcode2016' class in the `nonlinear.py' module
 # 3) the Halofit operator defined in the `nonlinear_pk' class in the `nonlinear.py' module
 #=================
 
@@ -33,7 +33,7 @@ k_camb, pk_camb = C.camb_Pk(k = kk, z = zz, nonlinear = True, halofit = 'mead')
 print(">> Non-linear power spectrum computed with CAMB halofit")
 
 #=================
-# 2) Use the `halofit_operator' class, which takes as arguments
+# 2) Use the `HMcode2016' class, which takes as arguments
 #    - an array of scales
 #    - an array of redshifts
 #    - a 2D array of linear power spectra (the shape must coincide with len(z) x len(k) )
@@ -49,7 +49,7 @@ do_nonlinear = NL.HMcode2016(z = zz, k = k_l, pk = pk_l, field = 'cb', BAO_smear
 #do_nonlinear = NL.HMcode2020(z = zz, k = k_l, pk = pk_l, field = 'cb', BAO_smearing = False, cosmology = C)
 # Take spectra
 pk_hf        = do_nonlinear.pk_nl
-print(">> Non-linear power spectrum computed with 'halofit_operator' module")
+print(">> Non-linear power spectrum computed with 'HMcode2016' module")
 
 #=================
 # 3) Use the `nonlinear_pk' module, which inherits the class `cosmo'

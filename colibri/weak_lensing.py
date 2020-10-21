@@ -89,7 +89,7 @@ class weak_lensing():
 
 		 - [`'Class'`, `'class'`, `'Xclass'`, `'XClass'`] for `CLASS <http://class-code.net/>`_
 		 - [`'Camb'`, `'CAMB'`, `'camb'`, `'Xcamb'`, `'XCamb'`, `'XCAMB'`] for `CAMB <https://camb.info/>`_
-		 - [`'EH'`, `'eh'`, `'Eisenstein-Hu'`] for Eisenstein-Hu (then turned non-linear with :func:`~colibri.nonlinear.halofit_operator`)
+		 - [`'EH'`, `'eh'`, `'Eisenstein-Hu'`] for Eisenstein-Hu (then turned non-linear with :func:`~colibri.nonlinear.HMcode2016`)
 
 		:type code: string, default = `'Class'`.
 
@@ -146,7 +146,7 @@ class weak_lensing():
 			else:
 				# Non-linear 'cdm+b' power spectrum
 				pk_lin_cb     = pk_lin['cb-cb']
-				do_nonlinear  = NL.halofit_operator(z = self.z, k = self.k, pk = pk_lin_cb, cosmology = self.cosmology)
+				do_nonlinear  = NL.HMcode2016(z = self.z, k = self.k, pk = pk_lin_cb, cosmology = self.cosmology)
 				k_hf, pk_hf   = do_nonlinear.k, do_nonlinear.pk_nl
 				# Total matter non-linear power spectrum
 				pk_m          = f_cb**2.*pk_hf + 2.*f_nu*f_cb*pk_lin['cb-nu'] + f_nu**2.*pk_lin['nu-nu']
@@ -404,6 +404,40 @@ class weak_lensing():
 
 		"""
 
+		if self.cosmology.Omega_K == 0.:
+			self.load_window_functions_flat(galaxy_distributions)
+		else:
+			# Set number of bins
+			n_bins = len(galaxy_distributions)
+
+			# Normalization of the distribution function
+			norm_const = [sint.quad(lambda x: galaxy_distributions[i][0](x, **galaxy_distributions[i][1]), 0., np.inf)[0] for i in range(n_bins)]
+
+			# Initialize arrays of windows
+			self.window_function    = []
+			self.window_function_IA = []
+			constant = 3./2.*self.cosmology.Omega_m*(self.cosmology.H0/self.cosmology.h/const.c)**2.*(1.+self.z_windows)*self.geometric_factor_windows
+
+			# Set windows
+			for galaxy_bin in xrange(n_bins):
+				# Select which is the function and which are the arguments
+				n_z  = galaxy_distributions[galaxy_bin][0]
+				args = galaxy_distributions[galaxy_bin][1]
+				# Do the integral for window function
+				integral = list(map(lambda z_i: sint.quad(lambda x: n_z(x, **args)*self.geometric_factor_f_K(x,z_i)/self.geometric_factor_f_K(x), z_i, self.z_max, epsrel = 1.e-3)[0], self.z_windows))
+				# Fill temporary window functions with real values
+				window_function_tmp    = constant*integral/norm_const[galaxy_bin]
+				window_function_IA_tmp = n_z(self.z_windows, **args)*self.Hubble_windows/const.c/norm_const[galaxy_bin]
+				# Interpolate (the Akima interpolator avoids oscillations around the zero due to the cubic spline)
+				self.window_function.append   (si.Akima1DInterpolator(self.z_windows, window_function_tmp))
+				self.window_function_IA.append(si.interp1d(self.z_integration, n_z(self.z_integration, **args)*self.Hubble/const.c/norm_const[galaxy_bin], 'cubic'))
+
+	def load_window_functions_flat(self, galaxy_distributions):
+		"""
+		This function does the same as :func:`~colibri.weak_lensing.load_window_functions` but for a flat Universe, with a speed-up in the calculation of a factor ~4.
+		When the function :func:`~colibri.weak_lensing.load_window_functions` is called and :math:`\Omega_\mathrm{K}` is set to 0, this function is what is actually being run.
+		"""
+
 		# Set number of bins
 		n_bins = len(galaxy_distributions)
 
@@ -411,24 +445,24 @@ class weak_lensing():
 		norm_const = [sint.quad(lambda x: galaxy_distributions[i][0](x, **galaxy_distributions[i][1]), 0., np.inf)[0] for i in range(n_bins)]
 
 		# Initialize arrays of windows
-		zz_tmp = np.linspace(self.z_integration.min(), self.z_integration.max(), 1001)
 		self.window_function    = []
 		self.window_function_IA = []
 		constant = 3./2.*self.cosmology.Omega_m*(self.cosmology.H0/self.cosmology.h/const.c)**2.*(1.+self.z_windows)*self.geometric_factor_windows
 
 		# Set windows
+		chi_max = self.cosmology.comoving_distance(self.z_max)
 		for galaxy_bin in xrange(n_bins):
 			# Select which is the function and which are the arguments
-			n_z  = galaxy_distributions[galaxy_bin][0]
-			args = galaxy_distributions[galaxy_bin][1]
+			n_z_array  = galaxy_distributions[galaxy_bin][0](self.z_windows, **galaxy_distributions[galaxy_bin][1])
+			n_z_interp = si.interp1d(self.geometric_factor_windows, n_z_array*(self.Hubble_windows/const.c), 'cubic')
 			# Do the integral for window function
-			integral = list(map(lambda z_i: sint.quad(lambda x: n_z(x, **args)*self.geometric_factor_f_K(x,z_i)/self.geometric_factor_f_K(x), z_i, self.z_max, epsrel = 1.e-3)[0], self.z_windows))
+			integral = list(map(lambda chi_i: sint.quad(lambda chi: n_z_interp(chi)*(1.-chi_i/chi), chi_i, chi_max, epsrel = 1.e-3)[0], self.geometric_factor_windows))
 			# Fill temporary window functions with real values
 			window_function_tmp    = constant*integral/norm_const[galaxy_bin]
-			window_function_IA_tmp = n_z(self.z_windows, **args)*self.Hubble_windows/const.c/norm_const[galaxy_bin]
+			window_function_IA_tmp = n_z_array*self.Hubble_windows/const.c/norm_const[galaxy_bin]
 			# Interpolate (the Akima interpolator avoids oscillations around the zero due to the cubic spline)
-			self.window_function.append(si.Akima1DInterpolator(self.z_windows, window_function_tmp))
-			self.window_function_IA.append(si.interp1d(self.z_integration, n_z(self.z_integration, **args)*self.Hubble/const.c/norm_const[galaxy_bin], 'cubic'))		
+			self.window_function.append   (si.Akima1DInterpolator(self.z_windows, window_function_tmp))
+			self.window_function_IA.append(si.interp1d(self.z_integration, galaxy_distributions[galaxy_bin][0](self.z_integration, **galaxy_distributions[galaxy_bin][1])*self.Hubble/const.c/norm_const[galaxy_bin], 'cubic'))	
 
 
 	#-----------------------------------------------------------------------------------------
