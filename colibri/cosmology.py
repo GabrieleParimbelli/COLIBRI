@@ -2863,7 +2863,7 @@ class cosmo:
 		:return: float
 		"""
 		if pk == []:
-			k, PkL = self.camb_Pk(z = z, k = np.logspace(-4., 2.5, 201), var_1 = fundamental, var_2 = fundamental)
+			k, PkL = self.camb_Pk(z = z, k = np.logspace(-4., 2.5, 201), var_1 = var, var_2 = var)
 			#PkL = PkL[0]
 		else:
 			k, PkL = k, [pk]
