@@ -51,7 +51,7 @@ If one wants to use an already computed power spectrum (that comes e.g. from sim
 
 .. note::
 
- The previous step can also be skipped. When the function :func:`~colibri.weak_lensing.weak_lensing.shear_power_spectrum` is called, the power spectra will be loaded automatically using the default values of the :func:`~colibri.weak_lensing.weak_lensing.load_power_spectrum` or with arguments given in a dictionary ``kwargs_power_spectra``.
+ The previous step can also be skipped. When the function :func:`~colibri.weak_lensing.weak_lensing.angular_power_spectra` is called, the power spectra will be loaded automatically using the default values of the :func:`~colibri.weak_lensing.weak_lensing.load_power_spectra` or with arguments given in a dictionary ``kwargs_power_spectra``.
 
 Window functions
 ------------------
@@ -81,12 +81,12 @@ Finally, the shear power spectrum is computed with
 .. code-block:: python
 
  ll = np.geomspace(2., 4.e4, 51)
- Cl = S.shear_power_spectrum(l = ll, IA = 'LA', kwargs_IA = {'A_IA': -1.3})
+ Cl = S.angular_power_spectra(l = ll, do_shear = True, do_IA = True, do_clustering = False, IA_model = 'LA', kwargs_IA = {'A_IA': -1.3})
 
 The ``l`` argument sets the multipoles at which the spectrum must be computed; the ``IA`` argument sets the intrinsic alignment model used, implemented with the arguments contained in ``kwargs_IA`` (if ``IA = None`` all the terms relative to intrinsic alignment are set to zero).
 See the function :func:`~colibri.weak_lensing.weak_lensing.intrinsic_alignment_kernel` for all the relevant info.
 
-The returned object is a dictionary that contains 3 keys: ``GG``, ``GI``, ``II`` that represent the cosmological signal, the cross spectrum with intrinsic alignment effect and the pure intrinsic alignment signal, respectively.
+The returned object is a dictionary that contains 3 non-zero keys: ``GG``, ``GI``, ``II`` that represent the cosmological signal, the cross spectrum with intrinsic alignment effect and the pure intrinsic alignment signal, respectively.
 Each of these keys is a 3D array, in this case of shape ``(3, 3, 51)``, containing the quantity :math:`C^{(ij)}(\ell)`.
 
 .. image:: ../_static/shear_spectrum.png
@@ -100,6 +100,18 @@ Equivalently, the two shear correlation functions can be computed with
 .. code-block:: python
 
  theta = np.geomspace(1., 100., 51)
- xi_plus, xi_minus = S.shear_correlation_functions(theta = theta, IA = 'LA', kwargs_IA = {'A_IA': -1.3})
+ xi_plus, xi_minus = S.angular_correlation_functions(theta = theta, do_shear = True, do_IA = True, do_clustering = False, IA_model = 'LA', kwargs_IA = {'A_IA': -1.3})
+
+Galaxy clustering power spectra and correlation functions
+---------------------------------------------------------
+
+If :func:`~colibri.weak_lensing.weak_lensing.angular_power_spectra` or :func:`~colibri.weak_lensing.weak_lensing.angular_correlation_functions` are called with ``do_clustering = True``, then two additional non-zero keys labelled ``gG`` and ``gg`` appear. These represent the galaxy-galaxy lensing term and the galaxy clustering power spectrum/correlation function.
+However, before using it, one has to load the galaxy bias function, essential to compute clustering.
+This is done by calling the routine :func:`~colibri.weak_lensing.weak_lensing.load_galaxy_bias` **after :func:`~colibri.weak_lensing.load_power_spectra` but before calling the angular power spectrum/correlation function routine**.
+This takes as argument a function whose first 2 arguments MUST be the scale k [in Mpc/h] and the redshift z. Further keyword arguments can be added as **kwargs. The function 'load_galaxy_bias' returns a 2D interpolator in k and z.
+
+
+
+
 
 

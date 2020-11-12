@@ -87,7 +87,21 @@ print("> Window functions loaded")
 #-----------------
 
 #-----------------
-# 5) Shear power spectrum
+# 5) Galaxy bias
+#-----------------
+# Only needed if galaxy clustering must be computed, it takes as argument a function 
+# whose first 2 arguments MUST be the scale k [in Mpc/h] and the redshift z.
+# Further keyword arguments can be added as **kwargs
+# The function 'load_galaxy_bias' returns a 2D interpolator in k and z.
+# For how the code is built, this function msut be called after 'load_power_spectrum'
+#-----------------
+bias = lambda k,z: (1. + (k/10.)**2.)*(1.+z)
+S.load_galaxy_bias(bias_function = bias)
+#-----------------
+
+
+#-----------------
+# 6) Angular power spectrum
 #-----------------
 # Compute the shear spectra at the given multipoles, with the power spectra computed above.
 # If one wants to use power spectra from simulation, he/she can skip the load_power_spectra part
@@ -101,18 +115,25 @@ print("> Window functions loaded")
 #   - 'GG': cosmological signal
 #   - 'GI': cross term of cosmological signal and intrinsic alignment
 #   - 'II': pure intrinsic alignment signal
+#   - 'gG': galaxy-galaxy lensing angular power spectrum
+#   - 'gg': angular galaxy clustering
 # Each of these keys has a shape (n_bins, n_bins, len(multipoles))
 # 
 # N.B. Willingly, this function can also be called by skipping the 'load_power_spectrum' line
 #      and by adding to it the dictionary 'kwargs_power_spectra' containing all the relevant things.
-ll    = np.geomspace(2., 4.e4, 51)
-Cl    = S.shear_power_spectrum(l = ll, IA = 'LA', kwargs_IA = {'A_IA': -1.3})
+ll     = np.geomspace(2., 4.e4, 51)
+Cl     = S.angular_power_spectra(l = ll,
+                                 do_shear = True,
+                                 do_IA = True,
+                                 do_galaxy_clustering = True,
+                                 IA_model = 'LA',
+                                 kwargs_IA = {'A_IA': -1.3})
 Cl_tot = Cl['GG'] + Cl['GI'] + Cl['II']
 print("> Shear spectra loaded")
 #-----------------
 
 #-----------------
-# 6) Plot
+# 7) Plot
 #-----------------
 # Multiplication constant for plotting
 c = ll*(ll+1.)/(2.*np.pi)
@@ -135,16 +156,19 @@ for i in xrange(nbins):
 		axarr[j,i].loglog(ll, c*Cl['GG'][i,j],         'b', lw=2.0, label='$C_\mathrm{GG}^{(ij)}(\ell)$')
 		axarr[j,i].loglog(ll, np.abs(c*Cl['GI'][i,j]), 'g', lw=2.0, label='$C_\mathrm{GI}^{(ij)}(\ell)$')
 		axarr[j,i].loglog(ll, c*Cl['II'][i,j],         'r', lw=2.0, label='$C_\mathrm{II}^{(ij)}(\ell)$')
+		axarr[j,i].loglog(ll, c*Cl['gG'][i,j],         'm', lw=2.0, label='$C_\mathrm{gG}^{(ij)}(\ell)$')
+		axarr[j,i].loglog(ll, c*Cl['gg'][i,j],         'c', lw=2.0, label='$C_\mathrm{gg}^{(ij)}(\ell)$')
 		# Coloured box
 		if i != j: color = 'grey'
 		else:      color = colors[i]
-		axarr[j,i].text(3e1, 1e-4, '$%i \\times %i$' %(i+1,j+1),
+		axarr[j,i].text(0.1, 0.85, '$%i \\times %i$' %(i+1,j+1),
+						transform=axarr[j,i].transAxes,
 						style='italic',
 						fontsize = 30,
 						horizontalalignment='center',
 						bbox={'facecolor': color, 'alpha':0.5, 'pad':10})
 		axarr[j,i].set_xlim(ll.min(), ll.max())
-		axarr[i,j].set_ylim(7e-9, 1e-3)
+		axarr[i,j].set_ylim(7e-9, 1e-1)
 plt.legend(bbox_to_anchor=(0.9, nbins))
 
 # Single label
