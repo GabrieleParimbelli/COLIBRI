@@ -1,8 +1,7 @@
 import colibri.cosmology as cc
-import matplotlib.pyplot as plt
-import numpy as np
 import colibri.weak_lensing as wlc
-from six.moves import xrange
+import numpy as np
+import matplotlib.pyplot as plt
 
 plt.rc('text', usetex = True)
 plt.rc('font', family = 'serif', size = 40)
@@ -38,15 +37,26 @@ print("> Shear instance loaded")
 #
 #     e.g. S.load_power_spectra(z = np.linspace(0., 5., 51), k = np.logspace(-4., 2., 101), code = 'camb', nonlinear = True)
 #
-#   - they can be read from file (for example if they are taken from simulations). In this case, the arguments 'code' and
-#     'nonlinear' are useless and one must set as arguments the regular grid in scales and redshifts
+#   - they can be computed using any other tool (e.g. with the 'halofit_operator' class in 'nonlinear.py' file;
+#     calling CAMB/Class externally; reading them from file, if they are taken from simulations).
+#     In this case, the arguments 'code' and 'nonlinear' are useless and one must set as arguments the regular grid in scales and redshifts
 #
+#     e.g. CALL CAMB EXTERNALLY
+#          kk = np.geomspace(1e-4, 1e2, 301)
+#          zz = np.linspace(0., 5., 51)
+#          _, pk_array = C.camb_Pk(z = zz, k = kk, nonlinear = True, halofit = 'mead2020')	# Call CAMB externally with 'mead2020' halofit version
+#          S.load_power_spectra(z = zz, k = kk, power_spectra = pk_array)	                # Interpolate, pk_array must be a 2D array of shape (51,151)
 #
-#     e.g. pk_array = np.loadtxt('pk_array.txt', unpack = True)															# Read file containing power spectra
-#          S.load_power_spectra(z = np.linspace(0., 5., 51), k = np.logspace(-4., 2., 151), power_spectra = pk_array)	# Interpolate, pk_array must be a 2D array of shape (51,151)
+#     e.g. READ FROM SIMULATIONS
+#          kk = np.geomspace(1e-4, 1e2, 301)
+#          zz = np.linspace(0., 5., 51)
+#          pk_array = np.loadtxt('pk_array.txt', unpack = True)				# Read file containing power spectra
+#          S.load_power_spectra(z = zz, k = kk, power_spectra = pk_array)	# Interpolate, pk_array must be a 2D array of shape (51,151)
 #
-
-S.load_power_spectra(z = np.linspace(0., 5., 51), k = np.logspace(-4., 2., 101), code = 'camb', nonlinear = True)
+kk = np.geomspace(1e-4, 1e2, 301)
+zz = np.linspace(0., 5., 51)
+_, pkz = C.camb_Pk(z = zz, k = kk, nonlinear = True, halofit = 'mead2020')
+S.load_power_spectra(z = zz, k = kk, power_spectra = pkz)
 print("> Power spectra loaded")
 #-----------------
 
@@ -65,7 +75,7 @@ print("> Power spectra loaded")
 # 
 # def euclid_distribution(self, z, zmin, zmax, a = 2.0, b = 1.5, z_med = 0.9):
 #     z_0 = z_med/sqrt(2.)
-#     step = 1e-2
+#     step = 1e-4
 #     lower = 0.5*(1.+np.tanh((z-zmin)/step))				# Heaviside-like step function
 #     upper = 0.5*(1.+np.tanh((zmax-z)/step))				# Heaviside-like step function
 #     n = (z/z_0)**a*np.exp(-(z/z_0)**b)*lower*upper
@@ -78,8 +88,9 @@ print("> Power spectra loaded")
 
 bin_edges = [0.00, 0.72, 1.11, 5.00]	# Bin edges
 nbins     = len(bin_edges)-1			# Number of bins
-print("> Galaxy distribution functions:")
 n_z = [[S.euclid_distribution, {'a': 2.0, 'b': 1.5, 'zmin': bin_edges[i], 'zmax': bin_edges[i+1]}] for i in range(nbins)]
+#n_z = [[S.euclid_distribution_with_photo_error, {'zmin': bin_edges[i], 'zmax': bin_edges[i+1], 'a': 2.0, 'b': 1.5}] for i in range(nbins)]
+print("> Galaxy distribution functions:")
 for i in range(len(n_z)):
 	print("    Bin %i: using function '%s' with parameters %s" %(i+1, n_z[i][0].__name__, n_z[i][1]))
 S.load_window_functions(galaxy_distributions = n_z)
@@ -95,8 +106,9 @@ print("> Window functions loaded")
 # The function 'load_galaxy_bias' returns a 2D interpolator in k and z.
 # For how the code is built, this function msut be called after 'load_power_spectrum'
 #-----------------
-bias = lambda k,z: (1. + (k/10.)**2.)*(1.+z)
-S.load_galaxy_bias(bias_function = bias)
+def _bias(k,z,k_damp = 0.5):
+    return (1. + (k/10.)**2.)*np.exp(-k/k_damp)*np.sqrt(1.+z)
+S.load_galaxy_bias(bias_function = _bias, k_damp = 4.)
 #-----------------
 
 
@@ -121,16 +133,16 @@ S.load_galaxy_bias(bias_function = bias)
 # 
 # N.B. Willingly, this function can also be called by skipping the 'load_power_spectrum' line
 #      and by adding to it the dictionary 'kwargs_power_spectra' containing all the relevant things.
-ll     = np.geomspace(2., 4.e4, 51)
-Cl     = S.angular_power_spectra(l = ll,
-                                 do_shear = True,
-                                 do_IA = True,
+ll     = np.geomspace(2., 1e4, 51)
+Cl     = S.angular_power_spectra(l                    = ll,
+                                 do_shear             = True,
+                                 do_IA                = True,
                                  do_galaxy_clustering = True,
-                                 IA_model = 'LA',
-                                 kwargs_IA = {'A_IA': -1.3})
-Cl_tot = Cl['GG'] + Cl['GI'] + Cl['II']
+                                 IA_model             = 'NLA',
+                                 kwargs_IA            = {'A_IA': -1.3, 'beta_IA': 0., 'eta_IA': 0.})
 print("> Shear spectra loaded")
 #-----------------
+
 
 #-----------------
 # 7) Plot
@@ -138,26 +150,29 @@ print("> Shear spectra loaded")
 # Multiplication constant for plotting
 c = ll*(ll+1.)/(2.*np.pi)
 # Colors
-colors = ['r', 'b','g','goldenrod','m']
+colors = ['r','b','g','y','m']
+# Linewidth
+LW = 3
 # Plot shear spectra
 hf, axarr = plt.subplots(nbins, nbins, sharex = True, sharey = True, figsize=(30,20))
 
-for j in xrange(1, nbins):
-	for i in xrange(j):
+for j in range(1, nbins):
+	for i in range(j):
 		axarr[i,j].axis('off')
 	plt.setp([a.get_xticklabels() for a in axarr[i, :]], visible=False)
 	plt.setp([a.get_yticklabels() for a in axarr[:, j]], visible=False)
 	plt.subplots_adjust(wspace=0, hspace=0)
 
-for i in xrange(nbins):
-	for j in xrange(i, nbins):
+for i in range(nbins):
+	for j in range(i, nbins):
 		# Plotting Cls and systematics
-		axarr[j,i].loglog(ll, c*Cl_tot[i,j],           'k', lw=3.0, label='$C_\mathrm{tot}^{(ij)}(\ell)$')
-		axarr[j,i].loglog(ll, c*Cl['GG'][i,j],         'b', lw=2.0, label='$C_\mathrm{GG}^{(ij)}(\ell)$')
-		axarr[j,i].loglog(ll, np.abs(c*Cl['GI'][i,j]), 'g', lw=2.0, label='$C_\mathrm{GI}^{(ij)}(\ell)$')
-		axarr[j,i].loglog(ll, c*Cl['II'][i,j],         'r', lw=2.0, label='$C_\mathrm{II}^{(ij)}(\ell)$')
-		axarr[j,i].loglog(ll, c*Cl['gG'][i,j],         'm', lw=2.0, label='$C_\mathrm{gG}^{(ij)}(\ell)$')
-		axarr[j,i].loglog(ll, c*Cl['gg'][i,j],         'c', lw=2.0, label='$C_\mathrm{gg}^{(ij)}(\ell)$')
+		axarr[j,i].loglog(ll, c*Cl['gg'][i,j],         'blue'     , ls='-' , lw=LW, label='$C_\mathrm{\gamma\gamma}^{(ij)}(\ell)$')
+		axarr[j,i].loglog(ll, np.abs(c*Cl['gI'][i,j]), 'magenta'  , ls='-' , lw=LW, label='$C_\mathrm{\gamma I}^{(ij)}(\ell)$')
+		axarr[j,i].loglog(ll, c*Cl['II'][i,j],         'red'      , ls='-' , lw=LW, label='$C_\mathrm{II}^{(ij)}(\ell)$')
+		axarr[j,i].loglog(ll, c*Cl['LL'][i,j],         'black'    , ls='-' , lw=LW, label='$C_\mathrm{LL}^{(ij)}(\ell)$')
+		axarr[j,i].loglog(ll, c*Cl['GL'][i,j],         'green'    , ls='-' , lw=LW, label='$C_\mathrm{GL}^{(ij)}(\ell)$')
+		axarr[j,i].loglog(ll, c*Cl['GL'][j,i],         'limegreen', ls='--', lw=LW, label='$C_\mathrm{GL}^{(ji)}(\ell)$')
+		axarr[j,i].loglog(ll, c*Cl['GG'][i,j],         'goldenrod', ls='-' , lw=LW, label='$C_\mathrm{GG}^{(ij)}(\ell)$')
 		# Coloured box
 		if i != j: color = 'grey'
 		else:      color = colors[i]
@@ -168,7 +183,7 @@ for i in xrange(nbins):
 						horizontalalignment='center',
 						bbox={'facecolor': color, 'alpha':0.5, 'pad':10})
 		axarr[j,i].set_xlim(ll.min(), ll.max())
-		axarr[i,j].set_ylim(7e-9, 1e-1)
+		axarr[i,j].set_ylim(5e-9, 1e-1)
 plt.legend(bbox_to_anchor=(0.9, nbins))
 
 # Single label
@@ -187,8 +202,8 @@ for i in range(nbins):
 	axarr[1].plot(zz, S.window_function_IA[i](zz)*1e3, colors[i], ls = '--', lw = 3.0)
 axarr[1].set_xlabel('$z$')
 axarr[0].set_xlim(zz.min(), zz.max())
-axarr[0].set_ylabel('$10^5 \\times W(z) \ [h/\mathrm{Mpc}]$')
-axarr[1].set_ylabel('$10^3 \\times N(z) \ [h/\mathrm{Mpc}]$')
+axarr[0].set_ylabel('$10^5 \\times W_\gamma     (z) \ [h/\mathrm{Mpc}]$')
+axarr[1].set_ylabel('$10^3 \\times W_\mathrm{IA}(z) \ [h/\mathrm{Mpc}]$')
 axarr[0].legend()
 plt.show()
 #-----------------

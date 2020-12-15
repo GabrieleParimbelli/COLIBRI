@@ -2833,18 +2833,18 @@ class cosmo:
 	#-----------------------------------------------------------------------------------------
 	# SIGMA 8
 	#-----------------------------------------------------------------------------------------
-	def compute_sigma_8(self, z = 0., k = [], pk = [], var = 'tot'):
+	def compute_sigma_8(self, k = [], pk = [], z = 0., var = 'tot'):
 		"""
 		This routine computes :math:`sigma_8`.
-
-		:param z: Redshift.
-		:type z: array, default = 0
 
 		:param k: Scales in units of :math:`h/\mathrm{Mpc}`.
 		:type k: array, default = []
 
 		:param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`. If not given, it is computed at the given redshift with CAMB.
 		:type pk: array, default = []
+
+		:param z: Redshift.
+		:type z: array, default = 0
 
 		:param var: component with respect to which to compute the variance.
 
