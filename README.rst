@@ -44,18 +44,19 @@ Here we report briefly what the various packages are needed for.
 Installation
 =============
 
-**COLIBRÌ** is available on `pip <https://pypi.org/project/colibri-cosmology/>`__.
+The best way to install **COLIBRÌ** is to clone the GitHub repository `<https://github.com/GabrieleParimbelli/COLIBRI>`__ , enter in the ``COLIBRI`` directory and run::
+
+    python setup.py install --user
+
+A second way consists of cloning the repository and add the libraries to your ``PYTHONPATH`` editing your ``.bashrc`` file.::
+
+    export PYTHONPATH="${PYTHONPATH}:/path/to/COLIBRI/"
+
+Finally, **COLIBRÌ** is also available on `pip <https://pypi.org/project/colibri-cosmology/>`__, but it is less frequently updated.
 To install it is sufficient to run::
 
     pip install colibri-cosmology
 
-In alternative, you can clone the GitHub repository `<https://github.com/GabrieleParimbelli/COLIBRI>`__ , enter in the ``COLIBRI`` directory and run::
-
-    python setup.py install --user
-
-A third way consists of cloning the repository and add the libraries to your ``PYTHONPATH`` editing your ``.bashrc`` file.::
-
-    export PYTHONPATH="${PYTHONPATH}:/path/to/COLIBRI/"
 
 So, set your preferences and get started!
 
