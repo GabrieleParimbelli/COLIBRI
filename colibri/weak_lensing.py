@@ -4,12 +4,15 @@ import numpy as np
 import scipy.special as ss
 import scipy.interpolate as si
 import scipy.integrate as sint
+import scipy.optimize as so
 import colibri.fourier as FF
 from six.moves import xrange
 import colibri.nonlinear as NL
 from math import sqrt
 
-
+#==================
+# CLASS WEAK LENSING
+#==================
 class weak_lensing():
     """
     The class :func:`~colibri.weak_lensing.weak_lensing` contains all the functions usefult to compute
@@ -39,7 +42,7 @@ class weak_lensing():
         self.cosmology = cosmology
 
         # Redshifts
-        assert len(z_limits) == 2, "Limits of integration must be a 2-uple or a list of length 2,with z_min at first place and z_max at 2nd place"
+        assert len(z_limits) == 2, "Limits of integration must be a 2-uple or a list of length 2, with z_min at 1st place and z_max at 2nd place"
         assert z_limits[0] < z_limits[1], "z_min (lower limit of integration) must be smaller than z_max (upper limit)"
 
         # Minimum and maximum redshifts
@@ -53,9 +56,11 @@ class weak_lensing():
         self.nz_integration = int((self.z_max - self.z_min)*80 + 2)
         self.z_integration  = np.linspace(self.z_min, self.z_max, self.nz_integration)
 
-        # Array of redshifts for computing window integrals (set number of redshift so that there is an integral at least each dz = 0.05)
-        self.nz_windows = int((self.z_max - self.z_min)*20 + 2)
-        self.z_windows  = np.linspace(self.z_min, self.z_max, self.nz_windows)
+        # Array of redshifts for computing window integrals (set number of redshift so that there is an integral at least each dz = 0.025)
+        #self.nz_windows = int((self.z_max - self.z_min)*20 + 2)
+        #self.z_windows  = np.linspace(self.z_min, self.z_max, self.nz_windows)
+        self.z_windows  = np.arange(self.z_min, self.z_max+0.025, 0.025)
+        self.nz_windows = len(np.atleast_1d(self.z_windows))
 
 
         # Distances (in Mpc/h)
@@ -163,10 +168,9 @@ class weak_lensing():
     #-----------------------------------------------------------------------------------------
     # EXAMPLES OF GALAXY PDF'S
     #-----------------------------------------------------------------------------------------
-    def euclid_distribution(self, z, zmin, zmax, a = 2.0, b = 1.5, z_med = 0.9):
+    def euclid_distribution(self, z, zmin, zmax, a = 2.0, b = 1.5, z_med = 0.9, step = 5e-3):
         """
-        Example function for the distribution of source galaxy. This distribution in particular is
-        expected to be used in the Euclid mission:
+        Example function for the distribution of source galaxy. This distribution in particular is expected to be used in the Euclid mission:
 
         .. math::
 
@@ -177,10 +181,10 @@ class weak_lensing():
         :param z: Redshifts.
         :type z: array
 
-        :param zmin: Lower edge of the bin.
+        :param zmin: Lower edge of the bin (a small width of 0.005 will be applied for convergence reasons).
         :type zmin: float
 
-        :param zmax: Upper edge of the bin.
+        :param zmax: Upper edge of the bin (a small width of 0.005 will be applied for convergence reasons).
         :type zmax: float
 
         :param a: Parameter of the distribution.
@@ -192,12 +196,14 @@ class weak_lensing():
         :param z_med: Median redshift of the distribution.
         :type z_med: float, default = 0.9
 
+        :param step: width of the cutoff (better to avoid a sharp one for numerical reasons, better set it to be at least 0.001)
+        :type step: float, default = 0.005
+
         :return: array
         """
         # from median redshift to scale-redshift
         z_0 = z_med/sqrt(2.)
         # Heaviside-like function
-        step  = 1e-4
         lower = 0.5*(1.+np.tanh((z-zmin)/step))
         upper = 0.5*(1.+np.tanh((zmax-z)/step))
         # Galaxy distribution
@@ -290,7 +296,7 @@ class weak_lensing():
         return np.exp(exponent)
 
 
-    def constant_distribution(z, zmin, zmax):
+    def constant_distribution(z, zmin, zmax, step = 5e-3):
         """
         Example function for the distribution of source galaxy. Here we use a constant distribution of sources.
 
@@ -303,10 +309,12 @@ class weak_lensing():
         :param zmax: Upper edge of the bin.
         :type zmax: float
 
+        :param step: width of the cutoff (better to avoid a sharp one for numerical reasons, better set it to be at least 0.001)
+        :type step: float, default = 0.005
+
         :return: array
         """
         # Heaviside-like function
-        step = 1e-2
         lower = 0.5*(1.+np.tanh((z-zmin)/step))
         upper = 0.5*(1.+np.tanh((zmax-z)/step))
         # Galaxy distribution
@@ -427,7 +435,10 @@ class weak_lensing():
                 window_function_tmp    = constant*integral/norm_const[galaxy_bin]
                 window_function_IA_tmp = n_z(self.z_windows, **args)*self.Hubble_windows/const.c/norm_const[galaxy_bin]
                 # Interpolate (the Akima interpolator avoids oscillations around the zero due to the cubic spline)
-                self.window_function.append   (si.Akima1DInterpolator(self.z_windows, window_function_tmp))
+                try:
+                    self.window_function.append   (si.interp1d(self.z_windows, window_function_tmp, 'cubic'))
+                except ValueError:
+                    self.window_function.append   (si.Akima1DInterpolator(self.z_windows, window_function_tmp))
                 self.window_function_IA.append(si.interp1d(self.z_integration, n_z(self.z_integration, **args)*self.Hubble/const.c/norm_const[galaxy_bin], 'cubic'))
 
     def load_window_functions_flat(self, galaxy_distributions):
@@ -466,7 +477,10 @@ class weak_lensing():
             window_function_tmp    = constant*integral/norm_const[galaxy_bin]
             window_function_IA_tmp = n_z_array*self.Hubble_windows/const.c/norm_const[galaxy_bin]
             # Interpolate (the Akima interpolator avoids oscillations around the zero due to the cubic spline)
-            self.window_function.append   (si.Akima1DInterpolator(self.z_windows, window_function_tmp))
+            try:
+                self.window_function.append   (si.interp1d(self.z_windows, window_function_tmp, 'cubic'))
+            except ValueError:
+                self.window_function.append   (si.Akima1DInterpolator(self.z_windows, window_function_tmp))
             self.window_function_IA.append(si.interp1d(self.z_integration, galaxy_distributions[galaxy_bin][0](self.z_integration, **galaxy_distributions[galaxy_bin][1])*self.Hubble/const.c/norm_const[galaxy_bin], 'cubic'))    
 
     #-----------------------------------------------------------------------------------------
@@ -651,7 +665,7 @@ class weak_lensing():
         PS_lz = np.zeros((n_l, n_z))
         F_lz  = np.zeros((n_l, n_z))
         b_lz  = np.zeros((n_l, n_z))
-        if do_IA:
+        if do_shear and do_IA:
             F_IA        = self.intrinsic_alignment_kernel(k = self.k, z = zz, IA_model = IA_model, **kwargs_IA)
         else:
             F_IA        = np.zeros((n_z,self.nk))
@@ -678,7 +692,7 @@ class weak_lensing():
                     Cl['gg'][i,j] = [sint.simps(const.c/HH*windows[i]*windows[j]*PS_lz[xx]/self.geometric_factor**2., x = zz) for xx in range(len(np.atleast_1d(l)))]
 
         # 5) Compute intrinsic alignment spectra
-        if do_IA:
+        if do_shear and do_IA:
             for i in xrange(n_bin):
                 for j in xrange(n_bin):
                     for il in xrange(n_l):
@@ -820,7 +834,7 @@ class weak_lensing():
                 if do_shear:
                     theta_tmp, xi_tmp['gg+'][i,j] = FF.Hankel(l, Cl['gg'][i,j]/(2.*np.pi), order = 0, N = NN)
                     theta_tmp, xi_tmp['gg-'][i,j] = FF.Hankel(l, Cl['gg'][i,j]/(2.*np.pi), order = 4, N = NN)
-                if do_IA:
+                if do_shear and do_IA:
                     for component in ['gI', 'II']:
                         theta_tmp, xi_tmp[component+'+'][i,j] = FF.Hankel(l, Cl[component][i,j]/(2.*np.pi), order = 0, N = NN)
                         theta_tmp, xi_tmp[component+'-'][i,j] = FF.Hankel(l, Cl[component][i,j]/(2.*np.pi), order = 4, N = NN)
@@ -845,4 +859,5 @@ class weak_lensing():
         del xi_tmp
 
         return xi
+
 
