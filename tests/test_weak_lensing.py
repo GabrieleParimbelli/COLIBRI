@@ -9,6 +9,8 @@ plt.rc('font', family = 'serif', size = 40)
 #########################
 # Test of weak lensing class
 #########################
+number_of_bins     = 4
+photometric_errors = False
 
 #-----------------
 # 1) Define a cosmology instance (with default values)
@@ -86,10 +88,19 @@ print("> Power spectra loaded")
 # in the class but one can create a custom distribution on his/her own!
 # The only important thing is that the first argument MUST be redshift!
 
-bin_edges = [0.00, 0.72, 1.11, 5.00]	# Bin edges
-nbins     = len(bin_edges)-1			# Number of bins
-n_z = [[S.euclid_distribution, {'a': 2.0, 'b': 1.5, 'zmin': bin_edges[i], 'zmax': bin_edges[i+1]}] for i in range(nbins)]
-#n_z = [[S.euclid_distribution_with_photo_error, {'zmin': bin_edges[i], 'zmax': bin_edges[i+1], 'a': 2.0, 'b': 1.5}] for i in range(nbins)]
+if number_of_bins == 3:
+    bin_edges = [0.00, 0.72, 1.11, 5.00]	            # Bin edges
+elif number_of_bins == 4:
+    bin_edges = [0.00, 0.62, 0.90, 1.23, 5.00]	        # Bin edges
+elif number_of_bins == 5:
+    bin_edges = [0.00, 0.56, 0.79, 1.02, 1.32, 5.00]	# Bin edges
+else:
+    raise ValueError("Choose among 3,4 or 5 bins (or implement your own set of galaxy distributions).")
+nbins     = len(bin_edges)-1			            # Number of bins
+if photometric_errors:
+    n_z = [[S.euclid_distribution_with_photo_error, {'zmin': bin_edges[i], 'zmax': bin_edges[i+1], 'a': 2.0, 'b': 1.5}] for i in range(nbins)]
+else:
+    n_z = [[S.euclid_distribution, {'a': 2.0, 'b': 1.5, 'zmin': bin_edges[i], 'zmax': bin_edges[i+1], 'step': 1e-4}] for i in range(nbins)]
 print("> Galaxy distribution functions:")
 for i in range(len(n_z)):
 	print("    Bin %i: using function '%s' with parameters %s" %(i+1, n_z[i][0].__name__, n_z[i][1]))
@@ -150,7 +161,7 @@ print("> Shear spectra loaded")
 # Multiplication constant for plotting
 c = ll*(ll+1.)/(2.*np.pi)
 # Colors
-colors = ['r','b','g','y','m']
+colors = ['r', 'b','g','goldenrod','m', 'k', 'springgreen', 'darkorange', 'pink', 'darkcyan', 'salmon']
 # Linewidth
 LW = 3
 # Plot shear spectra
