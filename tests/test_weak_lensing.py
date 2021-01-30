@@ -10,12 +10,12 @@ plt.rc('font', family = 'serif', size = 40)
 # Test of weak lensing class
 #########################
 number_of_bins     = 4
-photometric_errors = False
+photometric_errors = True
 
 #-----------------
 # 1) Define a cosmology instance (with default values)
 #-----------------
-C = cc.cosmo()
+C = cc.cosmo(Omega_K = 0.01)
 print("> Cosmology loaded")
 #-----------------
 
@@ -66,7 +66,10 @@ print("> Power spectra loaded")
 # 4) Window functions
 #-----------------
 # The function 'load_window_function' computes the W(z) for all the bins that are required.
-# The only argument it takes is the galaxy distribution in redshift.
+# It can take as argument a thing called 'galaxy_distributions'.
+#
+#   S.load_window_functions(galaxy_distributions = n_z)
+#
 # This is a nested list, in which every element has two entries:
 #   - the first is a function whose first argument must be redshift
 #   - the second is a dictionary of remaining arguments to pass to the above function.
@@ -87,6 +90,13 @@ print("> Power spectra loaded")
 # a Gaussian (see self.gaussian_distribution) and a constant distributions (see self.constant) are defined
 # in the class but one can create a custom distribution on his/her own!
 # The only important thing is that the first argument MUST be redshift!
+# 
+# Alternatively, one can leave 'galaxy_distributions' undefined and call e.g.
+#   z_w  = np.linspace(0., 6., 1001)        # Redshift range must be wider than z_limits!!
+#   nz_w = [S.euclid_distribution(z = z_w, a = 2.0, b = 1.5, zmin = bin_edges[i], zmax = bin_edges[i+1], step = 1e-4) for i in range(nbins)]
+#   S.load_window_functions(z = z_w, nz = nz_w)
+# 
+# where 'z' is 1-D array of redshifts and 'nz_w' is a 2-D array of shape (number of bins x len(z))
 
 if number_of_bins == 3:
     bin_edges = [0.00, 0.72, 1.11, 5.00]	            # Bin edges

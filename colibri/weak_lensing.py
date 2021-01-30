@@ -378,7 +378,7 @@ class weak_lensing():
     #-----------------------------------------------------------------------------------------
     # WINDOW FUNCTION
     #-----------------------------------------------------------------------------------------
-    def load_window_functions(self, galaxy_distributions):
+    def load_window_functions(self, galaxy_distributions = None, z = None, nz = None):
         """
         This function computes the window function to use in the shear power spectrum, evaluated at
         ``self.z_integration``. It automatically normalizes the galaxy distribution function such that the
@@ -396,7 +396,13 @@ class weak_lensing():
            W^{(i)}_{IA}(z) = n^{(i)}(z) \\frac{H(z)}{c}
 
         :param galaxy_distributions: The distribution of galaxies in each bin for which the shear spectra need to be computed. A list of functions containing the distribution of galaxies in each bin considered. Every element of this list is in turn a list. The first element is the name of a defined function describing a galaxy distribution in redshift. The first argument of said function must be redshift. All the other arguments must be specified by the second element of the list, which is a dictionary.
-        :type galaxy_distributions: nested list 
+        :type galaxy_distributions: nested list, default = None
+
+        :param z: array or list of redshift at which the galaxy distribution ``nz`` is evaluated
+        :type z: 1-D array, default = None
+
+        :param nz: 2-D array or 2-D list where each sublist is the galaxy distribution of a given redshift bin
+        :type nz: 2-D array with shape ``(n_bins, len(z))``, default = None
 
         An example call can be, for 3 bins all with a :func:`~colibri.weak_lensing.euclid_distribution` with default arguments for ``a`` and ``b`` but different bin edges ``zmin``, ``zmax``:
 
@@ -406,18 +412,40 @@ class weak_lensing():
                                                               [self.euclid_distribution, {'zmin': 0.72, 'zmax': 1.11}],
                                                               [self.euclid_distribution, {'zmin': 1.11, 'zmax': 5.00}]])
 
+        Alternatively, one can pre-compute a 2-D array containing the galaxy distributions and feed it into the function.
+
+        .. code-block:: python
+
+           bin_edges = [0.00, 0.72, 1.11, 5.00]
+           nbins     = len(bin_edges)-1
+           z_w       = np.linspace(0., 6., 1001)
+           nz_w      = [S.euclid_distribution(z = z_w, a = 2.0, b = 1.5, zmin = bin_edges[i], zmax = bin_edges[i+1], step = 1e-4) for i in range(nbins)]
+           S.load_window_functions(z = z_w, nz = nz_w)
+
         :return: Nothing, but the quantities ``self.window_function`` and ``self.window_function_IA`` will be created: these are lists of length ``len(galaxy_distributions)`` of interpolated functions from ``z_limits.min()`` to ``z_limits.max()``.
 
         """
 
-        if self.cosmology.Omega_K == 0.:
-            self.load_window_functions_flat(galaxy_distributions)
-        else:
-            # Set number of bins
-            n_bins = len(galaxy_distributions)
+        if (galaxy_distributions is None and z is None and nz is None):
+            raise ValueError("Either 'galaxy distribution' or 'z' AND 'nz' must be different from None")
+        if nz is not None and z is not None:
+            nz = np.array(nz)
+            z  = np.array(z)
+            assert nz.ndim == 2, "'nz' must be 2-dimensional" 
+            assert (nz.shape)[1] == z.shape[0], "Length of each 'nz[i]' must be the same of 'z'"
 
-            # Normalization of the distribution function
-            norm_const = [sint.quad(lambda x: galaxy_distributions[i][0](x, **galaxy_distributions[i][1]), 0., np.inf)[0] for i in range(n_bins)]
+        # Call a simpler function if Omega_K == 0.
+        if self.cosmology.Omega_K == 0.:
+            self.load_window_functions_flat(galaxy_distributions, z, nz)
+        # Otherwise compute window function in curved geometry
+        else:
+            # Set number of bins and normalize them
+            if galaxy_distributions is not None:
+                n_bins = len(galaxy_distributions)
+                norm_const = [sint.quad(lambda x: galaxy_distributions[i][0](x, **galaxy_distributions[i][1]), 0., np.inf)[0] for i in range(n_bins)]
+            else:
+                n_bins = len(nz)
+                norm_const = sint.simps(nz, x = z, axis = 1)
 
             # Initialize arrays of windows
             self.window_function    = []
@@ -426,22 +454,26 @@ class weak_lensing():
 
             # Set windows
             for galaxy_bin in xrange(n_bins):
-                # Select which is the function and which are the arguments
-                n_z  = galaxy_distributions[galaxy_bin][0]
-                args = galaxy_distributions[galaxy_bin][1]
-                # Do the integral for window function
-                integral = list(map(lambda z_i: sint.quad(lambda x: n_z(x, **args)*self.geometric_factor_f_K(x,z_i)/self.geometric_factor_f_K(x), z_i, self.z_max, epsrel = 1.e-3)[0], self.z_windows))
+                # Select which is the function and which are the arguments and do the integral for window function
+                if galaxy_distributions is not None:
+                    n_z  = galaxy_distributions[galaxy_bin][0]
+                    args = galaxy_distributions[galaxy_bin][1]
+                    integral = list(map(lambda z_i: sint.quad(lambda x: n_z(x, **args)*self.geometric_factor_f_K(x,z_i)/self.geometric_factor_f_K(x), z_i, self.z_max, epsrel = 1.e-3)[0], self.z_windows))
+                else:
+                    n_z = si.interp1d(z,nz[galaxy_bin],'cubic')
+                    args = {}
+                    integral = list(map(lambda z_i: sint.quad(lambda x: n_z(x)*self.geometric_factor_f_K(x,z_i)/self.geometric_factor_f_K(x), z_i, self.z_max, epsrel = 1.e-3)[0], self.z_windows))
                 # Fill temporary window functions with real values
                 window_function_tmp    = constant*integral/norm_const[galaxy_bin]
                 window_function_IA_tmp = n_z(self.z_windows, **args)*self.Hubble_windows/const.c/norm_const[galaxy_bin]
                 # Interpolate (the Akima interpolator avoids oscillations around the zero due to the cubic spline)
                 try:
-                    self.window_function.append   (si.interp1d(self.z_windows, window_function_tmp, 'cubic'))
+                    self.window_function.append(si.interp1d(self.z_windows, window_function_tmp, 'cubic'))
                 except ValueError:
-                    self.window_function.append   (si.Akima1DInterpolator(self.z_windows, window_function_tmp))
+                    self.window_function.append(si.Akima1DInterpolator(self.z_windows, window_function_tmp))
                 self.window_function_IA.append(si.interp1d(self.z_integration, n_z(self.z_integration, **args)*self.Hubble/const.c/norm_const[galaxy_bin], 'cubic'))
 
-    def load_window_functions_flat(self, galaxy_distributions):
+    def load_window_functions_flat(self, galaxy_distributions, z = None, nz = None):
         """
         This function does the same as :func:`~colibri.weak_lensing.load_window_functions` but for a flat Universe, with a speed-up in the calculation of a factor ~4.
         When the function :func:`~colibri.weak_lensing.load_window_functions` is called and :math:`\Omega_\mathrm{K}` is set to 0, this function is what is actually being run.
@@ -449,16 +481,31 @@ class weak_lensing():
         :param galaxy_distributions: The distribution of galaxies in each bin for which the shear spectra need to be computed. A list of functions containing the distribution of galaxies in each bin considered. Every element of this list is in turn a list. The first element is the name of a defined function describing a galaxy distribution in redshift. The first argument of said function must be redshift. All the other arguments must be specified by the second element of the list, which is a dictionary.
         :type galaxy_distributions: nested list 
 
+        :param z: array or list of redshift at which the galaxy distribution ``nz`` is evaluated
+        :type z: 1-D array, default = None
+
+        :param nz: 2-D array or 2-D list where each sublist is the galaxy distribution of a given redshift bin
+        :type nz: 2-D array with shape ``(n_bins, len(z))``, default = None
+
         :return: Nothing, but the quantities ``self.window_function`` and ``self.window_function_IA`` will be created: these are lists of length ``len(galaxy_distributions)`` of interpolated functions from ``z_limits.min()`` to ``z_limits.max()``.
 
 
         """
 
-        # Set number of bins
-        n_bins = len(galaxy_distributions)
-
-        # Normalization of the distribution function
-        norm_const = [sint.quad(lambda x: galaxy_distributions[i][0](x, **galaxy_distributions[i][1]), 0., np.inf)[0] for i in range(n_bins)]
+        if (galaxy_distributions is None and z is None and nz is None):
+            raise ValueError("Either 'galaxy distribution' or 'z' AND 'nz' must be different from None")
+        if nz is not None and z is not None:
+            nz = np.array(nz)
+            z  = np.array(z)
+            assert nz.ndim == 2, "'nz' must be 2-dimensional" 
+            assert (nz.shape)[1] == z.shape[0], "Length of each 'nz[i]' must be the same of 'z'"
+        # Set number of bins and normalize them
+        if galaxy_distributions is not None:
+            n_bins = len(galaxy_distributions)
+            norm_const = [sint.quad(lambda x: galaxy_distributions[i][0](x, **galaxy_distributions[i][1]), 0., np.inf)[0] for i in range(n_bins)]
+        else:
+            n_bins = len(nz)
+            norm_const = sint.simps(nz, x = z, axis = 1)
 
         # Initialize arrays of windows
         self.window_function    = []
@@ -469,7 +516,11 @@ class weak_lensing():
         chi_max = self.cosmology.comoving_distance(self.z_max)
         for galaxy_bin in xrange(n_bins):
             # Select which is the function and which are the arguments
-            n_z_array  = galaxy_distributions[galaxy_bin][0](self.z_windows, **galaxy_distributions[galaxy_bin][1])
+            if galaxy_distributions is not None:
+                n_z_array  = galaxy_distributions[galaxy_bin][0](self.z_windows, **galaxy_distributions[galaxy_bin][1])
+            else:
+                tmp_interp = si.interp1d(z,nz[galaxy_bin],'cubic')
+                n_z_array  = tmp_interp(self.z_windows)
             n_z_interp = si.interp1d(self.geometric_factor_windows, n_z_array*(self.Hubble_windows/const.c), 'cubic')
             # Do the integral for window function
             integral = list(map(lambda chi_i: sint.quad(lambda chi: n_z_interp(chi)*(1.-chi_i/chi), chi_i, chi_max, epsrel = 1.e-3)[0], self.geometric_factor_windows))
@@ -478,10 +529,13 @@ class weak_lensing():
             window_function_IA_tmp = n_z_array*self.Hubble_windows/const.c/norm_const[galaxy_bin]
             # Interpolate (the Akima interpolator avoids oscillations around the zero due to the cubic spline)
             try:
-                self.window_function.append   (si.interp1d(self.z_windows, window_function_tmp, 'cubic'))
+                self.window_function.append(si.interp1d(self.z_windows, window_function_tmp, 'cubic'))
             except ValueError:
-                self.window_function.append   (si.Akima1DInterpolator(self.z_windows, window_function_tmp))
-            self.window_function_IA.append(si.interp1d(self.z_integration, galaxy_distributions[galaxy_bin][0](self.z_integration, **galaxy_distributions[galaxy_bin][1])*self.Hubble/const.c/norm_const[galaxy_bin], 'cubic'))    
+                self.window_function.append(si.Akima1DInterpolator(self.z_windows, window_function_tmp))
+            if galaxy_distributions is not None:
+                self.window_function_IA.append(si.interp1d(self.z_integration, galaxy_distributions[galaxy_bin][0](self.z_integration, **galaxy_distributions[galaxy_bin][1])*self.Hubble/const.c/norm_const[galaxy_bin], 'cubic'))
+            else:
+                self.window_function_IA.append(si.interp1d(self.z_integration, tmp_interp(self.z_integration)*self.Hubble/const.c/norm_const[galaxy_bin], 'cubic'))
 
     #-----------------------------------------------------------------------------------------
     # GALAXY BIAS
