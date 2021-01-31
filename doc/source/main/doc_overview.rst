@@ -42,10 +42,10 @@ Both these classes use the Halofit model by Mead `et al.` (see `arXiv:1505.07833
 The second class is called :func:`~colibri.nonlinear.HMcode2020` and does the same thing, except following `arXiv:2009.01858 <https://arxiv.org/abs/2009.01858>`_
 The last class uses the so-called `cold dark matter prescription` (see e.g. `arXiv:1311.0866 <https://arxiv.org/abs/1311.0866>`_, `arXiv:1311.1212 <https://arxiv.org/abs/1311.1212>`_, `arXiv:1311.1514 <https://arxiv.org/abs/1311.1514>`_ ), where the Halofit operator is applied only to the cold dark matter+baryons linear component, while the neutrino and the cross part are added linearly afterwards.
 
-`weak_lensing` module
+`angular_spectra` module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :func:`~colibri.weak_lensing.weak_lensing` class inside this file is finalized to compute the shear power spectrum and correlation functions in the flat sky and Limber's approximations. In this file are provided the routines to compute non-linear power spectra, example functions for galaxy distributions (although different ones can be defined by the user outside the class) and window functions. The possibility to add the intrinsic alignment effect (see `arXiv:0406275 <https://arxiv.org/abs/astro-ph/0406275>`_) is included.
+The :func:`~colibri.angular_spectra.angular_spectra` class inside this file is finalized to compute the shear power spectrum and correlation functions in the flat sky and Limber's approximations. In this file are provided the routines to compute non-linear power spectra, example functions for galaxy distributions (although different ones can be defined by the user outside the class) and window functions. The possibility to add the intrinsic alignment effect (see `arXiv:0406275 <https://arxiv.org/abs/astro-ph/0406275>`_) is included.
 
 `halo`, `galaxy`, `RSD`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

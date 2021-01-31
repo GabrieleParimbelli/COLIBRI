@@ -102,10 +102,10 @@ There are two classes, one called ``halofit_operator`` , which transforms a line
 Both these classes use the Halofit model by Mead `et al.` (see `arXiv:1505.07833 <https://arxiv.org/abs/1505.07833>`__ and `arXiv:1602.02154 <https://arxiv.org/abs/1602.02154>`__), taking as inputs redshift, scales, power spectrum and a cosmology.
 The latter class uses the so-called `cold dark matter prescription` (see e.g. `arXiv:1311.0866 <https://arxiv.org/abs/1311.0866>`__, `arXiv:1311.1212 <https://arxiv.org/abs/1311.1212>`__, `arXiv:1311.1514 <https://arxiv.org/abs/1311.1514>`__ ), where the Halofit operator is applied only to the cold dark matter+baryons linear component, while the neutrino and the cross part are added linearly afterwards.
 
-`weak_lensing` module
+`angular_spectra` module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``weak_lensing`` class inside this file is finalized to compute the shear power spectrum and correlation functions in the flat sky and Limber's approximations. In this file are provided the routines to compute non-linear power spectra, example functions for galaxy distributions (although different ones can be defined by the user outside the class) and window functions. The possibility to add the intrinsic alignment effect (see `arXiv:0406275 <https://arxiv.org/abs/astro-ph/0406275>`__) is included.
+The ``angular_spectra`` class inside this file is finalized to compute the weak lensing and galaxy clustering power spectrum and correlation functions in the flat sky and Limber's approximations. In this file are provided the routines to compute non-linear power spectra, example functions for galaxy distributions (although different ones can be defined by the user outside the class) and window functions. The possibility to add the intrinsic alignment effect (see `arXiv:0406275 <https://arxiv.org/abs/astro-ph/0406275>`__) is included.
 
 `halo`, `galaxy`, `RSD`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1,5 +1,5 @@
 import colibri.cosmology as cc
-import colibri.weak_lensing as wlc
+import colibri.angular_spectra as ang
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -7,7 +7,7 @@ plt.rc('text', usetex = True)
 plt.rc('font', family = 'serif', size = 40)
 
 #########################
-# Test of weak lensing class
+# Test of angular spectra class
 #########################
 number_of_bins     = 4
 photometric_errors = True
@@ -15,17 +15,17 @@ photometric_errors = True
 #-----------------
 # 1) Define a cosmology instance (with default values)
 #-----------------
-C = cc.cosmo(Omega_K = 0.01)
+C = cc.cosmo()
 print("> Cosmology loaded")
 #-----------------
 
 #-----------------
-# 2) Define a weak_lensing instance.
+# 2) Define an angular_spectra instance.
 #-----------------
 # This takes as arguments:
 #   - a cosmology instance:
 #   - a 2-uple or a list of length 2, whose values are the lower and upper limit of integration in redshift
-S = wlc.weak_lensing(cosmology = C, z_limits = [0., 5.])
+S = ang.angular_spectra(cosmology = C, z_limits = [0., 5.])
 print("> Shear instance loaded")
 #-----------------
 
@@ -75,7 +75,7 @@ print("> Power spectra loaded")
 #   - the second is a dictionary of remaining arguments to pass to the above function.
 # As an example, here we define 4 bin edges, which will give rise to 3 redshift bins.
 # We use the Euclid distribution which scales as z^a e^(-(z/z0)^b).
-# The function self.euclid_distribution is already defined in the weak_lensing class
+# The function self.euclid_distribution is already defined in the angular_spectra class
 # in the following way
 # 
 # def euclid_distribution(self, z, zmin, zmax, a = 2.0, b = 1.5, z_med = 0.9):
@@ -115,6 +115,9 @@ print("> Galaxy distribution functions:")
 for i in range(len(n_z)):
 	print("    Bin %i: using function '%s' with parameters %s" %(i+1, n_z[i][0].__name__, n_z[i][1]))
 S.load_window_functions(galaxy_distributions = n_z)
+#z_w  = np.linspace(0., 6., 1001)        # Redshift range must be wider than z_limits!!
+#nz_w = [S.euclid_distribution_with_photo_error(z = z_w, a = 2.0, b = 1.5, zmin = bin_edges[i], zmax = bin_edges[i+1]) for i in range(nbins)]
+#S.load_window_functions(z = z_w, nz = nz_w)
 print("> Window functions loaded")
 #-----------------
 
@@ -125,7 +128,7 @@ print("> Window functions loaded")
 # whose first 2 arguments MUST be the scale k [in Mpc/h] and the redshift z.
 # Further keyword arguments can be added as **kwargs
 # The function 'load_galaxy_bias' returns a 2D interpolator in k and z.
-# For how the code is built, this function msut be called after 'load_power_spectrum'
+# For how the code is built, this function must be called after 'load_power_spectrum'
 #-----------------
 def _bias(k,z,k_damp = 0.5):
     return (1. + (k/10.)**2.)*np.exp(-k/k_damp)*np.sqrt(1.+z)
@@ -155,13 +158,13 @@ S.load_galaxy_bias(bias_function = _bias, k_damp = 4.)
 # N.B. Willingly, this function can also be called by skipping the 'load_power_spectrum' line
 #      and by adding to it the dictionary 'kwargs_power_spectra' containing all the relevant things.
 ll     = np.geomspace(2., 1e4, 51)
-Cl     = S.angular_power_spectra(l                    = ll,
-                                 do_shear             = True,
-                                 do_IA                = True,
-                                 do_galaxy_clustering = True,
-                                 IA_model             = 'NLA',
-                                 kwargs_IA            = {'A_IA': -1.3, 'beta_IA': 0., 'eta_IA': 0.})
-print("> Shear spectra loaded")
+Cl     = S.compute_angular_power_spectra(l            = ll,
+                                         do_WL        = True,
+                                         do_IA        = True,
+                                         do_GC        = True,
+                                         IA_model     = 'NLA',
+                                         kwargs_IA    = {'A_IA': -1.3, 'beta_IA': 0., 'eta_IA': 0.})
+print("> Spectra loaded")
 #-----------------
 
 

@@ -28,7 +28,7 @@ FYI, "colibrì" is the Italian for `"hummingbird" <https://en.wikipedia.org/wiki
    :maxdepth: 1
 
    quickstart/test_cosmology
-   quickstart/test_weak_lensing
+   quickstart/test_angular_spectra
    quickstart/test_nonlinear
    quickstart/test_halo_model
    quickstart/test_fourier
@@ -38,7 +38,7 @@ FYI, "colibrì" is the Italian for `"hummingbird" <https://en.wikipedia.org/wiki
    :maxdepth: 1
 
    modules/cosmology_doc
-   modules/weak_lensing_doc
+   modules/angular_spectra_doc
    modules/nonlinear_doc
    modules/halo_model_doc
    modules/fourier_doc

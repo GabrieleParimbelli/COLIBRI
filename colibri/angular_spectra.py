@@ -11,13 +11,13 @@ import colibri.nonlinear as NL
 from math import sqrt
 
 #==================
-# CLASS WEAK LENSING
+# CLASS ANGULAR SPECTRA
 #==================
-class weak_lensing():
+class angular_spectra():
     """
-    The class :func:`~colibri.weak_lensing.weak_lensing` contains all the functions usefult to compute
-    the shear power spectra and correlation functions in the flat sky and Limber's approximation.
-    It also computes window functions and galaxy pdf. The initialization requires the redshifts and
+    The class :func:`~colibri.angular_spectra.angular_spectra` contains all the functions usefult to compute
+    the angular power spectra and correlation functions in the flat sky and Limber's approximation.
+    It also computes window functions and galaxy PDF. The initialization requires the redshifts and
     scales to integrate (this choice is dictated by the fact that in this way one can use power spectra
     from simulations). Also routines to compute the intrinsic alignment terms are present
     (linear and nonlinear alignment model by `Hirata & Seljak <https://arxiv.org/abs/astro-ph/0406275>`_.
@@ -53,13 +53,13 @@ class weak_lensing():
         if self.z_min == 0.: self.z_min += 1e-10    # Remove singularity of 1/chi(z) at z = 0
 
         # Set the array of integration (set number of redshift so that there is dz = 0.0125)
-        self.nz_integration = int((self.z_max - self.z_min)*80 + 2)
+        nz_min = 80
+        self.nz_integration = int((self.z_max - self.z_min)*nz_min + 2)
         self.z_integration  = np.linspace(self.z_min, self.z_max, self.nz_integration)
 
         # Array of redshifts for computing window integrals (set number of redshift so that there is an integral at least each dz = 0.025)
-        #self.nz_windows = int((self.z_max - self.z_min)*20 + 2)
-        #self.z_windows  = np.linspace(self.z_min, self.z_max, self.nz_windows)
-        self.z_windows  = np.arange(self.z_min, self.z_max+0.025, 0.025)
+        dz_windows = 0.025
+        self.z_windows  = np.arange(self.z_min, self.z_max+dz_windows, dz_windows)
         self.nz_windows = len(np.atleast_1d(self.z_windows))
 
 
@@ -114,8 +114,8 @@ class weak_lensing():
         self.z_int_max = z.max()
 
         # Assertion on redshifts: they must be at least as extended as the integration limits
-        assert self.z_int_max >= self.z_max, "Maximum redshift for power spectrum must be at least as large as the maximum redshift for integration (at least %.2f)" %(self.z_max)
-        assert self.z_int_min <= self.z_min, "Minimum redshift for power spectrum must be at least as small as the minimum redshift for integration (at most %.2f)"  %(self.z_min)
+        #assert self.z_int_max >= self.z_max, "Maximum redshift for power spectrum must be at least as large as the maximum redshift for integration (at least %.2f)" %(self.z_max)
+        #assert self.z_int_min <= self.z_min, "Minimum redshift for power spectrum must be at least as small as the minimum redshift for integration (at most %.2f)"  %(self.z_min)
 
         # Select kind of interpolation
         if self.nz > 3: kind_of_interpolation = 'cubic'
@@ -148,7 +148,7 @@ class weak_lensing():
             # Do linear or non-linear as required
             if nonlinear == False:
                 pk_m          = f_cb**2.*pk_lin['cb-cb'] + 2.*f_nu*f_cb*pk_lin['cb-nu'] + f_nu**2.*pk_lin['nu-nu']
-                self.power_spectra_interpolator = si.interp2d(self.k, self.z, pk_m, kind_of_interpolation)
+                self.power_spectra_interpolator = si.interp2d(self.k, self.z, pk_m, kind_of_interpolation, bounds_error = False, fill_value = 0.)
             else:
                 # Non-linear 'cdm+b' power spectrum
                 pk_lin_cb     = pk_lin['cb-cb']
@@ -157,11 +157,11 @@ class weak_lensing():
                 # Total matter non-linear power spectrum
                 pk_m          = f_cb**2.*pk_hf + 2.*f_nu*f_cb*pk_lin['cb-nu'] + f_nu**2.*pk_lin['nu-nu']
                 # Interpolate
-                self.power_spectra_interpolator = si.interp2d(self.k, self.z, pk_m, kind_of_interpolation)
+                self.power_spectra_interpolator = si.interp2d(self.k, self.z, pk_m, kind_of_interpolation, bounds_error = False, fill_value = 0.)
 
         else:
                 # Interpolate
-                self.power_spectra_interpolator = si.interp2d(self.k, self.z, power_spectra, kind_of_interpolation, fill_value = 0.)
+                self.power_spectra_interpolator = si.interp2d(self.k, self.z, power_spectra, kind_of_interpolation, bounds_error = False, fill_value = 0.)
 
 
 
@@ -404,7 +404,7 @@ class weak_lensing():
         :param nz: 2-D array or 2-D list where each sublist is the galaxy distribution of a given redshift bin
         :type nz: 2-D array with shape ``(n_bins, len(z))``, default = None
 
-        An example call can be, for 3 bins all with a :func:`~colibri.weak_lensing.euclid_distribution` with default arguments for ``a`` and ``b`` but different bin edges ``zmin``, ``zmax``:
+        An example call can be, for 3 bins all with a :func:`~colibri.angular_spectra.euclid_distribution` with default arguments for ``a`` and ``b`` but different bin edges ``zmin``, ``zmax``:
 
         .. code-block:: python
 
@@ -460,23 +460,22 @@ class weak_lensing():
                     args = galaxy_distributions[galaxy_bin][1]
                     integral = list(map(lambda z_i: sint.quad(lambda x: n_z(x, **args)*self.geometric_factor_f_K(x,z_i)/self.geometric_factor_f_K(x), z_i, self.z_max, epsrel = 1.e-3)[0], self.z_windows))
                 else:
-                    n_z = si.interp1d(z,nz[galaxy_bin],'cubic')
+                    n_z = si.interp1d(z,nz[galaxy_bin],'cubic', bounds_error = False, fill_value = 0.)
                     args = {}
                     integral = list(map(lambda z_i: sint.quad(lambda x: n_z(x)*self.geometric_factor_f_K(x,z_i)/self.geometric_factor_f_K(x), z_i, self.z_max, epsrel = 1.e-3)[0], self.z_windows))
                 # Fill temporary window functions with real values
                 window_function_tmp    = constant*integral/norm_const[galaxy_bin]
-                window_function_IA_tmp = n_z(self.z_windows, **args)*self.Hubble_windows/const.c/norm_const[galaxy_bin]
                 # Interpolate (the Akima interpolator avoids oscillations around the zero due to the cubic spline)
                 try:
-                    self.window_function.append(si.interp1d(self.z_windows, window_function_tmp, 'cubic'))
+                    self.window_function.append(si.interp1d(self.z_windows, window_function_tmp, 'cubic', bounds_error = False, fill_value = 0.))
                 except ValueError:
                     self.window_function.append(si.Akima1DInterpolator(self.z_windows, window_function_tmp))
-                self.window_function_IA.append(si.interp1d(self.z_integration, n_z(self.z_integration, **args)*self.Hubble/const.c/norm_const[galaxy_bin], 'cubic'))
+                self.window_function_IA.append(si.interp1d(self.z_integration, n_z(self.z_integration, **args)*self.Hubble/const.c/norm_const[galaxy_bin], 'cubic', bounds_error = False, fill_value = 0.))
 
     def load_window_functions_flat(self, galaxy_distributions, z = None, nz = None):
         """
-        This function does the same as :func:`~colibri.weak_lensing.load_window_functions` but for a flat Universe, with a speed-up in the calculation of a factor ~4.
-        When the function :func:`~colibri.weak_lensing.load_window_functions` is called and :math:`\Omega_\mathrm{K}` is set to 0, this function is what is actually being run.
+        This function does the same as :func:`~colibri.angular_spectra.load_window_functions` but for a flat Universe, with a speed-up in the calculation of a factor ~4.
+        When the function :func:`~colibri.angular_spectra.load_window_functions` is called and :math:`\Omega_\mathrm{K}` is set to 0, this function is what is actually being run.
 
         :param galaxy_distributions: The distribution of galaxies in each bin for which the shear spectra need to be computed. A list of functions containing the distribution of galaxies in each bin considered. Every element of this list is in turn a list. The first element is the name of a defined function describing a galaxy distribution in redshift. The first argument of said function must be redshift. All the other arguments must be specified by the second element of the list, which is a dictionary.
         :type galaxy_distributions: nested list 
@@ -519,30 +518,29 @@ class weak_lensing():
             if galaxy_distributions is not None:
                 n_z_array  = galaxy_distributions[galaxy_bin][0](self.z_windows, **galaxy_distributions[galaxy_bin][1])
             else:
-                tmp_interp = si.interp1d(z,nz[galaxy_bin],'cubic')
+                tmp_interp = si.interp1d(z,nz[galaxy_bin],'cubic', bounds_error = False, fill_value = 0.)
                 n_z_array  = tmp_interp(self.z_windows)
-            n_z_interp = si.interp1d(self.geometric_factor_windows, n_z_array*(self.Hubble_windows/const.c), 'cubic')
+            n_z_interp = si.interp1d(self.geometric_factor_windows, n_z_array*(self.Hubble_windows/const.c), 'cubic', bounds_error = False, fill_value = 0.)
             # Do the integral for window function
             integral = list(map(lambda chi_i: sint.quad(lambda chi: n_z_interp(chi)*(1.-chi_i/chi), chi_i, chi_max, epsrel = 1.e-3)[0], self.geometric_factor_windows))
             # Fill temporary window functions with real values
             window_function_tmp    = constant*integral/norm_const[galaxy_bin]
-            window_function_IA_tmp = n_z_array*self.Hubble_windows/const.c/norm_const[galaxy_bin]
             # Interpolate (the Akima interpolator avoids oscillations around the zero due to the cubic spline)
             try:
-                self.window_function.append(si.interp1d(self.z_windows, window_function_tmp, 'cubic'))
+                self.window_function.append(si.interp1d(self.z_windows, window_function_tmp, 'cubic', bounds_error = False, fill_value = 0.))
             except ValueError:
                 self.window_function.append(si.Akima1DInterpolator(self.z_windows, window_function_tmp))
             if galaxy_distributions is not None:
-                self.window_function_IA.append(si.interp1d(self.z_integration, galaxy_distributions[galaxy_bin][0](self.z_integration, **galaxy_distributions[galaxy_bin][1])*self.Hubble/const.c/norm_const[galaxy_bin], 'cubic'))
+                self.window_function_IA.append(si.interp1d(self.z_integration, galaxy_distributions[galaxy_bin][0](self.z_integration, **galaxy_distributions[galaxy_bin][1])*self.Hubble/const.c/norm_const[galaxy_bin], 'cubic', bounds_error = False, fill_value = 0.))
             else:
-                self.window_function_IA.append(si.interp1d(self.z_integration, tmp_interp(self.z_integration)*self.Hubble/const.c/norm_const[galaxy_bin], 'cubic'))
+                self.window_function_IA.append(si.interp1d(self.z_integration, tmp_interp(self.z_integration)*self.Hubble/const.c/norm_const[galaxy_bin], 'cubic', bounds_error = False, fill_value = 0.))
 
     #-----------------------------------------------------------------------------------------
     # GALAXY BIAS
     #-----------------------------------------------------------------------------------------
     def load_galaxy_bias(self, bias_function, **kwargs):
         """
-        It loads an interpolator for galaxy bias. Use it only if you are computing angular galaxy clustering. For how this code is built, this function must be called after:func:`~colibri.weak_lensing.load_power_spectra`
+        It loads an interpolator for galaxy bias. Use it only if you are computing angular galaxy clustering. For how this code is built, this function must be called after:func:`~colibri.angular_spectra.load_power_spectra`
 
         :param bias_function: bias function for galaxies :math:`b(k,z)`.
         :type bias_function: a function whose two first arguments are scale k (in :math:`h/\mathrm{Mpc}`) and redshift :math:`z`.
@@ -557,7 +555,7 @@ class weak_lensing():
         if self.nz > 3: kind_of_interpolation = 'cubic'
         else:           kind_of_interpolation = 'linear'
         # Create interpolator
-        self.galaxy_bias_interpolator = si.interp2d(self.k, self.z, bias_array, kind_of_interpolation, fill_value = 0.)
+        self.galaxy_bias_interpolator = si.interp2d(self.k, self.z, bias_array, kind_of_interpolation, bounds_error = False, fill_value = 0.)
 
 
     #-----------------------------------------------------------------------------------------
@@ -628,14 +626,14 @@ class weak_lensing():
     #-----------------------------------------------------------------------------------------
     # SPECTRA SHEAR CLUSTERING
     #-----------------------------------------------------------------------------------------
-    def angular_power_spectra(self,
-                             l,
-                             do_shear = True,
-                             do_IA = False,
-                             do_galaxy_clustering = False,
-                             kwargs_power_spectra = {},
-                             IA_model = 'LA',
-                             kwargs_IA = {}):
+    def compute_angular_power_spectra(self,
+                                      l,
+                                      do_WL                = True,
+                                      do_IA                = False,
+                                      do_GC                = False,
+                                      kwargs_power_spectra = {},
+                                      IA_model             = 'LA',
+                                      kwargs_IA            = {}):
         """
         This function computes the shear/clustering angular power spectra using the Limber's and the flat-sky approximations.
         Given two redshift bins `i` and `j` the equation is
@@ -649,14 +647,14 @@ class weak_lensing():
         :param l: Multipoles at which to compute the shear power spectra.
         :type l: array
 
-        :param do_shear: Whether to compute the shear power spectrum.
-        :type do_shear: boolean, default = ``True``
+        :param do_WL: Whether to compute the shear power spectrum.
+        :type do_WL: boolean, default = ``True``
 
         :param do_IA: Whether to compute the intrinsic alignment terms.
         :type do_IA: boolean, default = ``False``
 
-        :param do_galaxy_clustering: Whether to compute the galaxy clustering power spectra.
-        :type do_galaxy_clustering: boolean, default = ``False``
+        :param do_GC: Whether to compute the galaxy clustering power spectra.
+        :type do_GC: boolean, default = ``False``
 
         :param IA_model: Intrinsic alignment model to implement (only if ``do_IA`` is ``True``). Together with ``kwargs_IA`` defines the kernel for the calculation of the intrinsic alignment terms. If set to ``None``, these terms will be set to zero.
 
@@ -671,7 +669,7 @@ class weak_lensing():
         :param kwargs_IA: Keyword arguments to pass to intrinsic alignment model (used only if ``do_IA`` is ``True``)
         :type kwargs_IA: dictionary, default = {}
 
-        :return: power spectrum :math:`C^{(ij)}(\ell)` for all bin pairs whose window function was generated by :func:`~colibri.weak_lensing.load_window_functions`.
+        :return: power spectrum :math:`C^{(ij)}(\ell)` for all bin pairs whose window function was generated by :func:`~colibri.angular_spectra.load_window_functions`.
         :rtype:  dictionary containing the following keys:
 
             - ``'gg'``: shear power spectrum;
@@ -719,16 +717,16 @@ class weak_lensing():
         PS_lz = np.zeros((n_l, n_z))
         F_lz  = np.zeros((n_l, n_z))
         b_lz  = np.zeros((n_l, n_z))
-        if do_shear and do_IA:
+        if do_WL and do_IA:
             F_IA        = self.intrinsic_alignment_kernel(k = self.k, z = zz, IA_model = IA_model, **kwargs_IA)
         else:
             F_IA        = np.zeros((n_z,self.nk))
-        F_IA_interp = si.interp2d(self.k, zz, F_IA, kind = 'cubic')
+        F_IA_interp = si.interp2d(self.k, zz, F_IA, kind = 'cubic', bounds_error = False, fill_value = 0.)
         for il in xrange(n_l):
             for iz in range(n_z):
                 PS_lz[il, iz] = power_spectra(l[il]*1./self.geometric_factor[iz], zz[iz])
                 F_lz[il, iz]  = F_IA_interp  (l[il]*1./self.geometric_factor[iz], zz[iz])
-        if do_galaxy_clustering:
+        if do_GC:
             assert hasattr(self, "galaxy_bias_interpolator"), "Load bias function with 'load_galaxy_bias' before compute galaxy clustering"
             for il in xrange(n_l):
                 for iz in range(n_z):
@@ -740,13 +738,13 @@ class weak_lensing():
         g_windows  = np.array([self.window_function_IA[i](zz) for i in xrange(n_bin)])
 
         # 4) Compute shear spectra
-        if do_shear:
+        if do_WL:
             for i in xrange(n_bin):
                 for j in xrange(n_bin):
                     Cl['gg'][i,j] = [sint.simps(const.c/HH*windows[i]*windows[j]*PS_lz[xx]/self.geometric_factor**2., x = zz) for xx in range(len(np.atleast_1d(l)))]
 
         # 5) Compute intrinsic alignment spectra
-        if do_shear and do_IA:
+        if do_WL and do_IA:
             for i in xrange(n_bin):
                 for j in xrange(n_bin):
                     for il in xrange(n_l):
@@ -757,12 +755,12 @@ class weak_lensing():
         Cl['LL'] = Cl['gg'] + Cl['gI'] + Cl['II']
 
         # 7) Compute galaxy clustering and galaxy-galaxy lensing
-        if do_galaxy_clustering:
+        if do_GC:
             for i in xrange(n_bin):
                 for j in xrange(n_bin):
                     for il in xrange(n_l):
                         Cl['GG'][i,j,il] = sint.simps(const.c/HH*g_windows[i]*g_windows[j]*b_lz[il]**2.*PS_lz[il]/self.geometric_factor**2., x = zz)
-                        if do_shear:
+                        if do_WL:
                             Cl['GL'][i,j,il] = sint.simps(const.c/HH*b_lz[il]*g_windows[i]*(windows[j]+F_lz[il]*IA_windows[j])*PS_lz[il]/self.geometric_factor**2., x = zz)
 
         return Cl
@@ -771,16 +769,16 @@ class weak_lensing():
     #-----------------------------------------------------------------------------------------
     # CORRELATION FUNCTIONS SHEAR CLUSTERING
     #-----------------------------------------------------------------------------------------
-    def angular_correlation_functions(self,
-                                      theta,
-                                      do_shear = True,
-                                      do_IA = False,
-                                      do_galaxy_clustering = False,
-                                      kwargs_power_spectra = {},
-                                      IA_model = 'LA',
-                                      kwargs_IA = {}):
+    def compute_angular_correlation_functions(self,
+                                              theta,
+                                              do_WL = True,
+                                              do_IA = False,
+                                              do_GC = False,
+                                              kwargs_power_spectra = {},
+                                              IA_model = 'LA',
+                                              kwargs_IA = {}):
         """
-        This function computes the angular correlation functions for shear, intrinisic alignment and galaxy clustering using the Limber's and the flat-sky approximations. It first computes :func:`~colibri.weak_lensing.spectra_shear_clustering` and then computes its Hankel transform with :func:`~colibri.fourier.Hankel` (therefore this function requires the ``FFTlog`` package). The shear correlations function, the galaxy-galaxy lensing correlation function and the galaxy correlation function read, respectively
+        This function computes the angular correlation functions for shear, intrinisic alignment and galaxy clustering using the Limber's and the flat-sky approximations. It first computes :func:`~colibri.angular_spectra.compute_angular_power_spectra` and then computes its Hankel transform with :func:`~colibri.fourier.Hankel` (therefore this function requires the ``FFTlog`` package). The shear correlations function, the galaxy-galaxy lensing correlation function and the galaxy correlation function read, respectively
 
         .. math::
 
@@ -797,14 +795,14 @@ class weak_lensing():
         :param theta: Angles (in :math:`\mathrm{arcmin}` units) where to compute the shear correlation functions
         :type theta: array
 
-        :param do_shear: Whether to compute the shear power spectrum.
-        :type do_shear: boolean, default = ``True``
+        :param do_WL: Whether to compute the shear power spectrum.
+        :type do_WL: boolean, default = ``True``
 
         :param do_IA: Whether to compute the intrinsic alignment terms.
         :type do_IA: boolean, default = ``False``
 
-        :param do_galaxy_clustering: Whether to compute the galaxy clustering power spectra.
-        :type do_galaxy_clustering: boolean, default = ``False``
+        :param do_GC: Whether to compute the galaxy clustering power spectra.
+        :type do_GC: boolean, default = ``False``
 
         :param IA_model: Intrinsic alignment model to implement (only if ``do_IA`` is ``True``). Together with ``kwargs_IA`` defines the kernel for the calculation of the intrinsic alignment terms. If set to ``None``, these terms will be set to zero.
 
@@ -821,7 +819,7 @@ class weak_lensing():
         :type kwargs_IA: dictionary, default = {}
 
 
-        :return: power spectrum :math:`C^{(ij)}(\ell)` for all bin pairs whose window function was generated by :func:`~colibri.weak_lensing.load_window_functions`.
+        :return: power spectrum :math:`C^{(ij)}(\ell)` for all bin pairs whose window function was generated by :func:`~colibri.angular_spectra.load_window_functions`.
         :rtype:  dictionary containing the following keys:
 
             - ``'gg+'``: shear correlation function (transformed with :math:`J_0`);
@@ -847,13 +845,13 @@ class weak_lensing():
         HH           = self.Hubble
 
         # 2) Compute shear spectra
-        Cl = self.angular_power_spectra(l                    = l,
-                                        do_shear             = do_shear,
-                                        do_IA                = do_IA,
-                                        do_galaxy_clustering = do_galaxy_clustering,
-                                        kwargs_power_spectra = kwargs_power_spectra,
-                                        IA_model             = IA_model,
-                                        kwargs_IA            = kwargs_IA)
+        Cl = self.compute_angular_power_spectra(l                    = l,
+                                                do_WL                = do_WL,
+                                                do_IA                = do_IA,
+                                                do_GC                = do_GC,
+                                                kwargs_power_spectra = kwargs_power_spectra,
+                                                IA_model             = IA_model,
+                                                kwargs_IA            = kwargs_IA)
 
         # 3) Initialize arrays
         NN = 8192
@@ -885,18 +883,18 @@ class weak_lensing():
         # 4) Hankel transform
         for i in range(n_bin):
             for j in range(n_bin):
-                if do_shear:
+                if do_WL:
                     theta_tmp, xi_tmp['gg+'][i,j] = FF.Hankel(l, Cl['gg'][i,j]/(2.*np.pi), order = 0, N = NN)
                     theta_tmp, xi_tmp['gg-'][i,j] = FF.Hankel(l, Cl['gg'][i,j]/(2.*np.pi), order = 4, N = NN)
-                if do_shear and do_IA:
+                if do_WL and do_IA:
                     for component in ['gI', 'II']:
                         theta_tmp, xi_tmp[component+'+'][i,j] = FF.Hankel(l, Cl[component][i,j]/(2.*np.pi), order = 0, N = NN)
                         theta_tmp, xi_tmp[component+'-'][i,j] = FF.Hankel(l, Cl[component][i,j]/(2.*np.pi), order = 4, N = NN)
                 xi_tmp['LL+'] = xi_tmp['gg+'] + xi_tmp['gI+'] + xi_tmp['II+']
                 xi_tmp['LL-'] = xi_tmp['gg-'] + xi_tmp['gI-'] + xi_tmp['II-']
-                if do_galaxy_clustering:
+                if do_GC:
                     theta_tmp, xi_tmp['GG'][i,j] = FF.Hankel(l, Cl[component][i,j]/(2.*np.pi), order = 0, N = NN)
-                    if do_shear:
+                    if do_WL:
                         theta_tmp, xi_tmp['GL'][i,j] = FF.Hankel(l, Cl[component][i,j]/(2.*np.pi), order = 2, N = NN)
 
 
@@ -907,7 +905,7 @@ class weak_lensing():
         for i in range(n_bin):
             for j in range(n_bin):
                 for comp in xi_tmp.keys():
-                    xi_interp  = si.interp1d(theta_tmp, xi_tmp [comp][i,j], 'cubic')
+                    xi_interp  = si.interp1d(theta_tmp, xi_tmp [comp][i,j], 'cubic', bounds_error = False, fill_value = 0.)
                     xi[comp][i,j] = xi_interp(theta)
 
         del xi_tmp

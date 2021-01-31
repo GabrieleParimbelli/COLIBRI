@@ -1,9 +1,9 @@
-.. _weak_lensing_test:
+.. _angular_spectra_test:
 
 Generate weak lensing spectra
 ===================================
 
-Here is show an example of how to compute shear power spectra using the class :func:`~colibri.weak_lensing.weak_lensing`.
+Here is show an example of how to compute shear power spectra using the class :func:`~colibri.angular_spectra.angular_spectra`.
 We want to compute the shear power spectrum, which in a flat Universe is given by:
 
 .. math::
@@ -15,14 +15,14 @@ where in an ideal case :math:`z_{min}=0` and :math:`z_{max}=\infty`, :math:`W^{(
 Initialization
 ---------------
 
-To start, initialize a :func:`~colibri.cosmology.cosmo` instance and assign it to a :func:`~colibri.weak_lensing.weak_lensing` instance.
+To start, initialize a :func:`~colibri.cosmology.cosmo` instance and assign it to a :func:`~colibri.angular_spectra.angular_spectra` instance.
 
 .. code-block:: python
 
  import colibri.cosmology as cc
- import colibri.weak_lensing as wlc
+ import colibri.angular_spectra as ang
  C = cc.cosmo()
- S = wlc.weak_lensing(cosmology = C, z_limits = (0., 5.))
+ S = ang.angular_spectra(cosmology = C, z_limits = (0., 5.))
 
 The quantity ``z_limits`` tells the code which are the limits of integration.
 
@@ -51,14 +51,14 @@ If one wants to use an already computed power spectrum (that comes e.g. from sim
 
 .. note::
 
- The previous step can also be skipped. When the function :func:`~colibri.weak_lensing.weak_lensing.angular_power_spectra` is called, the power spectra will be loaded automatically using the default values of the :func:`~colibri.weak_lensing.weak_lensing.load_power_spectra` or with arguments given in a dictionary ``kwargs_power_spectra``.
+ The previous step can also be skipped. When the function :func:`~colibri.angular_spectra.angular_spectra.angular_power_spectra` is called, the power spectra will be loaded automatically using the default values of the :func:`~colibri.angular_spectra.angular_spectra.load_power_spectra` or with arguments given in a dictionary ``kwargs_power_spectra``.
 
 Window functions
 ------------------
 
-The routine :func:`~colibri.weak_lensing.weak_lensing.load_window_functions` takes as argument a list of galaxies distributions, i.e. callable functions whose first argument must be redshift, and transforms them into interpolated objects which will be used to compute the shear power spectra.
+The routine :func:`~colibri.angular_spectra.angular_spectra.load_window_functions` takes as argument a list of galaxies distributions, i.e. callable functions whose first argument must be redshift, and transforms them into interpolated objects which will be used to compute the shear power spectra.
 
-As an example, we assume a distribution given by :func:`~colibri.weak_lensing.weak_lensing.euclid_distribution`, with 3 redshift bins with edges [0, 0.72], [0.72, 1.11], [1.11, 5].
+As an example, we assume a distribution given by :func:`~colibri.angular_spectra.angular_spectra.euclid_distribution`, with 3 redshift bins with edges [0, 0.72], [0.72, 1.11], [1.11, 5].
 The window functions will be loaded with the line
 
 .. code-block:: python
@@ -84,7 +84,7 @@ Finally, the shear power spectrum is computed with
  Cl = S.angular_power_spectra(l = ll, do_shear = True, do_IA = True, do_clustering = False, IA_model = 'LA', kwargs_IA = {'A_IA': -1.3})
 
 The ``l`` argument sets the multipoles at which the spectrum must be computed; the ``IA`` argument sets the intrinsic alignment model used, implemented with the arguments contained in ``kwargs_IA`` (if ``IA = None`` all the terms relative to intrinsic alignment are set to zero).
-See the function :func:`~colibri.weak_lensing.weak_lensing.intrinsic_alignment_kernel` for all the relevant info.
+See the function :func:`~colibri.angular_spectra.angular_spectra.intrinsic_alignment_kernel` for all the relevant info.
 
 The returned object is a dictionary that contains 3 non-zero keys: ``GG``, ``GI``, ``II`` that represent the cosmological signal, the cross spectrum with intrinsic alignment effect and the pure intrinsic alignment signal, respectively.
 Each of these keys is a 3D array, in this case of shape ``(3, 3, 51)``, containing the quantity :math:`C^{(ij)}(\ell)`.
@@ -105,9 +105,9 @@ Equivalently, the two shear correlation functions can be computed with
 Galaxy clustering power spectra and correlation functions
 ---------------------------------------------------------
 
-If :func:`~colibri.weak_lensing.weak_lensing.angular_power_spectra` or :func:`~colibri.weak_lensing.weak_lensing.angular_correlation_functions` are called with ``do_clustering = True``, then two additional non-zero keys labelled ``gG`` and ``gg`` appear. These represent the galaxy-galaxy lensing term and the galaxy clustering power spectrum/correlation function.
+If :func:`~colibri.angular_spectra.angular_spectra.angular_power_spectra` or :func:`~colibri.angular_spectra.angular_spectra.angular_correlation_functions` are called with ``do_clustering = True``, then two additional non-zero keys labelled ``gG`` and ``gg`` appear. These represent the galaxy-galaxy lensing term and the galaxy clustering power spectrum/correlation function.
 However, before using it, one has to load the galaxy bias function, essential to compute clustering.
-This is done by calling the routine :func:`~colibri.weak_lensing.weak_lensing.load_galaxy_bias` **after** :func:`~colibri.weak_lensing.load_power_spectra` **but before calling the angular power spectrum/correlation function routine**.
+This is done by calling the routine :func:`~colibri.angular_spectra.angular_spectra.load_galaxy_bias` **after** :func:`~colibri.angular_spectra.load_power_spectra` **but before calling the angular power spectrum/correlation function routine**.
 This takes as argument a function whose first 2 arguments MUST be the scale k [in Mpc/h] and the redshift z. Further keyword arguments can be added as **kwargs. The function 'load_galaxy_bias' returns a 2D interpolator in k and z.
 
 
