@@ -1,6 +1,6 @@
 .. _angular_spectra:
 
-Weak gravitational lensing
+Angular spectra
 ==========================
 
 For a usage example of this library, see :ref:`angular_spectra_test`
