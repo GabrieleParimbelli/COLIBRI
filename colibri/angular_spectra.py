@@ -15,7 +15,7 @@ from math import sqrt
 #==================
 class angular_spectra():
     """
-    The class :func:`~colibri.angular_spectra.angular_spectra` contains all the functions usefult to compute
+    The class :func:`~colibri.angular_spectra.angular_spectra` contains all the functions useful to compute
     the angular power spectra and correlation functions in the flat sky and Limber's approximation.
     It also computes window functions and galaxy PDF. The initialization requires the redshifts and
     scales to integrate (this choice is dictated by the fact that in this way one can use power spectra

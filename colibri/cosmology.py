@@ -2132,7 +2132,7 @@ class cosmo:
                        0.284755   , -0.158286  ,  0.541178 , -0.0471913 ,  0.139772  , -0.134888  ,
                        0.0959162  ,  0.368186  , -0.157828 ]
 
-        # r \propto log10(f_R0)
+        # r \propto log(f_R0)
         r_low  = np.log(f_R0/fR0_low)
         r_mid  = np.log(f_R0/fR0_mid)
         r_high = np.log(f_R0/fR0_high)
