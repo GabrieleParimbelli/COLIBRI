@@ -9,8 +9,10 @@ plt.rc('font', family = 'serif', size = 40)
 #########################
 # Test of angular spectra class
 #########################
-number_of_bins     = 4
-photometric_errors = True
+number_of_bins     = 5      # Number of bins to use (choose among 3,4,5)
+photometric_errors = True   # Use a distribution function that includes errors due to photometric redshift measurement
+fourier_space      = True   # If True compute the spectra in Fourier space; if False, compute the correlation functions
+
 
 #-----------------
 # 1) Define a cosmology instance (with default values)
@@ -137,85 +139,134 @@ S.load_galaxy_bias(bias_function = _bias, k_damp = 4.)
 
 
 #-----------------
-# 6) Angular power spectrum
+# 6) Angular spectra or correlation functions
 #-----------------
-# Compute the shear spectra at the given multipoles, with the power spectra computed above.
-# If one wants to use power spectra from simulation, he/she can skip the load_power_spectra part
-# and set 'power_spectra' equal to a 2D interpolation taken from the simulations.
+# Compute the angular spectra at the given multipoles, with the power spectra computed above.
 # If power_spectra == None, they will be computed on the fly with 'kwargs_power_spectra' to specify
 # which code to use and whether to use linear or non-linear spectra.
 # 'IA' can take values of 'LA' for 'linear alignment' or 'NLA' for nonlinear alignment, and
 # 'kwargs_IA' are the parameters the function 'intrinsic_alignment_kernel' takes, depending
 # on the model chosen.
 # The output of the function is a dictionary with:
-#   - 'GG': cosmological signal
-#   - 'GI': cross term of cosmological signal and intrinsic alignment
+#   - 'gg': cosmic shear signal
+#   - 'gI': cross term of cosmic shear and intrinsic alignment
 #   - 'II': pure intrinsic alignment signal
-#   - 'gG': galaxy-galaxy lensing angular power spectrum
-#   - 'gg': angular galaxy clustering
-# Each of these keys has a shape (n_bins, n_bins, len(multipoles))
+#   - 'LL': lensing power spectrum (i.e. 'gg'+'gI'+'II')
+#   - 'GL': galaxy-galaxy lensing angular power spectrum
+#   - 'GG': angular galaxy clustering
+# Each of these keys has a shape (n_bins, n_bins, len(multipoles)).
+# If correlation functions are used, the keys 'gg','gI','II','LL' are split into 
+# 'gg+','gI+','II+','LL+' and 'gg-','gI-','II-','LL-', due to the presence of 2 different
+# quantities, \xi^+ and \xi^- (depending on the order of the Hankel transform)
 # 
 # N.B. Willingly, this function can also be called by skipping the 'load_power_spectrum' line
 #      and by adding to it the dictionary 'kwargs_power_spectra' containing all the relevant things.
-ll     = np.geomspace(2., 1e4, 51)
-Cl     = S.compute_angular_power_spectra(l            = ll,
-                                         do_WL        = True,
-                                         do_IA        = True,
-                                         do_GC        = True,
-                                         IA_model     = 'NLA',
-                                         kwargs_IA    = {'A_IA': -1.3, 'beta_IA': 0., 'eta_IA': 0.})
-print("> Spectra loaded")
+if fourier_space: 
+    ll     = np.geomspace(2., 1e4, 51)
+    Cl     = S.compute_angular_power_spectra(l            = ll,
+                                             do_WL        = True,
+                                             do_IA        = True,
+                                             do_GC        = True,
+                                             IA_model     = 'NLA',
+                                             kwargs_IA    = {'A_IA': -1.3, 'beta_IA': 0., 'eta_IA': 0.})
+    print("> Spectra loaded")
+else:
+    theta = np.geomspace(10., 800., 51)      # in arcmin
+    xi    = S.compute_angular_correlation_functions(theta        = theta,
+                                                    do_WL        = True,
+                                                    do_IA        = True,
+                                                    do_GC        = True,
+                                                    IA_model     = 'NLA',
+                                                    kwargs_IA    = {'A_IA': -1.3, 'beta_IA': 0., 'eta_IA': 0.})
 #-----------------
 
 
 #-----------------
 # 7) Plot
 #-----------------
-# Multiplication constant for plotting
-c = ll*(ll+1.)/(2.*np.pi)
 # Colors
 colors = ['r', 'b','g','goldenrod','m', 'k', 'springgreen', 'darkorange', 'pink', 'darkcyan', 'salmon']
 # Linewidth
 LW = 3
-# Plot shear spectra
-hf, axarr = plt.subplots(nbins, nbins, sharex = True, sharey = True, figsize=(30,20))
+if fourier_space:
+    # Plot shear spectra
+    hf, axarr = plt.subplots(nbins, nbins, sharex = True, sharey = True, figsize=(30,20))
+    # Multiplication constant for plotting
+    c = ll*(ll+1.)/(2.*np.pi)
+    for j in range(1, nbins):
+	    for i in range(j):
+		    axarr[i,j].axis('off')
+	    plt.setp([a.get_xticklabels() for a in axarr[i, :]], visible=False)
+	    plt.setp([a.get_yticklabels() for a in axarr[:, j]], visible=False)
+	    plt.subplots_adjust(wspace=0, hspace=0)
 
-for j in range(1, nbins):
-	for i in range(j):
-		axarr[i,j].axis('off')
-	plt.setp([a.get_xticklabels() for a in axarr[i, :]], visible=False)
-	plt.setp([a.get_yticklabels() for a in axarr[:, j]], visible=False)
-	plt.subplots_adjust(wspace=0, hspace=0)
+    for i in range(nbins):
+	    for j in range(i, nbins):
+		    # Plotting Cls and systematics
+		    axarr[j,i].loglog(ll, c*Cl['gg'][i,j],         'blue'     , ls='-' , lw=LW, label='$C_\mathrm{\gamma\gamma}^{(ij)}(\ell)$')
+		    axarr[j,i].loglog(ll, np.abs(c*Cl['gI'][i,j]), 'magenta'  , ls='-' , lw=LW, label='$C_\mathrm{\gamma I}^{(ij)}(\ell)$')
+		    axarr[j,i].loglog(ll, c*Cl['II'][i,j],         'red'      , ls='-' , lw=LW, label='$C_\mathrm{II}^{(ij)}(\ell)$')
+		    axarr[j,i].loglog(ll, c*Cl['LL'][i,j],         'black'    , ls='-' , lw=LW, label='$C_\mathrm{LL}^{(ij)}(\ell)$')
+		    axarr[j,i].loglog(ll, c*Cl['GL'][i,j],         'green'    , ls='-' , lw=LW, label='$C_\mathrm{GL}^{(ij)}(\ell)$')
+		    axarr[j,i].loglog(ll, c*Cl['GL'][j,i],         'limegreen', ls='--', lw=LW, label='$C_\mathrm{GL}^{(ji)}(\ell)$')
+		    axarr[j,i].loglog(ll, c*Cl['GG'][i,j],         'goldenrod', ls='-' , lw=LW, label='$C_\mathrm{GG}^{(ij)}(\ell)$')
+		    # Coloured box
+		    if i != j: color = 'grey'
+		    else:      color = colors[i]
+		    axarr[j,i].text(0.15, 0.85, '$%i \\times %i$' %(i+1,j+1),
+						    transform=axarr[j,i].transAxes,
+						    style='italic',
+						    fontsize = 30*(1.-number_of_bins/10.),
+						    horizontalalignment='center',
+						    bbox={'facecolor': color, 'alpha':0.5, 'pad':10})
+		    axarr[j,i].set_xlim(ll.min(), ll.max())
+		    axarr[i,j].set_ylim(5e-9, 1e-1)
+    plt.legend(bbox_to_anchor=(0.9, nbins))
 
-for i in range(nbins):
-	for j in range(i, nbins):
-		# Plotting Cls and systematics
-		axarr[j,i].loglog(ll, c*Cl['gg'][i,j],         'blue'     , ls='-' , lw=LW, label='$C_\mathrm{\gamma\gamma}^{(ij)}(\ell)$')
-		axarr[j,i].loglog(ll, np.abs(c*Cl['gI'][i,j]), 'magenta'  , ls='-' , lw=LW, label='$C_\mathrm{\gamma I}^{(ij)}(\ell)$')
-		axarr[j,i].loglog(ll, c*Cl['II'][i,j],         'red'      , ls='-' , lw=LW, label='$C_\mathrm{II}^{(ij)}(\ell)$')
-		axarr[j,i].loglog(ll, c*Cl['LL'][i,j],         'black'    , ls='-' , lw=LW, label='$C_\mathrm{LL}^{(ij)}(\ell)$')
-		axarr[j,i].loglog(ll, c*Cl['GL'][i,j],         'green'    , ls='-' , lw=LW, label='$C_\mathrm{GL}^{(ij)}(\ell)$')
-		axarr[j,i].loglog(ll, c*Cl['GL'][j,i],         'limegreen', ls='--', lw=LW, label='$C_\mathrm{GL}^{(ji)}(\ell)$')
-		axarr[j,i].loglog(ll, c*Cl['GG'][i,j],         'goldenrod', ls='-' , lw=LW, label='$C_\mathrm{GG}^{(ij)}(\ell)$')
-		# Coloured box
-		if i != j: color = 'grey'
-		else:      color = colors[i]
-		axarr[j,i].text(0.1, 0.85, '$%i \\times %i$' %(i+1,j+1),
-						transform=axarr[j,i].transAxes,
-						style='italic',
-						fontsize = 30,
-						horizontalalignment='center',
-						bbox={'facecolor': color, 'alpha':0.5, 'pad':10})
-		axarr[j,i].set_xlim(ll.min(), ll.max())
-		axarr[i,j].set_ylim(5e-9, 1e-1)
-plt.legend(bbox_to_anchor=(0.9, nbins))
+    # Single label
+    hf.add_subplot(111, frameon=False)
+    plt.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
+    plt.xlabel("$\ell$")
+    plt.ylabel("$\ell(\ell+1) \ C_\ell \ / \ (2\pi)$", labelpad = 35)
 
-# Single label
-hf.add_subplot(111, frameon=False)
-plt.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
-plt.xlabel("$\ell$")
-plt.ylabel("$\ell(\ell+1) \ C_\ell \ / \ (2\pi)$", labelpad = 35)
-plt.show()
+else:
+    # Plot correlation functions
+    hf, axarr = plt.subplots(nbins, nbins, sharex = True, sharey = True, figsize=(30,20))
+    for j in range(1, nbins):
+	    for i in range(j):
+		    axarr[i,j].axis('off')
+	    plt.setp([a.get_xticklabels() for a in axarr[i, :]], visible=False)
+	    plt.setp([a.get_yticklabels() for a in axarr[:, j]], visible=False)
+	    plt.subplots_adjust(wspace=0, hspace=0)
+
+    for i in range(nbins):
+	    for j in range(i, nbins):
+		    # Plotting Cls and systematics
+		    axarr[j,i].loglog(theta, xi['gg+'][i,j],         'blue'     , ls='-' , lw=LW, label='$\\xi_\mathrm{\gamma\gamma}^{+,(ij)}(\\theta)$')
+		    axarr[j,i].loglog(theta, xi['gg-'][i,j],         'blue'     , ls='--', lw=LW, label='$\\xi_\mathrm{\gamma\gamma}^{-,(ij)}(\\theta)$')
+		    axarr[j,i].loglog(theta, np.abs(xi['gI+'][i,j]), 'magenta'  , ls='-' , lw=LW, label='$\\xi_\mathrm{\gamma I}^{+,(ij)}(\\theta)$')
+		    axarr[j,i].loglog(theta, np.abs(xi['gI-'][i,j]), 'magenta'  , ls='--', lw=LW, label='$\\xi_\mathrm{\gamma I}^{-,(ij)}(\\theta)$')
+		    axarr[j,i].loglog(theta, xi['II+'][i,j],         'red'      , ls='-' , lw=LW, label='$\\xi_\mathrm{II}^{+,(ij)}(\\theta)$')
+		    axarr[j,i].loglog(theta, xi['II-'][i,j],         'red'      , ls='--', lw=LW, label='$\\xi_\mathrm{II}^{-,(ij)}(\\theta)$')
+		    axarr[j,i].loglog(theta, xi['LL+'][i,j],         'black'    , ls='-' , lw=LW, label='$\\xi_\mathrm{LL}^{+,(ij)}(\\theta)$')
+		    axarr[j,i].loglog(theta, xi['LL-'][i,j],         'black'    , ls='--', lw=LW, label='$\\xi_\mathrm{LL}^{-,(ij)}(\\theta)$')
+		    axarr[j,i].loglog(theta, xi['GL'] [i,j],         'green'    , ls='-' , lw=LW, label='$\\xi_\mathrm{GL}^{(ij)}(\\theta)$')
+		    axarr[j,i].loglog(theta, xi['GG'] [i,j],         'goldenrod', ls='-' , lw=LW, label='$\\xi_\mathrm{GG}^{(ij)}(\\theta)$')
+
+
+		    # Coloured box
+		    if i != j: color = 'grey'
+		    else:      color = colors[i]
+		    axarr[j,i].text(0.15, 0.15, '$%i \\times %i$' %(i+1,j+1),
+						    transform=axarr[j,i].transAxes,
+						    style='italic',
+						    fontsize = 30*(1.-number_of_bins/10.),
+						    horizontalalignment='center',
+						    bbox={'facecolor': color, 'alpha':0.5, 'pad':10})
+		    axarr[j,i].set_xlim(theta.min(), theta.max())
+		    axarr[i,j].set_ylim(1e-9, 1e-4)
+    plt.legend(bbox_to_anchor=(0.9, nbins), fontsize = 30)
+
 
 # Plot galaxy distributions and window functions
 hf, axarr = plt.subplots(2, 1, sharex=True, figsize=(30,20))
@@ -231,3 +282,4 @@ axarr[1].set_ylabel('$10^3 \\times W_\mathrm{IA}(z) \ [h/\mathrm{Mpc}]$')
 axarr[0].legend()
 plt.show()
 #-----------------
+
