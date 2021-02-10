@@ -114,7 +114,7 @@ The ``angular_spectra`` class inside this file is finalized to compute the weak 
 
 This three files are linked with each other. The basis is ``halo.py`` : it contains the class ``halo`` which computes the non-linear matter power spectrum according to the pure halo model (see for instance `Cooray & Sheth (2001) <https://arxiv.org/abs/astro-ph/0206508>`__).
 While this is known to return a poor description of the matter clustering, the class has routines able to compute properly halo mass functions and halo biases.
-In the file ``galaxy.py`` the class ``galaxy`` is implemented, which uses the Halo Occupation Distribution (see e.g. `arXiv:0408564 <https://arxiv.org/pdf/astro-ph/0408564.pdf>`__ prescription to predict the galaxy power spectrum in real space.
+In the file ``galaxy.py`` the class ``galaxy`` is implemented, which uses the Halo Occupation Distribution (see e.g. `arXiv:0408564 <https://arxiv.org/pdf/astro-ph/0408564.pdf>`_ ) prescription to predict the galaxy power spectrum in real space.
 Conversely, the redshift-space power spectrum is provided by the class ``RSD`` in the file ``RSD.py``: currently the dispersion model is implemented (with both Gaussian and Lorentzian dampings) as well as a halo model based prescription.
 
 `fourier` module
