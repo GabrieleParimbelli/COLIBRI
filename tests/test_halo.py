@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 plt.rc('text', usetex=True)
-plt.rc('font', family = 'serif', size = 40)
+plt.rc('font', family = 'serif', size = 25)
 
 #=====================
 # Test of 'halo'
@@ -78,7 +78,7 @@ ax1.set_xlim(H.k.min(), H.k.max())
 ax1.set_ylim(1e-2, 1e6)
 ax1.grid(True)
 
-ax1.legend(loc='upper right', ncol = 2, fontsize = 30)
+ax1.legend(loc='upper right', ncol = 2, fontsize = 20)
 plt.show()
 
 

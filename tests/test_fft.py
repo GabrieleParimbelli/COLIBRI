@@ -4,7 +4,7 @@ import colibri.fourier as FF
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 plt.rc('text', usetex=True)
-plt.rc('font', family = 'serif', size = 40)
+plt.rc('font', family = 'serif', size = 30)
 
 FS = 40
 
@@ -197,7 +197,7 @@ ind_y = np.linspace(1,len(y)-1,7).astype(int)[1:-1]
 
 
 plt.figure(figsize=(25,25))
-index = 0.
+index = 0
 for ix in ind_x:
 	for iy in ind_y:
 		index +=1
@@ -235,7 +235,7 @@ ind_y = np.linspace(1,len(y)-1,7).astype(int)[1:-1]
 
 
 plt.figure(figsize=(25,25))
-index = 0.
+index = 0
 for ix in ind_x:
 	for iy in ind_y:
 		index +=1

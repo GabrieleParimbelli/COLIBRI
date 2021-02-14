@@ -5,7 +5,7 @@ import colibri.useful_functions as UF
 import matplotlib.pyplot as plt
 
 plt.rc('text', usetex = True)
-plt.rc('font', family = 'serif', size = 40)
+plt.rc('font', family = 'serif', size = 30)
 
 ######################
 # Test of FFTlog
@@ -34,8 +34,8 @@ k_fft, pk_fft = FF.FFT_iso_3D(r, xi)
 plt.figure(figsize = (30,18))
 plt.loglog(k,     pk,     '--', label = 'camb')
 plt.loglog(k_fft, pk_fft, '-',  label = 'double FFT')
-plt.xlabel('$k \ [h/\mathrm{Mpc}]$', fontsize = 40)
-plt.ylabel('$P(k) \ [(\mathrm{Mpc}/h)^3]$', fontsize = 40)
+plt.xlabel('$k \ [h/\mathrm{Mpc}]$', fontsize = 30)
+plt.ylabel('$P(k) \ [(\mathrm{Mpc}/h)^3]$', fontsize = 30)
 plt.legend()
 plt.show()
 

@@ -1,10 +1,5 @@
 import colibri.cosmology as cc
 import numpy as np
-import matplotlib.pyplot as plt
-
-plt.rc('text', usetex = True)
-plt.rc('font', family = 'serif', size = 40)
-
 
 #==================
 # This code computes the CMB Cls using the Python wrapper of class
@@ -16,8 +11,7 @@ C = cc.cosmo()
 # Compute Cls
 l, Cl = C.class_Cl(l_max = 3000,
 				   do_tensors = True,
-				   lensing = True,
-				   l_max_tensors = 1000)
+				   lensing = True)
 
 # Separate components (T = temperature, E = scalar polarization modes, B = tensor polarization modes
 # '-lensed' contain lensing effect)
@@ -31,6 +25,10 @@ ClEE_l = Cl['EE-lensed']
 ClBB_l = Cl['BB-lensed']
 
 # Plot
+import matplotlib.pyplot as plt
+plt.rc('text', usetex = True)
+plt.rc('font', family = 'serif', size = 40)
+
 plt.figure(figsize = (25,17))
 plt.loglog(l, l*(l+1)/(2.*np.pi)*ClTT, 'b', label = 'TT')
 plt.loglog(l, l*(l+1)/(2.*np.pi)*ClTE, 'r', label = 'TE')

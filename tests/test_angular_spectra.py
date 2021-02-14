@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 plt.rc('text', usetex = True)
-plt.rc('font', family = 'serif', size = 40)
+plt.rc('font', family = 'serif', size = 25)
 
 #########################
 # Test of angular spectra class
@@ -187,10 +187,10 @@ else:
 # Colors
 colors = ['r', 'b','g','goldenrod','m', 'k', 'springgreen', 'darkorange', 'pink', 'darkcyan', 'salmon']
 # Linewidth
-LW = 3
+LW = 2
 if fourier_space:
     # Plot shear spectra
-    hf, axarr = plt.subplots(nbins, nbins, sharex = True, sharey = True, figsize=(30,20))
+    hf, axarr = plt.subplots(nbins, nbins, sharex = True, sharey = True, figsize=(15,10))
     # Multiplication constant for plotting
     c = ll*(ll+1.)/(2.*np.pi)
     for j in range(1, nbins):
@@ -216,9 +216,9 @@ if fourier_space:
 		    axarr[j,i].text(0.15, 0.85, '$%i \\times %i$' %(i+1,j+1),
 						    transform=axarr[j,i].transAxes,
 						    style='italic',
-						    fontsize = 30*(1.-number_of_bins/10.),
+						    fontsize = 15*(1.-number_of_bins/10.),
 						    horizontalalignment='center',
-						    bbox={'facecolor': color, 'alpha':0.5, 'pad':10})
+						    bbox={'facecolor': color, 'alpha':0.5, 'pad':5})
 		    axarr[j,i].set_xlim(ll.min(), ll.max())
 		    axarr[i,j].set_ylim(5e-9, 1e-1)
     plt.legend(bbox_to_anchor=(0.9, nbins))
@@ -231,7 +231,7 @@ if fourier_space:
 
 else:
     # Plot correlation functions
-    hf, axarr = plt.subplots(nbins, nbins, sharex = True, sharey = True, figsize=(30,20))
+    hf, axarr = plt.subplots(nbins, nbins, sharex = True, sharey = True, figsize=(15,10))
     for j in range(1, nbins):
 	    for i in range(j):
 		    axarr[i,j].axis('off')
@@ -260,12 +260,12 @@ else:
 		    axarr[j,i].text(0.15, 0.15, '$%i \\times %i$' %(i+1,j+1),
 						    transform=axarr[j,i].transAxes,
 						    style='italic',
-						    fontsize = 30*(1.-number_of_bins/10.),
+						    fontsize = 15*(1.-number_of_bins/10.),
 						    horizontalalignment='center',
-						    bbox={'facecolor': color, 'alpha':0.5, 'pad':10})
+						    bbox={'facecolor': color, 'alpha':0.5, 'pad':5})
 		    axarr[j,i].set_xlim(theta.min(), theta.max())
 		    axarr[i,j].set_ylim(1e-9, 1e-4)
-    plt.legend(bbox_to_anchor=(0.9, nbins), fontsize = 30)
+    plt.legend(bbox_to_anchor=(0.9, nbins), fontsize = 20)
 
 
 # Plot galaxy distributions and window functions
@@ -273,12 +273,12 @@ hf, axarr = plt.subplots(2, 1, sharex=True, figsize=(30,20))
 plt.subplots_adjust(hspace = 0.)
 zz = np.linspace(0.1, 5., 1000)
 for i in range(nbins):
-	axarr[0].plot(zz, S.window_function   [i](zz)*1e5, colors[i],            lw = 3.0, label = 'Bin %i' %(i+1))
-	axarr[1].plot(zz, S.window_function_IA[i](zz)*1e3, colors[i], ls = '--', lw = 3.0)
+	axarr[0].plot(zz, S.window_function   [i](zz)*1e5, colors[i],            lw = LW, label = 'Bin %i' %(i+1))
+	axarr[1].plot(zz, S.window_function_IA[i](zz)*1e3, colors[i], ls = '--', lw = LW)
 axarr[1].set_xlabel('$z$')
 axarr[0].set_xlim(zz.min(), zz.max())
-axarr[0].set_ylabel('$10^5 \\times W_\gamma     (z) \ [h/\mathrm{Mpc}]$')
-axarr[1].set_ylabel('$10^3 \\times W_\mathrm{IA}(z) \ [h/\mathrm{Mpc}]$')
+axarr[0].set_ylabel('$10^5 \\times W_\gamma     (z) \ [h/\mathrm{Mpc}]$', fontsize = 20)
+axarr[1].set_ylabel('$10^3 \\times W_\mathrm{IA}(z) \ [h/\mathrm{Mpc}]$', fontsize = 20)
 axarr[0].legend()
 plt.show()
 #-----------------

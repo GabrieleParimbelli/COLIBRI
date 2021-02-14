@@ -2581,7 +2581,7 @@ class cosmo:
         # Storing Pk
         pk = np.zeros((nz,nk))
         for i in xrange(nk):
-            for j in range(nz):
+            for j in xrange(nz):
                 pk[j,i] = cosmo.pk(k[i],z[j])*self.h**3.
         # Re-switching to (Mpc/h) units
         k /= self.h
@@ -2724,7 +2724,7 @@ class cosmo:
         # Storing Pk
         pk_m = np.zeros((nz,nk))
         for i in xrange(nk):
-            for j in range(nz):
+            for j in xrange(nz):
                 pk_m[j,i] = cosmo.pk(k[i],z[j])*self.h**3.
 
         # Re-switching to (Mpc/h) units

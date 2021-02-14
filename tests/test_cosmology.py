@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 plt.rc('text', usetex = True)
-plt.rc('font', family = 'serif', size = 40)
+plt.rc('font', family = 'serif', size = 20)
 
 #========================
 # Test of 'cosmology'
@@ -60,7 +60,7 @@ okz0 = C.Omega_K_z(zz)
 otz0 = np.sum(onz0, axis=0)+olz0+ocz0+obz0+ogz0+okz0
 
 plt.figure(figsize=(20,20))
-plt.subplot(211) 
+plt.subplot(211)
 LS = ['-','--',':']
 for i in range(len(np.atleast_1d(onz0))):
 	plt.semilogx(aa, onz0[i],'m', ls = LS[i], lw = 2.0, label ='$\\nu_%i$' %(i+1))
@@ -75,7 +75,7 @@ plt.xlabel('$a$')
 plt.ylabel('$\Omega_i(a)$')
 plt.xlim(aa.min(), aa.max())
 plt.ylim(1e-6, 5.)
-plt.legend(loc = 'best', ncol = 3, fontsize = 30)
+plt.legend(loc = 'lower left', ncol = 3, fontsize = 16)
 
 # Distances and Hubble parameter as function of redshift
 # massive_nu_approx = True is a flag that approximate neutrinos as matter
@@ -96,7 +96,7 @@ plt.semilogy(zzz, H_z,   'r', lw = 2.0, label = '$H(z) \ [\mathrm{km/s/Mpc}]$')
 plt.yscale('log')
 plt.xlabel('$z$')
 plt.xlim(zzz.min(), zzz.max())
-plt.legend(loc = 'best', ncol = 2, fontsize = 30)
+plt.legend(loc = 'lower right', ncol = 3, fontsize = 16)
 
 # Show!
 plt.show()

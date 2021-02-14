@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 plt.rc('text', usetex=True)
-plt.rc('font', family = 'serif', size = 40)
+plt.rc('font', family = 'serif', size = 25)
 
 #=====================
 # Test of 'galaxy'
@@ -119,7 +119,7 @@ ax2.grid(True)
 ax1.plot(0., 0., 'r:' , label = '1 halo term')
 ax1.plot(0., 0., 'b:' , label = '2 halo term')
 
-ax1.legend(loc='upper right', ncol = 2, fontsize = 30)
+ax1.legend(loc='lower left', ncol = 2, fontsize = 20)
 plt.show()
 
 

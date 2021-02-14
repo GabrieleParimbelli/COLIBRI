@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import colibri.nonlinear as NL
 
 plt.rc('text', usetex = True)
-plt.rc('font', family = 'serif', size = 50)
+plt.rc('font', family = 'serif', size = 25)
 colors = ['b','r','g','m','gray','c']
 
 #=================
@@ -101,11 +101,11 @@ ax1.grid(True)
 
 ax2.fill_between(k_camb, -1., 1., color = 'k', alpha = 0.2)
 ax2.set_xlabel('$k$ $[h/\mathrm{Mpc}]$')
-ax2.set_ylabel(r'$\left(\frac{P(k)}{P_\mathrm{CAMB}(k)}-1\right)\times 100 \ [\%]$', fontsize = 25)
+ax2.set_ylabel(r'$\left(\frac{P(k)}{P_\mathrm{CAMB}(k)}-1\right)\times 100 \ [\%]$', fontsize = 20)
 ax2.set_xlim(kk.min(), kk.max())
 ax2.set_ylim(-3., 3.)
 ax2.grid(True)
 
-ax1.legend(loc='lower left', ncol = 3, fontsize = 40)
+ax1.legend(loc='lower left', ncol = 3, fontsize = 20)
 plt.show()
 

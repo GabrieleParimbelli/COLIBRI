@@ -8,7 +8,7 @@ import matplotlib.gridspec as gridspec
 
 
 plt.rc('text', usetex=True)
-plt.rc('font', family = 'serif', size = 25)
+plt.rc('font', family = 'serif', size = 18)
 
 ######################
 # Test of 'RSD'
@@ -91,10 +91,10 @@ multipoles = [0, 2, 4]
 #---------------------
 # Initialize grid for plots
 #---------------------
-if multiple_redshifts: fig = plt.figure(figsize = (25,20))
+if multiple_redshifts: fig = plt.figure(figsize = (15,20))
 else:                  fig = plt.figure(figsize = (15,20))
-G   = gridspec.GridSpec(3,len(zz)+1, width_ratios = [1. for i in range(len(zz))]+[0.2], figure = fig, wspace = 0.05, hspace = 0.22)
-fig.suptitle("Redshift-space galaxy power spectrum, model: %s" %RSD_model, fontsize = 40, bbox = dict(boxstyle='round', facecolor='white', alpha = 1.0))
+G   = gridspec.GridSpec(3,len(zz)+1, width_ratios = [1. for i in range(len(zz))]+[0.2], figure = fig, wspace = 0.05, hspace = 0.4)
+fig.suptitle("Redshift-space galaxy power spectrum, model: %s" %RSD_model, fontsize = 20, bbox = dict(boxstyle='round', facecolor='white', alpha = 1.0))
 #---------------------
 
 
@@ -129,20 +129,20 @@ for iz in range(len(zz)+1):
 		cbar.set_label('$P_g^{(s)}(k, \\mu)$')
 	else:
 		# Title
-		ax.set_title('$z=%.1f$' %zz[iz], bbox = dict(boxstyle='round', facecolor='white', alpha = 1.0), fontsize = 30, pad = 40)
+		ax.set_title('$z=%.1f$' %zz[iz], bbox = dict(boxstyle='round', facecolor='white', alpha = 1.0), fontsize = 14, pad = 15)
 		# Contour lines
 		CS = ax.contour(np.log10(K), MU, Pk_k_mu[iz],
 						norm = LogNorm(),
 						colors = 'k',
 						levels = [10,100,1000,10000,50000],
 						)
-		ax.clabel(CS, fmt = '%.0f', fontsize = 20)
+		ax.clabel(CS, fmt = '%.0f', fontsize = 10)
 
 		# Color map
 		CF = ax.imshow(np.transpose(Pk_k_mu[iz]), 
 					   cmap = 'rainbow',
 					   aspect = 'auto',
-					   vmin = 1e1, vmax = 1e5,
+					   #vmin = 1e1, vmax = 1e5,
 					   norm = LogNorm(), 
 					   interpolation = 'bicubic', 
 					   origin = 'lower', 
@@ -200,7 +200,7 @@ for iz in range(len(zz)):
 					ax.loglog(Z.k, Z.Pk['matter']['linear'][iz]*(8.*ff[iz]**2./35.) , 'g:', markersize = 2, lw = 2.0)
 		if RSD_model != 'halo model':
 			ax.loglog(1., 1., 'k:', markersize = 2, lw = 2.0, label = 'Kaiser effect')
-		ax.legend(fontsize = 15)
+		ax.legend(fontsize = 12)
 		# Axis settings
 		ax.set_xlim(Z.k.min(), Z.k.max())
 		ax.set_ylim(1e1, 1e6)
@@ -250,13 +250,13 @@ for iz in range(len(zz)+1):
 						norm = LogNorm(),
 						colors = 'k'
 						)
-		ax.clabel(CS, fmt = '%.0f', fontsize = 20)
+		ax.clabel(CS, fmt = '%.0f', fontsize = 10)
 
 		# Color map
 		CF = ax.imshow(Pk_k_par_k_perp[iz], 
 					   cmap = 'rainbow',
 					   aspect = 'auto',
-					   vmin = 1e1, vmax = 1e5,
+					   #vmin = 1e1, vmax = 1e5,
 					   norm = LogNorm(), 
 					   interpolation = 'bicubic', 
 					   origin = 'lower', 

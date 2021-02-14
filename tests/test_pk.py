@@ -1,10 +1,7 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import time
 import colibri.cosmology as cc
 
-plt.rc('text', usetex=True)
-plt.rc('font', family = 'serif', size = 40)
 
 ######################
 # Test of power spectra
@@ -67,7 +64,6 @@ k_xcamb, pk_xcamb = C.camb_XPk(z = z,
 							   var_2 = ['tot'])
 print(">> Done XCAMB")
 XCAMB = time.time()
-
 # Compute power spectrum with Class
 k_class, pk_class = C.class_Pk(z = z,					# Redshifts
 							   k = k,					# Scales
@@ -94,6 +90,10 @@ print("--------------------------------")
 print("TOTAL                   %.2f s" %(EH-START))
 print("--------------------------------")
 
+import matplotlib.pyplot as plt
+plt.rc('text', usetex=True)
+plt.rc('font', family = 'serif', size = 25)
+
 # Plotting power spectra
 fig, ax = plt.subplots(2,1,sharex = True, figsize=(30,18))
 plt.subplots_adjust(hspace = 0., wspace = 0.)
@@ -109,7 +109,7 @@ ax[0].plot(0., 0., 'k:',  lw = 3.0, label = 'EH')
 ax[0].legend(loc = 'lower left', fontsize = 30, ncol = 4)
 ax[0].set_xlim(k.min(), k.max())
 ax[0].set_ylabel('$P(k)$ $[(\mathrm{Mpc}/h)^3]$')
-ax[0].text(0.8, 0.9, '$z =$ %s' %string_redshifts, transform = ax[0].transAxes, bbox = dict(boxstyle='round', facecolor='white', alpha = 1.0))
+ax[0].text(0.75, 0.8, '$z =$ %s' %string_redshifts, transform = ax[0].transAxes, bbox = dict(boxstyle='round', facecolor='white', alpha = 1.0))
 ax[0].grid(True)
 
 # Plot ratios
