@@ -2317,8 +2317,9 @@ class cosmo:
                       'v_b'  : 'v_newtonian_baryon',
                       'Phi'  : 'Weyl'}            # Weyl: (phi+psi)/2 is proportional to lensing potential
 
-        # Number of points
-        npoints = 1001            # Equally log-spaced points (not so important, because in the end I interpolate)
+        # Number of points (according to logint)
+        npoints = int(100*np.log10(k.max()/k.min()))
+        dlogk   = np.log10(k.max()/k.min())/npoints
 
         # Halofit version
         if nonlinear == True:
@@ -2327,9 +2328,9 @@ class cosmo:
             params.NonLinear = camb.model.NonLinear_both
 
         # Computing spectra
-        params.set_matter_power(redshifts = z, kmax = k.max()*2.5, silent = True)
+        params.set_matter_power(redshifts = z, kmax = k.max()*10**dlogk, silent = True)
         results = camb.get_results(params)
-        kh, z, pkh = results.get_matter_power_spectrum(minkh = k.min()/2., maxkh = k.max()*2.5, npoints = npoints, var1 = components[var_1], var2 = components[var_2])
+        kh, z, pkh = results.get_matter_power_spectrum(minkh = k.min()*10.**-dlogk, maxkh = k.max()*10**dlogk, npoints = npoints, var1 = components[var_1], var2 = components[var_2])
 
         # Interpolation to the required scales k's
         power = si.interp1d(kh, pkh, kind = 'cubic')
@@ -2454,8 +2455,9 @@ class cosmo:
                       'v_b'  : 'v_newtonian_baryon',
                       'Phi'  : 'Weyl'}                # Weyl: (phi+psi)/2 is proportional to lensing potential
 
-        # Number of points
-        npoints = 1001            # Equally log-spaced points (not so important, because in the end I interpolate)
+        # Number of points (200 per logint)
+        npoints = int(100*np.log10(k.max()/k.min()))
+        dlogk   = np.log10(k.max()/k.min())/npoints
 
         # Halofit version
         if nonlinear == True:
@@ -2464,15 +2466,15 @@ class cosmo:
             params.NonLinear = camb.model.NonLinear_both
 
         # Initialize power spectrum as a dictionary and compute it
-        pk      = {}
-        params.set_matter_power(redshifts = z, kmax = k.max()*2.5, silent = True)
+        pk = {}
+        params.set_matter_power(redshifts = z, kmax = k.max()*10**dlogk, silent = True)
         results = camb.get_results(params)
 
         # Fill the power spectrum array
         for c1 in var_1:
             for c2 in var_2:
                 string = c1+'-'+c2
-                kh, zz, ppkk = results.get_matter_power_spectrum(minkh = k.min()/2., maxkh = k.max()*2.5,
+                kh, zz, ppkk = results.get_matter_power_spectrum(minkh = k.min()*10.**-dlogk, maxkh = k.max()*10**dlogk,
                                                                  npoints = npoints,
                                                                  var1 = components[c1],
                                                                  var2 = components[c2])
