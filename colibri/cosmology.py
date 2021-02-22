@@ -42,10 +42,10 @@ class cosmo:
     :param N_eff: Effective number of neutrinos. This number should be greater than ``N_nu``.
     :type N_eff: float, default = 3.046
 
-    :param As: Amplitude of primordial scaled perturbations. At least one between this and `sigma_8` must be different from None. If `As` is not None, it will be the parameter used to compute the amplitude of the power spectrum.
+    :param As: Amplitude of primordial scaled perturbations. At least one between this and `sigma_8` must be different from None. If ``As`` is not None, it will be the parameter used to compute the amplitude of the power spectrum.
     :type As: float, default = 2.14e-9
 
-    :param sigma_8: Root mean square amplitude fluctuation on scales of 8 :math:`\mathrm{Mpc}/h`. At least one between this and `sigma_8` must be different from None. If ``sigma_8`` is not None, and ``As`` is None, the former will be the parameter used to compute the amplitude of the power spectrum.
+    :param sigma_8: Root mean square amplitude fluctuation on scales of 8 :math:`\mathrm{Mpc}/h`. At least one between this and ``As`` must be different from None. If ``sigma_8`` is not None, and ``As`` is None, the former will be the parameter used to compute the amplitude of the power spectrum.
     :type sigma_8: float, default = ``None``
 
     :param ns: Spectral index of scalar primordial perturbations.
@@ -888,7 +888,7 @@ class cosmo:
 
         .. math::
 
-            \sigma^2_j(M) = \int_0^\infty \\frac{dk \ k^2}{2\pi^2} P(k) \ W^2[kR(M)],
+            \sigma^2_j(M) = \int_0^\infty \\frac{dk \ k^{2j}}{2\pi^2} P(k) \ W^2[kR(M)],
 
         where :math:`W` is a window function, :math:`R` is a radius in :math:`\mathrm{Mpc}/h` and :math:`M` is the mass enclosed in such radius according to the window function.
 
@@ -910,21 +910,22 @@ class cosmo:
          - 'tot': total matter
         :type var: string, default = 'cb'
 
-        :param j: Order of multipole.
-        :type j: even integer, default = 0
-
-        :param smooth: Further smoothing of the density field with a Gaussian filter (useful for void size function).
-        :type smooth: boolean, default = True
-
-        :param R_sm: Size of second filter in :math:`\mathrm{Mpc}/h.`
-        :type R_sm: float, default = 5.5
-
         :param window: Window function used to filter.
 
          - `'th'`,`'th'`,`'tophat'`,`'top-hat'` for top-hat filter
          - `'gauss'`, `'Gaussian'`, `'Gauss'`, `'gaussian'`, `'g'`, for Gaussian
 
         :type window: string, default = 'th'
+
+        :param j: Order of multipole.
+        :type j: even integer, default = 0
+
+        :param smooth: Further smoothing of the density field with a Gaussian filter (useful for void size function).
+        :type smooth: boolean, default = True
+
+        :param R_sm: Size of second Gaussian filter in :math:`\mathrm{Mpc}/h.`
+        :type R_sm: float, default = 5.5
+
 
 
         :return: An interpolated function that gives :math:`\\sigma^2_j(\log_{10}(M))`, evaluable between 2 and 18 (therefore between :math:`M = 10^2` and :math:`10^{18} \ M_\odot/h`).
