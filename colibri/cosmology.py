@@ -27,10 +27,10 @@ class cosmo:
     :param Omega_m: Matter density parameter today (including massive neutrinos), :math:`\Omega_m`.
     :type Omega_m: float, default = 0.3089
 
-    :param Omega_b: Baryon density parameter today (including massive neutrinos), :math:`\Omega_b`.
+    :param Omega_b: Baryon density parameter today, :math:`\Omega_b`.
     :type Omega_b: float, default = 0.0486
 
-    :param Omega_K: Curvature density parameter today (including massive neutrinos), :math:`\Omega_K`.
+    :param Omega_K: Curvature density parameter today, :math:`\Omega_K`.
     :type Omega_K: float, default = 0
         
     :param N_nu: Number of active neutrino species.
