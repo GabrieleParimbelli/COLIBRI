@@ -19,8 +19,7 @@ class angular_spectra():
     the angular power spectra and correlation functions in the flat sky and Limber's approximation.
     It also computes window functions and galaxy PDF. The initialization requires the redshifts and
     scales to integrate (this choice is dictated by the fact that in this way one can use power spectra
-    from simulations). Also routines to compute the intrinsic alignment terms are present
-    (linear and nonlinear alignment model by `Hirata & Seljak <https://arxiv.org/abs/astro-ph/0406275>`_.
+    from simulations). Also routines to compute the intrinsic alignment terms are present.
 
 
     :param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`~colibri.cosmology.cosmo` documentation).
@@ -561,12 +560,9 @@ class angular_spectra():
     #-----------------------------------------------------------------------------------------
     # CORRECTION FUNCTION FOR INTRINSIC ALIGNMENT
     #-----------------------------------------------------------------------------------------
-    def intrinsic_alignment_kernel(self, A_IA, k, z, IA_model = 'linear alignment', **kwargs):
+    def intrinsic_alignment_kernel(self, k, z, A_IA, eta_IA = 0., beta_IA = 0., lum_IA = 1.):
         """
         Intrinsic alignment correction function.
-
-        :param A_IA: Intrinsic alignment amplitude.
-        :type A_IA: float
 
         :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
         :type k: array
@@ -574,54 +570,33 @@ class angular_spectra():
         :param z: Redshifts at which the function must be computed.
         :type z: array
 
-        :param IA_model: Model to use to implement linear alignment. Implemented models are
+        :param A_IA: Intrinsic alignment amplitude.
+        :type A_IA: float
 
-          - `'linear alignment'`, `'Linear Alignment'`, `'linear_alignment'`, `'la'`, `'LA'` for Linear alignment
-          - `'non-linear alignment'`, `'nonlinear alignment'`, `'nla'`, `'NLA'` for Non-linear alignment
+        :param eta_IA: Exponent for redshift dependence of intrinsic alignment.
+        :type eta_IA: float, default = 0
 
-        :type IA_model: string, default = 'linear alignment'
+        :param beta_IA: Exponent for luminosity dependence of intrinsic alignment.
+        :type beta_IA: float, default = 0
+
+        :param rlum_IA: Relative luminosity of galaxies w.r.t. :math:`L_*`.
+        :type lum_IA: float or array of same length as `z`, default = 1
 
         :param kwargs: Keyword arguments for the IA function.
 
         :return: 2D array containing the correction function :math:`F(k,z)` for intrinsic alignment
-        """    
-        C1 = 5e-14 # Constant in front of IA spectrum [h^(-2) Msun^(-1) Mpc^3]
-        front = -A_IA*C1*self.cosmology.rho_crit(z = 0.)*self.cosmology.Omega_m
-        
-        k      = np.array(k)
-        nk     = len(np.atleast_1d(k))
-        nz     = len(np.atleast_1d(z))
-        growth = self.cosmology.D_cbnu(k = k, z = z)
-        if   IA_model in ['linear alignment', 'Linear Alignment', 'linear_alignment', 'la', 'LA']:
-            return front*1./growth
-        elif IA_model in ['non-linear alignment', 'nonlinear alignment', 'nla', 'NLA']:
-            return front*1./growth*np.tile(self.nonlinear_alignment_term(z = z, **kwargs), nk).reshape(nz, -1)
-        else:
-            raise NameError("Instrinsic alignment model unknown")
-
-
-    def nonlinear_alignment_term(self, z, eta_IA, beta_IA, L_mean = 1e10, L0 = 4.6e10):
         """
-        Non-linear alignment term, goes directly into self.intrinsic_alignment_kernel.
-
-        :param z: Redshifts at which the function must be computed.
-        :type z: array
-
-        :param eta_IA: Exponent for redshift dependence of intrinsic alignment.
-        :type eta_IA: float
-
-        :param beta_IA: Exponent for luminosity dependence of intrinsic alignment.
-        :type beta_IA: float
-
-        :param L_mean: Average luminosity of galaxies in :math:`L_\odot`.
-        :type L_mean: float, default = 1e10
-
-        :param L0: Pivot luminosity of galaxies in :math:`L_\odot`.
-        :type L0: float, default = 4.6e10, corresponding to an absolute `r`-band magnitude of -22
-
-        :return: array
-        """    
-        return (1.+z)**eta_IA*(L_mean/L0)**beta_IA
+        # Constants in front
+        C1     = 0.0134
+        front  = -A_IA*C1*self.cosmology.Omega_m
+        # Growth factors
+        Z,K    = np.meshgrid(z,k,indexing='ij')
+        growth = self.cosmology.D_cbnu(k = np.array(k), z = z)
+        # Relative luminosity is either a function or a float
+        if   callable(lum_IA):          rel_lum = lum_IA(Z)
+        elif isinstance(lum_IA, float): rel_lum = lum_IA
+        else:                           raise TypeError("'lum_IA' must be either a float or a function with redshift as the only argument.")
+        return front/growth*(1.+Z)**eta_IA*rel_lum**beta_IA
 
     #-----------------------------------------------------------------------------------------
     # SPECTRA SHEAR CLUSTERING
@@ -632,7 +607,6 @@ class angular_spectra():
                                       do_IA                = False,
                                       do_GC                = False,
                                       kwargs_power_spectra = {},
-                                      IA_model             = 'LA',
                                       kwargs_IA            = {}):
         """
         This function computes the shear/clustering angular power spectra using the Limber's and the flat-sky approximations.
@@ -655,13 +629,6 @@ class angular_spectra():
 
         :param do_GC: Whether to compute the galaxy clustering power spectra.
         :type do_GC: boolean, default = ``False``
-
-        :param IA_model: Intrinsic alignment model to implement (only if ``do_IA`` is ``True``). Together with ``kwargs_IA`` defines the kernel for the calculation of the intrinsic alignment terms. If set to ``None``, these terms will be set to zero.
-
-          - `'linear alignment'`, `'Linear Alignment'`, `'linear_alignment'`, `'la'`, `'LA'` for Linear alignment
-          - `'non-linear alignment'`, `'nonlinear alignment'`, `'nla'`, `'NLA'` for Non-linear alignment
-
-        :type IA_model: string, default = `'LA'`            
 
         :param kwargs_power_spectra: Keyword arguments to pass to ``self.load_power_spectra`` (used only if ``power_spectra == None``).
         :type kwargs_power_spectra: dictionary, default = {}
@@ -718,14 +685,14 @@ class angular_spectra():
         F_lz  = np.zeros((n_l, n_z))
         b_lz  = np.zeros((n_l, n_z))
         if do_WL and do_IA:
-            F_IA        = self.intrinsic_alignment_kernel(k = self.k, z = zz, IA_model = IA_model, **kwargs_IA)
+            F_IA = self.intrinsic_alignment_kernel(k = self.k, z = zz, **kwargs_IA)
         else:
-            F_IA        = np.zeros((n_z,self.nk))
+            F_IA = np.zeros((n_z,self.nk))
         F_IA_interp = si.interp2d(self.k, zz, F_IA, kind = 'cubic', bounds_error = False, fill_value = 0.)
         for il in xrange(n_l):
             for iz in range(n_z):
-                PS_lz[il, iz] = power_spectra(l[il]*1./self.geometric_factor[iz], zz[iz])
-                F_lz[il, iz]  = F_IA_interp  (l[il]*1./self.geometric_factor[iz], zz[iz])
+                PS_lz[il,iz] = power_spectra(l[il]/self.geometric_factor[iz], zz[iz])
+                F_lz[il,iz]  = F_IA_interp  (l[il]/self.geometric_factor[iz], zz[iz])
         if do_GC:
             assert hasattr(self, "galaxy_bias_interpolator"), "Load bias function with 'load_galaxy_bias' before compute galaxy clustering"
             for il in xrange(n_l):
@@ -775,7 +742,6 @@ class angular_spectra():
                                               do_IA = False,
                                               do_GC = False,
                                               kwargs_power_spectra = {},
-                                              IA_model = 'LA',
                                               kwargs_IA = {}):
         """
         This function computes the angular correlation functions for shear, intrinisic alignment and galaxy clustering using the Limber's and the flat-sky approximations. It first computes :func:`~colibri.angular_spectra.compute_angular_power_spectra` and then computes its Hankel transform with :func:`~colibri.fourier.Hankel` (therefore this function requires the ``FFTlog`` package). The shear correlations function, the galaxy-galaxy lensing correlation function and the galaxy correlation function read, respectively
@@ -803,14 +769,6 @@ class angular_spectra():
 
         :param do_GC: Whether to compute the galaxy clustering power spectra.
         :type do_GC: boolean, default = ``False``
-
-        :param IA_model: Intrinsic alignment model to implement (only if ``do_IA`` is ``True``). Together with ``kwargs_IA`` defines the kernel for the calculation of the intrinsic alignment terms. If set to ``None``, these terms will be set to zero.
-
-          - `'linear alignment'`, `'Linear Alignment'`, `'linear_alignment'`, `'la'`, `'LA'` for Linear alignment
-          - `'non-linear alignment'`, `'nonlinear alignment'`, `'nla'`, `'NLA'` for Non-linear alignment
-
-        :type IA_model: string, default = `'LA'`
-            
 
         :param kwargs_power_spectra: Keyword arguments to pass to ``self.load_power_spectra`` (used only if ``power_spectra == None``).
         :type kwargs_power_spectra: dictionary, default = {}
@@ -850,7 +808,6 @@ class angular_spectra():
                                                 do_IA                = do_IA,
                                                 do_GC                = do_GC,
                                                 kwargs_power_spectra = kwargs_power_spectra,
-                                                IA_model             = IA_model,
                                                 kwargs_IA            = kwargs_IA)
 
         # 3) Initialize arrays
@@ -865,7 +822,7 @@ class angular_spectra():
                    'II-': np.zeros((n_bin, n_bin, NN)),  # J_4
                    'LL-': np.zeros((n_bin, n_bin, NN)),  # J_4
                    'GL' : np.zeros((n_bin, n_bin, NN)),  # J_2
-                   'GG' : np.zeros((n_bin, n_bin, NN))}  # J_2
+                   'GG' : np.zeros((n_bin, n_bin, NN))}  # J_0
 
 
 
@@ -878,7 +835,7 @@ class angular_spectra():
                    'II-': np.zeros((n_bin, n_bin, n_theta)),  # J_4
                    'LL-': np.zeros((n_bin, n_bin, n_theta)),  # J_4
                    'GL' : np.zeros((n_bin, n_bin, n_theta)),  # J_2
-                   'GG' : np.zeros((n_bin, n_bin, n_theta))}  # J_2
+                   'GG' : np.zeros((n_bin, n_bin, n_theta))}  # J_0
 
         # 4) Hankel transform
         for i in range(n_bin):
@@ -907,7 +864,6 @@ class angular_spectra():
                 for comp in xi_tmp.keys():
                     xi_interp  = si.interp1d(theta_tmp, xi_tmp [comp][i,j], 'cubic', bounds_error = False, fill_value = 0.)
                     xi[comp][i,j] = xi_interp(theta)
-
         del xi_tmp
 
         return xi

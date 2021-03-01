@@ -817,22 +817,23 @@ class cosmo:
     #-------------------------------------------------------------------------------
     def r_s(self):
         """
-        Sound horizon at drag epoch
+        Sound horizon at drag epoch.
 
         :return: float.
         """
         if 'classy' not in sys.modules:
+            warnings.warn("Class not installed, using a custom function to compute sound horizon (not precise)")
             return self.r_s_drag()
         else:
             params = {
-                'A_s': self.As,
-                'n_s': self.ns, 
-                'h': self.h,
-                'omega_b': self.Omega_b*self.h**2.,
+                'A_s':       self.As,
+                'n_s':       self.ns, 
+                'h':         self.h,
+                'omega_b':   self.Omega_b*self.h**2.,
                 'omega_cdm': self.Omega_cdm*self.h**2.,
-                'Omega_k': self.Omega_K,
-                'N_ur': self.massless_nu,
-                'N_ncdm': self.massive_nu}
+                'Omega_k':   self.Omega_K,
+                'N_ur':      self.massless_nu,
+                'N_ncdm':    self.massive_nu}
             if self.massive_nu != 0:
                 params['m_ncdm'] = ', '.join(str(x) for x in self.M_nu[self.M_nu != 0.])
 
@@ -949,12 +950,12 @@ class cosmo:
         dlnk    = np.log(kappa[1]/kappa[0])
 
         # Smoothing radii
-        if   var == 'cb':        omega = self.Omega_cb
-        elif var == 'cdm':        omega = self.Omega_cdm
-        elif var == 'b':        omega = self.Omega_b
-        elif var == 'nu':        omega = self.Omega_nu
-        elif var == 'tot':        omega = self.Omega_m
-        else:                    raise NameError("Component unknown, use 'cb', 'cdm', 'b', 'nu', 'tot'")
+        if   var == 'cb':   omega = self.Omega_cb
+        elif var == 'cdm':  omega = self.Omega_cdm
+        elif var == 'b':    omega = self.Omega_b
+        elif var == 'nu':   omega = self.Omega_nu
+        elif var == 'tot':  omega = self.Omega_m
+        else:               raise NameError("Component unknown, use 'cb', 'cdm', 'b', 'nu', 'tot'")
         rho = self.rho_crit(0.)*omega
         M   = self.M
         R   = self.radius_of_mass(M, var = var, window = window)
@@ -1506,6 +1507,7 @@ class cosmo:
          - 'Sheth-Tormen','ST','ShethTormen' for Sheth-Tormen
          - 'Press-Schechter', 'PS', 'PressSchechter' for Press-Schechter
          - 'Tinker', 'T', 'T08' for Tinker et al. (2008)
+         - 'MICE', 'Crocce', 'C' for Crocce et al. (2010)
 
         :type mass_fun: string, default = `'ST'`
 
@@ -1525,8 +1527,8 @@ class cosmo:
         M  = self.M[1:-1]
         # log-derivative
         s2 = self.sigma2(z,k,pk)
-        log_der = sm.derivative(s2, np.log10(M), dx = 1e-2, n = 1, order = 3)    # d(sigma^2)/dlog10 M ---> factor of log10(e)
-        log_der *= -1./2./s2(np.log10(M))*np.log10(np.exp(1.))            # Factor of 1/2 because of sigma^2
+        log_der = sm.derivative(s2, np.log10(M), dx = 1e-2, n = 1, order = 3) # d(sigma^2)/dlog10 M ---> factor of log10(e)
+        log_der *= -1./2./s2(np.log10(M))*np.log10(np.e)                      # Factor of 1/2 because of sigma^2
         s = s2(np.log10(M))**.5
 
         # Choose according the mass function

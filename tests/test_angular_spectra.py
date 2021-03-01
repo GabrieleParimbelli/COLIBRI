@@ -48,14 +48,14 @@ print("> Shear instance loaded")
 #     e.g. CALL CAMB EXTERNALLY
 #          kk = np.geomspace(1e-4, 1e2, 301)
 #          zz = np.linspace(0., 5., 51)
-#          _, pk_array = C.camb_Pk(z = zz, k = kk, nonlinear = True, halofit = 'mead2020')	# Call CAMB externally with 'mead2020' halofit version
-#          S.load_power_spectra(z = zz, k = kk, power_spectra = pk_array)	                # Interpolate, pk_array must be a 2D array of shape (51,151)
+#          _, pk_array = C.camb_Pk(z = zz, k = kk, nonlinear = True, halofit = 'mead2020')    # Call CAMB externally with 'mead2020' halofit version
+#          S.load_power_spectra(z = zz, k = kk, power_spectra = pk_array)                    # Interpolate, pk_array must be a 2D array of shape (51,151)
 #
 #     e.g. READ FROM SIMULATIONS
 #          kk = np.geomspace(1e-4, 1e2, 301)
 #          zz = np.linspace(0., 5., 51)
-#          pk_array = np.loadtxt('pk_array.txt', unpack = True)				# Read file containing power spectra
-#          S.load_power_spectra(z = zz, k = kk, power_spectra = pk_array)	# Interpolate, pk_array must be a 2D array of shape (51,151)
+#          pk_array = np.loadtxt('pk_array.txt', unpack = True)                # Read file containing power spectra
+#          S.load_power_spectra(z = zz, k = kk, power_spectra = pk_array)    # Interpolate, pk_array must be a 2D array of shape (51,151)
 #
 kk = np.geomspace(1e-4, 1e2, 301)
 zz = np.linspace(0., 5., 51)
@@ -83,8 +83,8 @@ print("> Power spectra loaded")
 # def euclid_distribution(self, z, zmin, zmax, a = 2.0, b = 1.5, z_med = 0.9):
 #     z_0 = z_med/sqrt(2.)
 #     step = 1e-4
-#     lower = 0.5*(1.+np.tanh((z-zmin)/step))				# Heaviside-like step function
-#     upper = 0.5*(1.+np.tanh((zmax-z)/step))				# Heaviside-like step function
+#     lower = 0.5*(1.+np.tanh((z-zmin)/step))                # Heaviside-like step function
+#     upper = 0.5*(1.+np.tanh((zmax-z)/step))                # Heaviside-like step function
 #     n = (z/z_0)**a*np.exp(-(z/z_0)**b)*lower*upper
 #     return n
 # 
@@ -101,25 +101,25 @@ print("> Power spectra loaded")
 # where 'z' is 1-D array of redshifts and 'nz_w' is a 2-D array of shape (number of bins x len(z))
 
 if number_of_bins == 3:
-    bin_edges = [0.00, 0.72, 1.11, 5.00]	            # Bin edges
+    bin_edges = [0.00, 0.72, 1.11, 5.00]                # Bin edges
 elif number_of_bins == 4:
-    bin_edges = [0.00, 0.62, 0.90, 1.23, 5.00]	        # Bin edges
+    bin_edges = [0.00, 0.62, 0.90, 1.23, 5.00]            # Bin edges
 elif number_of_bins == 5:
-    bin_edges = [0.00, 0.56, 0.79, 1.02, 1.32, 5.00]	# Bin edges
+    bin_edges = [0.00, 0.56, 0.79, 1.02, 1.32, 5.00]    # Bin edges
 else:
     raise ValueError("Choose among 3,4 or 5 bins (or implement your own set of galaxy distributions).")
-nbins     = len(bin_edges)-1			            # Number of bins
+nbins     = len(bin_edges)-1                        # Number of bins
 if photometric_errors:
     n_z = [[S.euclid_distribution_with_photo_error, {'zmin': bin_edges[i], 'zmax': bin_edges[i+1], 'a': 2.0, 'b': 1.5}] for i in range(nbins)]
 else:
     n_z = [[S.euclid_distribution, {'a': 2.0, 'b': 1.5, 'zmin': bin_edges[i], 'zmax': bin_edges[i+1], 'step': 1e-4}] for i in range(nbins)]
 print("> Galaxy distribution functions:")
 for i in range(len(n_z)):
-	print("    Bin %i: using function '%s' with parameters %s" %(i+1, n_z[i][0].__name__, n_z[i][1]))
-S.load_window_functions(galaxy_distributions = n_z)
-#z_w  = np.linspace(0., 6., 1001)        # Redshift range must be wider than z_limits!!
-#nz_w = [S.euclid_distribution_with_photo_error(z = z_w, a = 2.0, b = 1.5, zmin = bin_edges[i], zmax = bin_edges[i+1]) for i in range(nbins)]
-#S.load_window_functions(z = z_w, nz = nz_w)
+    print("    Bin %i: using function '%s' with parameters %s" %(i+1, n_z[i][0].__name__, n_z[i][1]))
+#S.load_window_functions(galaxy_distributions = n_z)
+z_w  = np.linspace(0., 6., 1001)        # Redshift range must be wider than z_limits!!
+nz_w = [S.euclid_distribution_with_photo_error(z = z_w, a = 2.0, b = 1.5, zmin = bin_edges[i], zmax = bin_edges[i+1]) for i in range(nbins)]
+S.load_window_functions(z = z_w, nz = nz_w)
 print("> Window functions loaded")
 #-----------------
 
@@ -167,7 +167,7 @@ if fourier_space:
                                              do_WL        = True,
                                              do_IA        = True,
                                              do_GC        = True,
-                                             IA_model     = 'NLA',
+                                             #IA_model     = 'NLA',
                                              kwargs_IA    = {'A_IA': -1.3, 'beta_IA': 0., 'eta_IA': 0.})
     print("> Spectra loaded")
 else:
@@ -176,7 +176,7 @@ else:
                                                     do_WL        = True,
                                                     do_IA        = True,
                                                     do_GC        = True,
-                                                    IA_model     = 'NLA',
+                                                    #IA_model     = 'NLA',
                                                     kwargs_IA    = {'A_IA': -1.3, 'beta_IA': 0., 'eta_IA': 0.})
 #-----------------
 
@@ -194,33 +194,34 @@ if fourier_space:
     # Multiplication constant for plotting
     c = ll*(ll+1.)/(2.*np.pi)
     for j in range(1, nbins):
-	    for i in range(j):
-		    axarr[i,j].axis('off')
-	    plt.setp([a.get_xticklabels() for a in axarr[i, :]], visible=False)
-	    plt.setp([a.get_yticklabels() for a in axarr[:, j]], visible=False)
-	    plt.subplots_adjust(wspace=0, hspace=0)
+        for i in range(j):
+            axarr[i,j].axis('off')
+        plt.setp([a.get_xticklabels() for a in axarr[i, :]], visible=False)
+        plt.setp([a.get_yticklabels() for a in axarr[:, j]], visible=False)
+        plt.subplots_adjust(wspace=0, hspace=0)
 
     for i in range(nbins):
-	    for j in range(i, nbins):
-		    # Plotting Cls and systematics
-		    axarr[j,i].loglog(ll, c*Cl['gg'][i,j],         'blue'     , ls='-' , lw=LW, label='$C_\mathrm{\gamma\gamma}^{(ij)}(\ell)$')
-		    axarr[j,i].loglog(ll, np.abs(c*Cl['gI'][i,j]), 'magenta'  , ls='-' , lw=LW, label='$C_\mathrm{\gamma I}^{(ij)}(\ell)$')
-		    axarr[j,i].loglog(ll, c*Cl['II'][i,j],         'red'      , ls='-' , lw=LW, label='$C_\mathrm{II}^{(ij)}(\ell)$')
-		    axarr[j,i].loglog(ll, c*Cl['LL'][i,j],         'black'    , ls='-' , lw=LW, label='$C_\mathrm{LL}^{(ij)}(\ell)$')
-		    axarr[j,i].loglog(ll, c*Cl['GL'][i,j],         'green'    , ls='-' , lw=LW, label='$C_\mathrm{GL}^{(ij)}(\ell)$')
-		    axarr[j,i].loglog(ll, c*Cl['GL'][j,i],         'limegreen', ls='--', lw=LW, label='$C_\mathrm{GL}^{(ji)}(\ell)$')
-		    axarr[j,i].loglog(ll, c*Cl['GG'][i,j],         'goldenrod', ls='-' , lw=LW, label='$C_\mathrm{GG}^{(ij)}(\ell)$')
-		    # Coloured box
-		    if i != j: color = 'grey'
-		    else:      color = colors[i]
-		    axarr[j,i].text(0.15, 0.85, '$%i \\times %i$' %(i+1,j+1),
-						    transform=axarr[j,i].transAxes,
-						    style='italic',
-						    fontsize = 15*(1.-number_of_bins/10.),
-						    horizontalalignment='center',
-						    bbox={'facecolor': color, 'alpha':0.5, 'pad':5})
-		    axarr[j,i].set_xlim(ll.min(), ll.max())
-		    axarr[i,j].set_ylim(5e-9, 1e-1)
+        for j in range(i, nbins):
+            # Plotting Cls and systematics
+            axarr[j,i].loglog(ll, c*Cl['gg'][i,j],         'blue'     , ls='-' , lw=LW, label='$C_\mathrm{\gamma\gamma}^{(ij)}(\ell)$')
+            axarr[j,i].loglog(ll, np.abs(c*Cl['gI'][i,j]), 'magenta'  , ls='-' , lw=LW, label='$C_\mathrm{\gamma I}^{(ij)}(\ell)$')
+            axarr[j,i].loglog(ll, c*Cl['II'][i,j],         'red'      , ls='-' , lw=LW, label='$C_\mathrm{II}^{(ij)}(\ell)$')
+            axarr[j,i].loglog(ll, c*Cl['LL'][i,j],         'black'    , ls='-' , lw=LW, label='$C_\mathrm{LL}^{(ij)}(\ell)$')
+            axarr[j,i].loglog(ll, c*Cl['GL'][i,j],         'green'    , ls='-' , lw=LW, label='$C_\mathrm{GL}^{(ij)}(\ell)$')
+            axarr[j,i].loglog(ll, c*Cl['GL'][j,i],         'limegreen', ls='--', lw=LW, label='$C_\mathrm{GL}^{(ji)}(\ell)$')
+            axarr[j,i].loglog(ll, c*Cl['GG'][i,j],         'goldenrod', ls='-' , lw=LW, label='$C_\mathrm{GG}^{(ij)}(\ell)$')
+            # Coloured box
+            if i != j: color = 'grey'
+            else:      color = colors[i]
+            axarr[j,i].text(0.15, 0.85, '$%i \\times %i$' %(i+1,j+1),
+                            transform=axarr[j,i].transAxes,
+                            style='italic',
+                            fontsize = 15*(1.-number_of_bins/10.),
+                            horizontalalignment='center',
+                            bbox={'facecolor': color, 'alpha':0.5, 'pad':5})
+            axarr[j,i].set_xlim(ll.min(), ll.max())
+            axarr[j,i].set_ylim(5e-10, 1e0)
+            axarr[j,i].set_yticks([1e-8,1e-5,1e-2])
     plt.legend(bbox_to_anchor=(0.9, nbins))
 
     # Single label
@@ -233,38 +234,38 @@ else:
     # Plot correlation functions
     hf, axarr = plt.subplots(nbins, nbins, sharex = True, sharey = True, figsize=(15,10))
     for j in range(1, nbins):
-	    for i in range(j):
-		    axarr[i,j].axis('off')
-	    plt.setp([a.get_xticklabels() for a in axarr[i, :]], visible=False)
-	    plt.setp([a.get_yticklabels() for a in axarr[:, j]], visible=False)
-	    plt.subplots_adjust(wspace=0, hspace=0)
+        for i in range(j):
+            axarr[i,j].axis('off')
+        plt.setp([a.get_xticklabels() for a in axarr[i, :]], visible=False)
+        plt.setp([a.get_yticklabels() for a in axarr[:, j]], visible=False)
+        plt.subplots_adjust(wspace=0, hspace=0)
 
     for i in range(nbins):
-	    for j in range(i, nbins):
-		    # Plotting Cls and systematics
-		    axarr[j,i].loglog(theta, xi['gg+'][i,j],         'blue'     , ls='-' , lw=LW, label='$\\xi_\mathrm{\gamma\gamma}^{+,(ij)}(\\theta)$')
-		    axarr[j,i].loglog(theta, xi['gg-'][i,j],         'blue'     , ls='--', lw=LW, label='$\\xi_\mathrm{\gamma\gamma}^{-,(ij)}(\\theta)$')
-		    axarr[j,i].loglog(theta, np.abs(xi['gI+'][i,j]), 'magenta'  , ls='-' , lw=LW, label='$\\xi_\mathrm{\gamma I}^{+,(ij)}(\\theta)$')
-		    axarr[j,i].loglog(theta, np.abs(xi['gI-'][i,j]), 'magenta'  , ls='--', lw=LW, label='$\\xi_\mathrm{\gamma I}^{-,(ij)}(\\theta)$')
-		    axarr[j,i].loglog(theta, xi['II+'][i,j],         'red'      , ls='-' , lw=LW, label='$\\xi_\mathrm{II}^{+,(ij)}(\\theta)$')
-		    axarr[j,i].loglog(theta, xi['II-'][i,j],         'red'      , ls='--', lw=LW, label='$\\xi_\mathrm{II}^{-,(ij)}(\\theta)$')
-		    axarr[j,i].loglog(theta, xi['LL+'][i,j],         'black'    , ls='-' , lw=LW, label='$\\xi_\mathrm{LL}^{+,(ij)}(\\theta)$')
-		    axarr[j,i].loglog(theta, xi['LL-'][i,j],         'black'    , ls='--', lw=LW, label='$\\xi_\mathrm{LL}^{-,(ij)}(\\theta)$')
-		    axarr[j,i].loglog(theta, xi['GL'] [i,j],         'green'    , ls='-' , lw=LW, label='$\\xi_\mathrm{GL}^{(ij)}(\\theta)$')
-		    axarr[j,i].loglog(theta, xi['GG'] [i,j],         'goldenrod', ls='-' , lw=LW, label='$\\xi_\mathrm{GG}^{(ij)}(\\theta)$')
+        for j in range(i, nbins):
+            # Plotting Cls and systematics
+            axarr[j,i].loglog(theta, xi['gg+'][i,j],         'blue'     , ls='-' , lw=LW, label='$\\xi_\mathrm{\gamma\gamma}^{+,(ij)}(\\theta)$')
+            axarr[j,i].loglog(theta, xi['gg-'][i,j],         'blue'     , ls='--', lw=LW, label='$\\xi_\mathrm{\gamma\gamma}^{-,(ij)}(\\theta)$')
+            axarr[j,i].loglog(theta, np.abs(xi['gI+'][i,j]), 'magenta'  , ls='-' , lw=LW, label='$\\xi_\mathrm{\gamma I}^{+,(ij)}(\\theta)$')
+            axarr[j,i].loglog(theta, np.abs(xi['gI-'][i,j]), 'magenta'  , ls='--', lw=LW, label='$\\xi_\mathrm{\gamma I}^{-,(ij)}(\\theta)$')
+            axarr[j,i].loglog(theta, xi['II+'][i,j],         'red'      , ls='-' , lw=LW, label='$\\xi_\mathrm{II}^{+,(ij)}(\\theta)$')
+            axarr[j,i].loglog(theta, xi['II-'][i,j],         'red'      , ls='--', lw=LW, label='$\\xi_\mathrm{II}^{-,(ij)}(\\theta)$')
+            axarr[j,i].loglog(theta, xi['LL+'][i,j],         'black'    , ls='-' , lw=LW, label='$\\xi_\mathrm{LL}^{+,(ij)}(\\theta)$')
+            axarr[j,i].loglog(theta, xi['LL-'][i,j],         'black'    , ls='--', lw=LW, label='$\\xi_\mathrm{LL}^{-,(ij)}(\\theta)$')
+            axarr[j,i].loglog(theta, xi['GL'] [i,j],         'green'    , ls='-' , lw=LW, label='$\\xi_\mathrm{GL}^{(ij)}(\\theta)$')
+            axarr[j,i].loglog(theta, xi['GG'] [i,j],         'goldenrod', ls='-' , lw=LW, label='$\\xi_\mathrm{GG}^{(ij)}(\\theta)$')
 
 
-		    # Coloured box
-		    if i != j: color = 'grey'
-		    else:      color = colors[i]
-		    axarr[j,i].text(0.15, 0.15, '$%i \\times %i$' %(i+1,j+1),
-						    transform=axarr[j,i].transAxes,
-						    style='italic',
-						    fontsize = 15*(1.-number_of_bins/10.),
-						    horizontalalignment='center',
-						    bbox={'facecolor': color, 'alpha':0.5, 'pad':5})
-		    axarr[j,i].set_xlim(theta.min(), theta.max())
-		    axarr[i,j].set_ylim(1e-9, 1e-4)
+            # Coloured box
+            if i != j: color = 'grey'
+            else:      color = colors[i]
+            axarr[j,i].text(0.15, 0.15, '$%i \\times %i$' %(i+1,j+1),
+                            transform=axarr[j,i].transAxes,
+                            style='italic',
+                            fontsize = 15*(1.-number_of_bins/10.),
+                            horizontalalignment='center',
+                            bbox={'facecolor': color, 'alpha':0.5, 'pad':5})
+            axarr[j,i].set_xlim(theta.min(), theta.max())
+            axarr[j,i].set_ylim(1e-9, 1e-4)
     plt.legend(bbox_to_anchor=(0.9, nbins), fontsize = 20)
 
 
@@ -273,8 +274,8 @@ hf, axarr = plt.subplots(2, 1, sharex=True, figsize=(30,20))
 plt.subplots_adjust(hspace = 0.)
 zz = np.linspace(0.1, 5., 1000)
 for i in range(nbins):
-	axarr[0].plot(zz, S.window_function   [i](zz)*1e5, colors[i],            lw = LW, label = 'Bin %i' %(i+1))
-	axarr[1].plot(zz, S.window_function_IA[i](zz)*1e3, colors[i], ls = '--', lw = LW)
+    axarr[0].plot(zz, S.window_function   [i](zz)*1e5, colors[i],            lw = LW, label = 'Bin %i' %(i+1))
+    axarr[1].plot(zz, S.window_function_IA[i](zz)*1e3, colors[i], ls = '--', lw = LW)
 axarr[1].set_xlabel('$z$')
 axarr[0].set_xlim(zz.min(), zz.max())
 axarr[0].set_ylabel('$10^5 \\times W_\gamma     (z) \ [h/\mathrm{Mpc}]$', fontsize = 20)
