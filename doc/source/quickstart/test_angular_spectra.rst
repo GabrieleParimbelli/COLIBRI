@@ -51,8 +51,6 @@ If one wants to use an already computed power spectrum (that comes e.g. from sim
 
 .. note::
 
- The previous step can also be skipped. When the function :func:`~colibri.angular_spectra.angular_spectra.angular_power_spectra` is called, the power spectra will be loaded automatically using the default values of the :func:`~colibri.angular_spectra.angular_spectra.load_power_spectra` or with arguments given in a dictionary ``kwargs_power_spectra``.
-
 Window functions
 ------------------
 
@@ -81,10 +79,11 @@ Finally, the shear power spectrum is computed with
 .. code-block:: python
 
  ll = np.geomspace(2., 4.e4, 51)
- Cl = S.angular_power_spectra(l = ll, do_WL = True, do_IA = True, do_GC = False, IA_model = 'LA', kwargs_IA = {'A_IA': -1.3})
+ Cl = S.angular_power_spectra(l = ll, do_WL = True, do_IA = True, do_GC = False, A_IA = -1.3)
 
-The ``l`` argument sets the multipoles at which the spectrum must be computed; the ``IA`` argument sets the intrinsic alignment model used, implemented with the arguments contained in ``kwargs_IA`` (if ``IA = None`` all the terms relative to intrinsic alignment are set to zero).
-See the function :func:`~colibri.angular_spectra.angular_spectra.intrinsic_alignment_kernel` for all the relevant info.
+The ``l`` argument sets the multipoles at which the spectrum must be computed; ``do_WL``, ``do_IA``, ``do_GC`` are the three flags switching on/off weak lensing, intrinsic alignment and galaxy clustering (see also below).
+The parameter ``A_IA`` is a keyword argument for the intrinsic alignment term.
+The full extended-non-linear alignment model is implemented, for all the relevant parameter and info, see :func:`~colibri.angular_spectra.angular_spectra.intrinsic_alignment_kernel` .
 
 The returned object is a dictionary that contains the following keys: ``gg``, ``gI``, ``II``, ``LL``, ``GL``, ``GG``.
 The first three represent the cosmological signal of cosmic shear, the cross spectrum with intrinsic alignment effect, the pure intrinsic alignment signal, respectively.
@@ -102,8 +101,8 @@ Equivalently, the two shear correlation functions can be computed with
 
 .. code-block:: python
 
- theta = np.geomspace(1., 100., 51)
- xi_plus, xi_minus = S.angular_correlation_functions(theta = theta, do_WL = True, do_IA = True, do_GC = False, IA_model = 'LA', kwargs_IA = {'A_IA': -1.3})
+ theta = np.geomspace(1., 100., 51)  # in arcmin
+ xi    = S.angular_correlation_functions(theta = theta, do_WL = True, do_IA = True, do_GC = False, A_IA = -1.3)
 
 Galaxy clustering power spectra and correlation functions
 ---------------------------------------------------------

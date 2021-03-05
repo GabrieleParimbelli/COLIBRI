@@ -37,7 +37,7 @@ For the latter, both Boltzmann solvers **CAMB** and **Class** can be used, provi
 `nonlinear` module
 ^^^^^^^^^^^^^^^^^^
 
-There are three classes
+There are three classes.
 The first one is called :func:`~colibri.nonlinear.HMcode2016` , which transforms a linear input power spectrum to its non-linear counterpart.
 This class uses the Halofit model by Mead `et al.` (see `arXiv:1505.07833 <https://arxiv.org/abs/1505.07833>`_ and `arXiv:1602.02154 <https://arxiv.org/abs/1602.02154>`_), taking as inputs redshift, scales, power spectrum and a cosmology.
 The second class is called :func:`~colibri.nonlinear.HMcode2020` and does the same thing, except following `arXiv:2009.01858 <https://arxiv.org/abs/2009.01858>`_
