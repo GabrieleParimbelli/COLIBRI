@@ -569,7 +569,7 @@ class angular_spectra():
 
         .. math::
 
-          F_\mathrm{IA}(k,z) = \\frac{A_\mathrm{IA} C_1 \Omega_m}{D_1(k,z)}(1+z)^{\eta_\mathrm{IA}} \mathrm{lum}_\mathrm{IA}^{\\beta_\mathrm{IA}}
+          F_\mathrm{IA}(k,z) = \\frac{A_\mathrm{IA} C_1 \Omega_m}{D_1(k,z)}(1+z)^{\eta_\mathrm{IA}} \left[\\frac{L(z)}{L_*(z)}\\right]^{\\beta_\mathrm{IA}}
 
         :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
         :type k: array
@@ -586,7 +586,7 @@ class angular_spectra():
         :param beta_IA: Exponent for luminosity dependence of intrinsic alignment.
         :type beta_IA: float, default = 0
 
-        :param lum_IA: Relative luminosity of galaxies w.r.t. :math:`L_*`.
+        :param lum_IA: Relative luminosity of galaxies :math:`L(z)/L_*(z)`.
         :type lum_IA: float or array of same length as :math:`z`, default = 1
 
         :param kwargs: Keyword arguments for the IA function.
