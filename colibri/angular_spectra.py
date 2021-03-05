@@ -582,7 +582,7 @@ class angular_spectra():
         :param beta_IA: Exponent for luminosity dependence of intrinsic alignment.
         :type beta_IA: float, default = 0
 
-        :param rlum_IA: Relative luminosity of galaxies w.r.t. :math:`L_*`.
+        :param lum_IA: Relative luminosity of galaxies w.r.t. :math:`L_*`.
         :type lum_IA: float or array of same length as `z`, default = 1
 
         :param kwargs: Keyword arguments for the IA function.
