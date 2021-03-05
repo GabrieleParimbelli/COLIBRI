@@ -855,28 +855,24 @@ class cosmo:
     #-----------------------------------------------------------------------------------------
     # SIGMA^2
     #-----------------------------------------------------------------------------------------
-    def sigma2(self, z = 0., k = [], pk = []):
+    def sigma2(self, k = [], pk = []):
         """
         Mass variance in spheres as a function of mass.
-
-        :param z: Redshift.
-        :type z: float, default = 0
 
         :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
         :type k: array, default = []
 
-        :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.  If not given, it is computed at the given redshift with CAMB.
+        :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.
         :type pk: array, default = []
 
         :return: An interpolated function that gives :math:`\\sigma^2(\log_{10}(M))`, evaluable between 2 and 18 (therefore between :math:`M = 10^2` and :math:`10^{18} \ M_\odot/h`).
         """
-        return self.sigma2_j(z = z, k = k, pk = pk)
+        return self.sigma2_j(k = k, pk = pk)
 
     #-----------------------------------------------------------------------------------------
     # SIGMA^2_j
     #-----------------------------------------------------------------------------------------
     def sigma2_j(self,
-                 z      = 0.,
                  k      = [],
                  pk     = [],
                  var    = 'cb',
@@ -893,13 +889,10 @@ class cosmo:
 
         where :math:`W` is a window function, :math:`R` is a radius in :math:`\mathrm{Mpc}/h` and :math:`M` is the mass enclosed in such radius according to the window function.
 
-        :param z: Redshift.
-        :type z: float, default = 0
-
         :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
         :type k: array, default = []
 
-        :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`. If not given, it is computed at the given redshift with CAMB.
+        :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.
         :type pk: array, default = []
 
         :param var: component with respect to which to compute the variance.
@@ -931,23 +924,26 @@ class cosmo:
 
         :return: An interpolated function that gives :math:`\\sigma^2_j(\log_{10}(M))`, evaluable between 2 and 18 (therefore between :math:`M = 10^2` and :math:`10^{18} \ M_\odot/h`).
         """
-        # Power spectrum
-        if not len(np.atleast_1d(z)) == 1:    raise TypeError("Only one redshift per time")
-        if k == [] and pk == []:
-            k, pk = self.camb_Pk(k = np.logspace(-4., 2.7, 201), z = z, var_1 = var, var_2 = var)
-            pk = pk[0]
+
+        # Number of redshifts
+        nz = len(pk)
 
         # Assertions on scales, lengths and intervals
-        assert np.max(k)>=99.,    "k_max too low to obtain a convergent result. Minimum 1e2."
-        assert np.min(k)<=0.001,  "k_min too high to obtain a convergent result. Minimum 1e-3."
-        assert len(k)>=200,       "size of 'k' too low to obtain a convergent result. At least 200 points."
+        assert np.max(k)>=99.,    "k_max too low to obtain a convergent result. Use k_max>=99 h/Mpc."
+        assert np.min(k)<=0.001,  "k_min too high to obtain a convergent result. Use k_min<=0.001 h/Mpc."
+        assert len(k)>=100,       "size of 'k' too low to obtain a convergent result. At least 100 points."
         assert np.all([np.isclose(np.log(k[ind+1]/k[ind]), np.log(k[ind+2]/k[ind+1]),
                 atol = 1e-4, rtol = 1e-2) for ind in xrange(len(k[:-2]))]),"k are not regularly log-spaced"
 
-        kappa, P_kappa = UF.extrapolate_log(k, pk, 1e-6, 1e8)
+        P_kappa = []
+        for iz in range(nz):
+            k_ext, p_tmp = UF.extrapolate_log(k, pk[iz], 1e-6, 1e8)
+            P_kappa.append(p_tmp)
+        kappa   = np.expand_dims(np.atleast_2d(k_ext),axis=1)
+        P_kappa = np.expand_dims(P_kappa, axis = 1)
 
         # Scales and power
-        dlnk    = np.log(kappa[1]/kappa[0])
+        dlnk    = np.log(k_ext[1]/k_ext[0])
 
         # Smoothing radii
         if   var == 'cb':   omega = self.Omega_cb
@@ -968,22 +964,21 @@ class cosmo:
             W = np.exp(-(k*r)**2./2.)
         else:
             raise NameError("Window not known")
+        W = np.expand_dims(W,axis=0)
 
         # Second smoothing
-        sm = np.ones_like(R)
-        if smooth:
-            sm = np.exp(-k**2.*(r/R_sm)**2./2.)
+        if smooth: sm = np.exp(-k**2.*(r/R_sm)**2./2.)
+        else:      sm = 1.
+        sm = np.expand_dims(sm,axis=0)
 
         # Integration in log-bins (with numpy)
-        integral  = np.zeros_like(R)
-        for i in xrange(len(R)):
-            integrand = kappa**(3.+2.*j)*P_kappa/(2.*const.PI**2.)*W[i]**2.*sm[i]**2.
-            integral[i] = sint.simps(integrand, dx = dlnk)
-
+        integral = sint.simps(kappa**(3.+2.*j)*P_kappa/(2.*const.PI**2.)*W**2.*sm**2.,dx=dlnk,axis=-1)
         # Smooth and interpolate
         if j > 0:
             integral = scipy.signal.savgol_filter(integral, 21, 3)
-        sigma_squared = si.interp1d(np.log10(M),integral,'cubic')
+        sigma_squared = []
+        for iz in range(nz):
+            sigma_squared.append(si.interp1d(np.log10(M),integral[iz],'cubic'))
 
         return sigma_squared
 
@@ -1176,30 +1171,24 @@ class cosmo:
     #-----------------------------------------------------------------------------------------
     # NU-MASS RELATION
     #-----------------------------------------------------------------------------------------
-    def peak_height(self, z = 0., k = [], pk = []):
+    def peak_height(self, k = [], pk = []):
         """
         Peak height as a function of log10(M).
-
-        :param z: Redshift.
-        :type z: float, default = 0
 
         :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
         :type k: array, default = []
 
-        :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`. If not given, it is computed at the given redshift with CAMB.
+        :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.
         :type pk: array, default = []
 
         :return: An interpolated function that gives :math:`\\sigma^2_j(\log_{10}(M))`, evaluable between 2 and 18 (therefore between :math:`M = 10^2` and :math:`10^{18} \ M_\odot/h`).
 
         """
-        if not np.size(z) == 1:    raise TypeError("Only one redshift per time")
-        if k == [] and pk == []:
-            k, pk = self.camb_Pk(k = np.logspace(-4., 2.7, 201), z = z, var_1 = 'cb', var_2 = 'cb')
-            pk = pk[0]
-
-        sigma    = self.sigma2(z,k,pk)
+        sigma    = self.sigma2(k,pk)
         M        = self.M
-        nu       = si.interp1d(np.log10(M), self.delta_sc/sigma(np.log10(M))**.5, 'cubic')
+        nu       = []
+        for iz in range(len(pk)):
+            nu.append(si.interp1d(np.log10(M), self.delta_sc/sigma[iz](np.log10(M))**.5, 'cubic'))
         return nu
 
     #-----------------------------------------------------------------------------------------
@@ -1259,11 +1248,18 @@ class cosmo:
         :param sigma: RMS mass fluctuation.
         :type sigma: array
 
+        :param z: Redshift.
+        :type z: array, default = 0
+
         :param Delta: Overdensity of collapsed objects.
         :type Delta: 200<=float<=3200, default = 200
 
         :return: array
         """
+
+        z = np.array(z)
+        assert len(np.atleast_2d(sigma))==len(np.atleast_1d(z)), "First dimension of 'sigma' must correspond to number of redshifts"
+
         # Exponent for redshift evolution of parameters
         alpha = 10.**(-(0.75/np.log10(Delta/75.))**1.2)
         # Log of overdensity
@@ -1284,10 +1280,10 @@ class cosmo:
         a_d = si.interp1d(delta_array, a_array, 'cubic')
         b_d = si.interp1d(delta_array, b_array, 'cubic')
         c_d = si.interp1d(delta_array, c_array, 'cubic')
-        A = A_d(Delta)*(1.+z)**(-0.14)
-        a = a_d(Delta)*(1.+z)**(-0.06)
-        b = b_d(Delta)*(1.+z)**(-alpha)
-        c = c_d(Delta)
+        A = np.expand_dims(A_d(Delta)*(1.+z)**(-0.14), axis = 0).T
+        a = np.expand_dims(a_d(Delta)*(1.+z)**(-0.06), axis = 0).T
+        b = np.expand_dims(b_d(Delta)*(1.+z)**(-alpha), axis = 0).T
+        c = np.expand_dims(c_d(Delta), axis = 0).T
 
         return A*((sigma/b)**(-a) + 1.)*np.exp(-c/sigma**2.)
 
@@ -1300,17 +1296,20 @@ class cosmo:
         Universal mass function by Crocce et al. (2010) as function of the RMS mass fluctuation in spheres :math:`\sigma(M)`.
 
         :param sigma: RMS mass fluctuation.
-        :type sigma: array
+        :type sigma: 2D array
 
         :param z: Redshift.
-        :type z: float, default = 0
+        :type z: array, default = 0
 
         :return: array
         """
-        A = 0.580*(1.+z)**-0.130
-        a = 1.370*(1.+z)**-0.150
-        b = 0.300*(1.+z)**-0.084
-        c = 1.036*(1.+z)**-0.024
+        z = np.array(z)
+        assert len(np.atleast_2d(sigma))==len(np.atleast_1d(z)), "First dimension of 'sigma' must correspond to number of redshifts"
+
+        A = np.expand_dims(0.580*(1.+z)**-0.130, axis = 0).T
+        a = np.expand_dims(1.370*(1.+z)**-0.150, axis = 0).T
+        b = np.expand_dims(0.300*(1.+z)**-0.084, axis = 0).T
+        c = np.expand_dims(1.036*(1.+z)**-0.024, axis = 0).T
 
         return A*(sigma**(-a)+b)*np.exp(-c/sigma**2.)
 
@@ -1369,6 +1368,9 @@ class cosmo:
 
         :param sigma: RMS mass fluctuation.
         :type sigma: array
+
+        :param z: Redshift.
+        :type z: array, default = 0
 
         :param Delta: Overdensity of collapsed objects.
         :type Delta: 200<=float<=3200, default = 200
@@ -1430,8 +1432,8 @@ class cosmo:
 
         where :math:`b(M)` is the linear halo bias given the kind of mass function.
 
-        :param z: Redshift.
-        :type z: float, default = 0
+        :param z: Redshift, used only for Tinker and Crocce mass functions
+        :type z: array, default = 0
 
         :param M_min: Minimum halo mass in :math:`M_\odot/h`.
         :type M_min: float>1e2, default = 1e10
@@ -1442,7 +1444,7 @@ class cosmo:
         :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
         :type k: array, default = []
 
-        :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`. If not given, it is computed at the given redshift with CAMB.
+        :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.
         :type pk: array, default = []
 
         :param mass_fun: Kind of halo mass function.
@@ -1458,13 +1460,6 @@ class cosmo:
         :return: float
         """
 
-        # Load power spectrum (if needed)
-        if not np.size(z) == 1:    raise TypeError("Only one redshift per time")
-        if k == [] and pk == []:
-            k, pk = self.camb_Pk(k = np.logspace(-4., 2.7, 201), z = z, var_1 = 'cb', var_2 = 'cb')
-            pk = pk[0]
-
-
         # mass quantities
         logM   = np.log10(self.M)
         conv   = np.log(10.)
@@ -1473,17 +1468,17 @@ class cosmo:
         HMF    = self.halo_mass_function(z = z, k = k, pk = pk, mass_fun = mass_fun, **kwargs)
 
         # mass variance in spheres
-        sigma2 = self.sigma2(z = z, k = k, pk = pk)
+        sigma2 = self.sigma2(k = k, pk = pk)
 
         # compute bias and interpolate in log10(mass)
-        bias   = self.halo_bias(sigma2(logM)**.5, mass_fun = mass_fun, **kwargs)
-        BIAS   = si.interp1d(logM, bias, kind = 'cubic')
-
-        # Compute effective bias with weighted integral
-        numerator, _   = sint.quad(lambda m: HMF(m)*BIAS(m)*conv*10.**m, np.log10(M_min), np.log10(M_max))
-        denominator, _ = sint.quad(lambda m: HMF(m)*conv*10.**m, np.log10(M_min), np.log10(M_max))
-
-        return numerator/denominator
+        bias_eff = np.zeros(len(pk))
+        for iz in range(len(pk)):
+            bias           = np.array(self.halo_bias(sigma2[iz](logM)**.5, mass_fun = mass_fun, **kwargs))
+            bias_interp    = si.interp1d(logM, bias, kind = 'cubic')
+            numerator, _   = sint.quad(lambda m: HMF[iz](m)*bias_interp(m)*conv*10.**m, np.log10(M_min), np.log10(M_max))
+            denominator, _ = sint.quad(lambda m: HMF[iz](m)*conv*10.**m,                np.log10(M_min), np.log10(M_max))
+            bias_eff[iz]   = numerator/denominator
+        return bias_eff
 
 
     #-----------------------------------------------------------------------------------------
@@ -1493,13 +1488,13 @@ class cosmo:
         """
         Halo mass function, i.e. number of halos per unit volume per unit mass.
 
-        :param z: Redshift.
-        :type z: float, default = 0
+        :param z: Redshift, used only for Tinker and Crocce mass functions.
+        :type z: array, default = 0
 
         :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
         :type k: array, default = []
 
-        :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`. If not given, it is computed at the given redshift with CAMB.
+        :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.
         :type pk: array, default = []
 
         :param mass_fun: Kind of halo mass function.
@@ -1515,38 +1510,44 @@ class cosmo:
 
         :return: An interpolated function that gives :math:`\\frac{dn}{dM}(\log_{10}(M))` in :math:`h^4 \ \mathrm{Mpc}^{-3} \ M_\odot^{-1}`, evaluable between 2 and 18 (therefore between :math:`M = 10^2` and :math:`10^{18} \ M_\odot/h`).
         """
-        # Load power spectrum (if needed)
-        if not np.size(z) == 1:    raise TypeError("Only one redshift per time")
-        if k == [] and pk == []:
-            k, pk = self.camb_Pk(k = np.logspace(-4., 2.7, 201), z = z, var_1 = 'cb', var_2 = 'cb')
-            pk = pk[0]
+        # Check dimensions (only if MICE or Tinker are asked)
+        if mass_fun in ['Tinker', 'T', 'T08','MICE', 'Crocce', 'C']:
+            assert len(np.atleast_1d(z))==len(pk), "Redshifts are not of the same length as power spectra"
 
         # CDM density today
         rho = self.rho_crit(0.)*self.Omega_cb
         # masses
         M  = self.M[1:-1]
         # log-derivative
-        s2 = self.sigma2(z,k,pk)
-        log_der = sm.derivative(s2, np.log10(M), dx = 1e-2, n = 1, order = 3) # d(sigma^2)/dlog10 M ---> factor of log10(e)
-        log_der *= -1./2./s2(np.log10(M))*np.log10(np.e)                      # Factor of 1/2 because of sigma^2
-        s = s2(np.log10(M))**.5
+        s2 = self.sigma2(k,pk)
+        log_der = []
+        sigma = []
+        for iz in range(len(pk)):
+            derivative = sm.derivative(s2[iz], np.log10(M), dx = 1e-2, n = 1, order = 3) # d(sigma^2)/dlog10 M ---> factor of log10(e)
+            log_der.append(derivative*(-1.)/2./s2[iz](np.log10(M))*np.log10(np.e))            # Factor of 1/2 because of sigma^2
+            sigma.append(s2[iz](np.log10(M))**.5)
+        log_der = np.array(log_der)
+        sigma   = np.array(sigma)
+
 
         # Choose according the mass function
         if mass_fun in ['Sheth-Tormen','ST','ShethTormen']:
-            f_nu = self.ShethTormen_mass_function(sigma = s, **kwargs)
+            f_nu = self.ShethTormen_mass_function(sigma = sigma, **kwargs)
         elif mass_fun in ['Tinker', 'T', 'T08']:
-            f_nu = self.Tinker_mass_function(sigma = s, z = z, **kwargs)
+            f_nu = self.Tinker_mass_function(sigma = sigma, z = z, **kwargs)
         elif mass_fun in ['MICE', 'Crocce', 'C']:
-            f_nu = self.MICE_mass_function(sigma = s, z = z)
+            f_nu = self.MICE_mass_function(sigma = sigma, z = z)
         elif mass_fun in ['Press-Schechter', 'PS', 'PressSchechter']:
-            f_nu = self.PressSchechter_mass_function(sigma = s)
+            f_nu = self.PressSchechter_mass_function(sigma = sigma)
         else:
             raise NameError("Unknown mass function, use 'Sheth-Tormen','ST','ShethTormen' / 'MICE', 'Crocce', 'C' / 'Press-Schechter', 'PS', 'PressSchechter' / 'Tinker', 'T', 'T08'")    
 
         # Halo mass function
-        hmf = rho/M**2.*log_der*f_nu
+        hmf_base = rho/M**2.*log_der*f_nu
         # Interpolation
-        hmf = si.interp1d(np.log10(M), hmf, 'cubic')
+        hmf = []
+        for iz in range(len(pk)):
+            hmf.append(si.interp1d(np.log10(M), hmf_base[iz], 'cubic'))
 
         return hmf
 
@@ -1561,10 +1562,10 @@ class cosmo:
         :param sigma: RMS mass fluctuation.
         :type sigma: array
 
-        :param delta_v: Critical underdensity in linear theory. If None, it is substituted by self.delta_sc.
+        :param delta_v: Critical underdensity in linear theory. If ``None``, it is substituted by self.delta_sc.
         :type delta_v: float, default = None
 
-        :param delta_c: Void in cloud parameter. If None, it is substituted by self.delta_v.
+        :param delta_c: Void in cloud parameter. If ``None``, it is substituted by self.delta_v.
         :type delta_c: float, default = None
 
         :param truncation: Order at which truncate the sum.
@@ -1573,7 +1574,7 @@ class cosmo:
         :return: array.
         """
         # Check if order is high enough for the sum to converge
-        assert truncation>11,"Sum will not converge, choose value for 'truncation' >= 12"
+        assert truncation>11,"Sum will not converge, choose value for 'truncation' > 11"
 
         if delta_c == None: delta_c = self.delta_sc
         if delta_v == None: delta_v = self.delta_v
@@ -1581,12 +1582,12 @@ class cosmo:
         dv = np.abs(delta_v)
         D  = dv/(delta_c + dv)
         # x factor
-        x = D/dv*sigma
+        x = D/(dv/sigma)
         # function
-        ns = len(sigma)
-        vdn = np.zeros(ns)
+        nz, ns = sigma.shape
+        vdn = np.zeros_like(sigma)
         for i_s in xrange(ns):
-            vdn[i_s] = 2.*np.sum([np.exp(-(j*const.PI*x[i_s])**2./2.)*j*const.PI*x[i_s]**2.*np.sin(j*const.PI*D) for j in xrange(1,truncation)])
+                    vdn[:,i_s] = 2.*np.sum([np.exp(-(j*const.PI*x[:,i_s])**2./2.)*j*const.PI*x[:,i_s]**2.*np.sin(j*const.PI*D) for j in xrange(1,truncation)])
         return vdn
 
 
@@ -1597,8 +1598,8 @@ class cosmo:
         """
         Computes the void size function per logarithmic interval of radius. Units of :math:`(h/\mathrm{Mpc})^3`.
 
-        :param z: Redshift.
-        :type z: float, default = 0
+        :param z: Redshift, used only for Tinker and Crocce mass functions.
+        :type z: array, default = 0
 
         :param ratio: Ratio between radii of voids in linear and non-linear theory.
         :type ratio: float, default = 1.72
@@ -1606,7 +1607,7 @@ class cosmo:
         :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
         :type k: array, default = []
 
-        :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`. If not given, it is computed at the given redshift with CAMB.
+        :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.
         :type pk: array, default = []
 
         :param model: Model to use for void size function.
@@ -1627,11 +1628,8 @@ class cosmo:
 
         :return: An interpolated function that gives :math:`\\frac{dn}{d\ln R}(R)` in :math:`h^3 \ \mathrm{Mpc}^{-3}`.
         """
-        # Load power spectrum (if needed)
-        if not np.size(z) == 1:    raise TypeError("Only one redshift per time")
-        if k == [] and pk == []:
-            k, pk = self.camb_Pk(k = np.logspace(-4., 2.7, 201), z = z, var_1 = var, var_2 = var)
-            pk = pk[0]
+        # Check dimensions (only if MICE or Tinker are asked)
+        assert len(np.atleast_1d(z))==len(pk), "Redshifts are not of the same length as power spectra"
 
         # Depending on model choose value
         # 'rat' takes the value of 1 if linear model is asked
@@ -1651,26 +1649,31 @@ class cosmo:
         # Masses, sigma, log-derivative
         # N.B. [ d ln(s^(-1)) = -0.5s^2*d ln(s^2) ; dlnM = 3 dlnR]
         M       = self.M[1:-1]
-        s2      = self.sigma2(z, k, pk)
-        sigma   = s2(np.log10(M))**0.5
-        log_der = sm.derivative(s2, np.log10(M),
-                    dx = 1e-2,
-                    n = 1,
-                    order = 3)*(-3.)/(2.*sigma**2.)*np.log10(np.exp(1.))
+        s2      = self.sigma2(k, pk)
+        sigma   = np.zeros((len(pk),len(M)))
+        log_der = np.zeros((len(pk),len(M)))
+        for iz in range(len(pk)):
+            sigma[iz] = s2[iz](np.log10(M))**0.5
+            log_der[iz] = sm.derivative(s2[iz], np.log10(M),
+                                        dx = 1e-2,
+                                        n = 1,
+                                        order = 3)*(-3.)/(2.*sigma[iz]**2.)*np.log10(np.e)
 
         # Background density
-        if var == 'cb':        omega = self.Omega_cb
-        elif var == 'tot':    omega = self.Omega_m
-        else:                raise NameError("'var' unknown, choose between 'cb' and 'tot'")
+        if var == 'cb':    omega = self.Omega_cb
+        elif var == 'tot': omega = self.Omega_m
+        else:              raise NameError("'var' unknown, choose between 'cb' and 'tot'")
         rho_v = rat**(-3.)*self.rho_crit(0.)*omega
 
         # Radii and volume
-        R     = self.radius_of_mass(M)
-        V     = lambda r: self.volume_of_radius(R)
+        R   = self.radius_of_mass(M)
+        vol = lambda r: self.volume_of_radius(R)
 
         # Void size function and interpolation
-        dndr = shift*self.f_nu_voids(sigma, **kwargs)/V(R)*log_der
-        vsf  = si.interp1d(R,dndr)
+        dndr = shift*self.f_nu_voids(sigma, **kwargs)/vol(R)*log_der
+        vsf = []
+        for iz in range(len(pk)):
+            vsf.append(si.interp1d(R,dndr[iz],'cubic'))
 
         return vsf
 
@@ -1751,7 +1754,7 @@ class cosmo:
         :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
         :type k: array
 
-        :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`. If not given, it is computed at the given redshift with CAMB.
+        :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.
         :type pk: array
 
         :param delta_v: Critical underdensity in linear theory. If None, it is substituted by self.delta_sc.
@@ -2968,18 +2971,15 @@ class cosmo:
     #-----------------------------------------------------------------------------------------
     # SIGMA 8
     #-----------------------------------------------------------------------------------------
-    def compute_sigma_8(self, k = [], pk = [], z = 0., var = 'tot'):
+    def compute_sigma_8(self, k = [], pk = [], var = 'tot'):
         """
         This routine computes :math:`sigma_8`.
 
         :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
         :type k: array, default = []
 
-        :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`. If not given, it is computed at the given redshift with CAMB.
+        :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.
         :type pk: array, default = []
-
-        :param z: Redshift (used only if ``pk == []``, so that CAMB can compute it)
-        :type z: array, default = 0
 
         :param var: component with respect to which to compute the variance.
 
@@ -2997,8 +2997,6 @@ class cosmo:
         :return: float
         """
 
-        # Load Pk if necessary
-        if pk == []: k, pk = self.camb_Pk(z = z, k = np.logspace(-4., 2.5, 201), var_1 = var, var_2 = var)
         # Smoothing radius of 8 Mpc/h
         R = 8.
         # Assertions on scales, lengths and intervals
@@ -3023,7 +3021,7 @@ class cosmo:
         :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
         :type k: array, default = []
 
-        :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`. If not given, it is computed at the given redshift with CAMB.
+        :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.
         :type pk: array, default = []
 
         :param new_sigma_8: Value to which normalize.
