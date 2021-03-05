@@ -565,7 +565,11 @@ class angular_spectra():
     #-----------------------------------------------------------------------------------------
     def intrinsic_alignment_kernel(self, k, z, A_IA = 0., eta_IA = 0., beta_IA = 0., lum_IA = 1.):
         """
-        Intrinsic alignment correction function.
+        Intrinsic alignment correction function. The extended non-linear alignment model is implemented:
+
+        .. math::
+
+          F_\mathrm{IA}(k,z) = \\frac{A_\mathrm{IA} C_1 \Omega_m}{D_1(k,z)}(1+z)^{\eta_\mathrm{IA}} \mathrm{lum}_\mathrm{IA}^{\\beta_\mathrm{IA}}
 
         :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
         :type k: array
@@ -583,7 +587,7 @@ class angular_spectra():
         :type beta_IA: float, default = 0
 
         :param lum_IA: Relative luminosity of galaxies w.r.t. :math:`L_*`.
-        :type lum_IA: float or array of same length as `z`, default = 1
+        :type lum_IA: float or array of same length as :math:`z`, default = 1
 
         :param kwargs: Keyword arguments for the IA function.
 
