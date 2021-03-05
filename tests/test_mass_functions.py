@@ -22,6 +22,7 @@ zz   = np.linspace(0., 5., 6)
 kk   = np.logspace(-4.,2.,1001)
 logM = np.linspace(5.,16.,111)
 nz, nk, nm = len(np.atleast_1d(zz)), len(np.atleast_1d(kk)), len(np.atleast_1d(logM))
+
 #=============
 # Load linear power spectra
 #=============
@@ -53,7 +54,7 @@ for iz in range(nz):
 #=============
 # Sheth-Tormen mass function (takes sigma(M), previously computed, as argument).
 # Even if it returns things as function of sigma, we plot it as function of mass.
-ShethTormen = C.ShethTormen_mass_function(sigma = sigma_squared**5., a = 0.707, p = 0.3)
+ShethTormen = C.ShethTormen_mass_function(sigma = sigma_squared**0.5, a = 0.707, p = 0.3)
 
 #=============
 # Halo mass function
