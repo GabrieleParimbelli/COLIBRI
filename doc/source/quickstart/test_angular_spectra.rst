@@ -79,7 +79,7 @@ Finally, the shear power spectrum is computed with
 .. code-block:: python
 
  ll = np.geomspace(2., 4.e4, 51)
- Cl = S.angular_power_spectra(l = ll, do_WL = True, do_IA = True, do_GC = False, A_IA = -1.3)
+ Cl = S.compute_angular_power_spectra(l = ll, do_WL = True, do_IA = True, do_GC = False, A_IA = -1.3)
 
 The ``l`` argument sets the multipoles at which the spectrum must be computed; ``do_WL``, ``do_IA``, ``do_GC`` are the three flags switching on/off weak lensing, intrinsic alignment and galaxy clustering (see also below).
 The parameter ``A_IA`` is a keyword argument for the intrinsic alignment term.
