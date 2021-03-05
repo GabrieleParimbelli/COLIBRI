@@ -5,7 +5,7 @@ Halo mass function
 
 In this section we show how to compute the halo mass functions using the class :func:`~colibri.cosmology.cosmo`
 We also provide alternatives to the test code.
-The text below refers to the file named``test_mass_function.py`` provided in the ``tests`` directory in the GitHub repository.
+The text below refers to the file named ``test_mass_function.py`` provided in the ``tests`` directory in the GitHub repository.
 
 
 Initialization
@@ -53,7 +53,7 @@ In particular, the mass variance in spheres, the peak height for the computation
      nu[iz]            = peak_height_interp[iz](logM)
      HMF[iz]           = mass_functions [iz](logM)
 
-One can also retrieve the universal mass function. Here is the Sheth-Tormen case (see :func:`~colibri.cosmology.ShethTormen_mass_function`), but there are also :func:`~colibri.cosmology.PressSchechter_mass_function`, :func:`~colibri.cosmology.Tinker_mass_function` and :func:`~colibri.cosmology.MICE_mass_function` .
+One can also retrieve the universal mass function. Here is the Sheth-Tormen case (see :func:`~colibri.cosmology.cosmo.ShethTormen_mass_function`), but there are also :func:`~colibri.cosmology.cosmo.PressSchechter_mass_function`, :func:`~colibri.cosmology.cosmo.Tinker_mass_function` and :func:`~colibri.cosmology.cosmo.MICE_mass_function` .
 
 .. code-block:: python
 

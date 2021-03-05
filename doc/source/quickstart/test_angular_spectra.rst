@@ -109,8 +109,8 @@ Galaxy clustering power spectra and correlation functions
 
 If :func:`~colibri.angular_spectra.angular_spectra.angular_power_spectra` or :func:`~colibri.angular_spectra.angular_spectra.angular_correlation_functions` are called with ``do_GC = True``, then two additional non-zero keys labelled ``GL`` and ``GG`` appear. These represent the galaxy-galaxy lensing term and the galaxy clustering power spectrum/correlation function.
 However, before using it, one has to load the galaxy bias function, essential to compute clustering.
-This is done by calling the routine :func:`~colibri.angular_spectra.angular_spectra.load_galaxy_bias` **after** :func:`~colibri.angular_spectra.load_power_spectra` **but before calling the angular power spectrum/correlation function routine**.
-This takes as argument a function whose first 2 arguments MUST be the scale k [in Mpc/h] and the redshift z. Further keyword arguments can be added as **kwargs. The function 'load_galaxy_bias' returns a 2D interpolator in k and z.
+This is done by calling the routine :func:`~colibri.angular_spectra.angular_spectra.load_galaxy_bias` **after** :func:`~colibri.angular_spectra.angular_spectra.load_power_spectra` **but before calling the angular power spectrum/correlation function routine**.
+This takes as argument a function whose first 2 arguments MUST be the scale k [in Mpc/h] and the redshift z. Further keyword arguments can be added as ``**kwargs``. The function :func:`~colibri.angular_spectra.angular_spectra.load_galaxy_bias` returns a 2D interpolator in k and z.
 
 
 
