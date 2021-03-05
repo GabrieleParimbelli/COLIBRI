@@ -978,7 +978,7 @@ class cosmo:
         integral  = np.zeros_like(R)
         for i in xrange(len(R)):
             integrand = kappa**(3.+2.*j)*P_kappa/(2.*const.PI**2.)*W[i]**2.*sm[i]**2.
-            integral[i] = np.trapz(integrand, dx = dlnk)
+            integral[i] = sint.simps(integrand, dx = dlnk)
 
         # Smooth and interpolate
         if j > 0:
@@ -2920,8 +2920,6 @@ class cosmo:
         :param k_high: Highest scale to spline in :math:`h/\mathrm{Mpc}`.
         :type k_high: float, default = 4.5e-1
 
-
-
         :return: array, power spectrum without BAO.
         """
 
@@ -2980,7 +2978,7 @@ class cosmo:
         :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`. If not given, it is computed at the given redshift with CAMB.
         :type pk: array, default = []
 
-        :param z: Redshift.
+        :param z: Redshift (used only if ``pk == []``, so that CAMB can compute it)
         :type z: array, default = 0
 
         :param var: component with respect to which to compute the variance.
@@ -2996,31 +2994,23 @@ class cosmo:
             - 'Phi'   : Weyl potential
         :type var: string, default = 'tot'
 
-
         :return: float
         """
-        if pk == []:
-            k, PkL = self.camb_Pk(z = z, k = np.logspace(-4., 2.5, 201), var_1 = var, var_2 = var)
-            #PkL = PkL[0]
-        else:
-            k, PkL = k, [pk]
 
+        # Load Pk if necessary
+        if pk == []: k, pk = self.camb_Pk(z = z, k = np.logspace(-4., 2.5, 201), var_1 = var, var_2 = var)
+        # Smoothing radius of 8 Mpc/h
+        R = 8.
         # Assertions on scales, lengths and intervals
-        assert np.max(k)>=10.,    "k_max too low to obtain a convergent result. Use k_max >= 10 h/Mpc."
-        assert np.min(k)<=0.001,  "k_min too high to obtain a convergent result. Use k_min <= 0.001 h/Mpc."
-        assert len(k)>=100,       "size of 'k' too low to obtain a convergent result. Use at least 100 points."
-        #assert np.all([np.isclose(np.log(k[ind+1]/k[ind]), np.log(k[ind+2]/k[ind+1]),
-        #        atol = 1e-4, rtol = 1e-2) for ind in xrange(len(k[:-2]))])
-
-        R = 8. # Mpc/h                # Smoothing radius of 8 Mpc/h
-
+        assert np.max(k)>=np.pi/R*2., "k_max too low to obtain a convergent result. Use k_max >= pi/4 h/Mpc to obtain covergent results."
+        assert np.min(k)<=0.001,      "k_min too high to obtain a convergent result. Use k_min <= 0.001 h/Mpc to obtain covergent results."
+        assert len(k)>=100,           "size of 'k' too low to obtain a convergent result. Use at least 100 points."
+        # Make 'k' 2D
+        k2d = np.atleast_2d(k)
+        # Top-hat window function
+        W_kR = self.TopHat_window(k2d*R)
         # Integration in log-bins
-        # N.B. It is CORRECT to integrate k^3 P(k)/(2 pi^2)! Guaranteed!
-        integral = np.zeros(len(np.atleast_1d(z)))
-        for i in range(len(np.atleast_1d(z))):
-            integrand    = k**3.*PkL[i]/(2.*const.PI**2.)*self.TopHat_window(k*R)**2.
-            integral[i]  = np.trapz(integrand, x = np.log(k))
-
+        integral = sint.simps(k2d**3.*pk/(2.*const.PI**2.)*W_kR**2.,x=np.log(k),axis=1)
         return integral**.5
 
     #-----------------------------------------------------------------------------------------
