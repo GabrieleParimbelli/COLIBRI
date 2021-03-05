@@ -28,7 +28,7 @@ print("> Cosmology loaded")
 #   - a cosmology instance:
 #   - a 2-uple or a list of length 2, whose values are the lower and upper limit of integration in redshift
 S = ang.angular_spectra(cosmology = C, z_limits = [0., 5.])
-print("> Shear instance loaded")
+print("> Angular spectra instance loaded")
 #-----------------
 
 #-----------------
@@ -116,10 +116,10 @@ else:
 print("> Galaxy distribution functions:")
 for i in range(len(n_z)):
     print("    Bin %i: using function '%s' with parameters %s" %(i+1, n_z[i][0].__name__, n_z[i][1]))
-#S.load_window_functions(galaxy_distributions = n_z)
-z_w  = np.linspace(0., 6., 1001)        # Redshift range must be wider than z_limits!!
-nz_w = [S.euclid_distribution_with_photo_error(z = z_w, a = 2.0, b = 1.5, zmin = bin_edges[i], zmax = bin_edges[i+1]) for i in range(nbins)]
-S.load_window_functions(z = z_w, nz = nz_w)
+S.load_window_functions(galaxy_distributions = n_z)
+#z_w  = np.linspace(0., 6., 1001)        # Redshift range must be wider than z_limits!!
+#nz_w = [S.euclid_distribution_with_photo_error(z = z_w, a = 2.0, b = 1.5, zmin = bin_edges[i], zmax = bin_edges[i+1]) for i in range(nbins)]
+#S.load_window_functions(z = z_w, nz = nz_w)
 print("> Window functions loaded")
 #-----------------
 
@@ -137,16 +137,13 @@ def _bias(k,z,k_damp = 0.5):
 S.load_galaxy_bias(bias_function = _bias, k_damp = 4.)
 #-----------------
 
-
 #-----------------
 # 6) Angular spectra or correlation functions
 #-----------------
 # Compute the angular spectra at the given multipoles, with the power spectra computed above.
-# If power_spectra == None, they will be computed on the fly with 'kwargs_power_spectra' to specify
-# which code to use and whether to use linear or non-linear spectra.
-# 'IA' can take values of 'LA' for 'linear alignment' or 'NLA' for nonlinear alignment, and
-# 'kwargs_IA' are the parameters the function 'intrinsic_alignment_kernel' takes, depending
-# on the model chosen.
+# The parameters 'A_IA', beta_IA', 'eta_IA','lum_IA' are the kwargs for the extended non-linear
+# intrinsic alignment model.
+# In particular 'lum_IA' can either be a float or a function whose ONLY argument is redshift.
 # The output of the function is a dictionary with:
 #   - 'gg': cosmic shear signal
 #   - 'gI': cross term of cosmic shear and intrinsic alignment
@@ -167,8 +164,7 @@ if fourier_space:
                                              do_WL        = True,
                                              do_IA        = True,
                                              do_GC        = True,
-                                             #IA_model     = 'NLA',
-                                             kwargs_IA    = {'A_IA': -1.3, 'beta_IA': 0., 'eta_IA': 0.})
+                                             A_IA = -1.3, beta_IA = 0., eta_IA = 0., lum_IA = 1.)
     print("> Spectra loaded")
 else:
     theta = np.geomspace(10., 800., 51)      # in arcmin
@@ -176,8 +172,8 @@ else:
                                                     do_WL        = True,
                                                     do_IA        = True,
                                                     do_GC        = True,
-                                                    #IA_model     = 'NLA',
-                                                    kwargs_IA    = {'A_IA': -1.3, 'beta_IA': 0., 'eta_IA': 0.})
+                                                    A_IA = -1.3, beta_IA = 0., eta_IA = 0., lum_IA = 1.)
+    print("> Correlation functions loaded")
 #-----------------
 
 
