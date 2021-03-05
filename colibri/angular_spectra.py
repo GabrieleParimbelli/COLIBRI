@@ -569,7 +569,9 @@ class angular_spectra():
 
         .. math::
 
-          F_\mathrm{IA}(k,z) = \\frac{A_\mathrm{IA} C_1 \Omega_m}{D_1(k,z)}(1+z)^{\eta_\mathrm{IA}} \left[\\frac{L(z)}{L_*(z)}\\right]^{\\beta_\mathrm{IA}}
+          F_\mathrm{IA}(k,z) = \\frac{A_\mathrm{IA} \mathcal C_1 \Omega_\mathrm m}{D_1(k,z)}(1+z)^{\eta_\mathrm{IA}} \left[\\frac{L(z)}{L_*(z)}\\right]^{\\beta_\mathrm{IA}},
+
+        where :math:`\mathcal C_1 = 0.0134`.
 
         :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
         :type k: array
