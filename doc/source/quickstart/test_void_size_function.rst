@@ -66,12 +66,17 @@ Other key quantities are the following:
  # High-mass approximation for Press-Schechter formalism for voids
  f_high_nu = np.exp(-nu**2./2.)/np.sqrt(2.*np.pi)*C.volume_of_radius(R_of_M, 'th')/(2.*np.pi*R_star**2.)**1.5*(nu**3.-3*nu)*gamma_p**3.
 
+Actual computation of void size function
+-----------------------------------------------
+
 All of these steps can be skipped if one just wants to compute the void size function.
 The summary of all the previous lines is given by:
 
 .. code-block:: python
 
- # Void size function (a,p are Sheth-Tormen parameters, delta_v is the linear underdensity for "collapse" of voids)
+ # Void size function
+ # a,p are Sheth-Tormen parameters
+ # delta_v is the linear underdensity for "collapse" of voids
  RL,VSF = C.void_size_function_EST(R=R_Eul,z=zz,k=k,pk=pk,delta_v=-1.76,a=1.,p=0.)
 
 The function :func:`~colibri.cosmology.cosmo.void_size_function_EST` returns two 2D arrays.
