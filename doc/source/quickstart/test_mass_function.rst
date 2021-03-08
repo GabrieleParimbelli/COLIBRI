@@ -38,27 +38,12 @@ In particular, the mass variance in spheres, the peak height for the computation
 
 .. code-block:: python
 
- # Compute...
- sigma2_interp      = C.sigma2(k = k, pk = pk)                                        # mass variance in spheres
- peak_height_interp = C.peak_height(k = k, pk = pk)                                   # peak height
- mass_functions     = C.halo_mass_function(k = k, pk = pk, mass_fun = 'ShethTormen')  # halo mass function
+ sigma_squared = C.mass_variance(logM = logM, k = k, pk = pk)                                 # mass variance in spheres
+ nu_peak       = C.peak_height(logM = logM, k = k, pk = pk)                                   # peak-background split
+ ShethTormen   = C.ShethTormen_mass_function(sigma = sigma_squared**0.5, a = 0.707, p = 0.3)  # Sheth-Tormen function
+ HMF           = C.halo_mass_function(logM = logM, k = k, pk = pk, mass_fun = 'ShethTormen')  # halo mass function
 
- # The ones abouve are interpolated quantities.
- # Let us fill the tables for the values
- sigma_squared = np.zeros((nz,nm))
- nu            = np.zeros((nz,nm))
- HMF           = np.zeros((nz,nm))
- for iz in range(nz):
-     sigma_squared[iz] = sigma2_interp[iz](logM)
-     nu[iz]            = peak_height_interp[iz](logM)
-     HMF[iz]           = mass_functions [iz](logM)
-
-One can also retrieve the universal mass function. Here is the Sheth-Tormen case (see :func:`~colibri.cosmology.cosmo.ShethTormen_mass_function`), but there are also :func:`~colibri.cosmology.cosmo.PressSchechter_mass_function`, :func:`~colibri.cosmology.cosmo.Tinker_mass_function` and :func:`~colibri.cosmology.cosmo.MICE_mass_function` .
-
-.. code-block:: python
-
- ShethTormen = C.ShethTormen_mass_function(sigma = sigma_squared**0.5, a = 0.707, p = 0.3)
-
+These 4 quantities return 2D arrays (one dimension is redshift, the other is mass/peak height).
 If one wants to plot all the previous quantities, the following picture is the result.
 
 .. image:: ../_static/mass_function.png

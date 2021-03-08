@@ -1,11 +1,7 @@
 import numpy as np
 import colibri.cosmology as cc
 import matplotlib.pyplot as plt
-from scipy.signal import savgol_filter
-import scipy.special as ss
-import scipy.misc as sm
 import scipy.interpolate as si
-import scipy.integrate as sint
 
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif', size = 14)
