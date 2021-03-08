@@ -77,9 +77,9 @@ The summary of all the previous lines is given by:
  # Void size function
  # a,p are Sheth-Tormen parameters
  # delta_v is the linear underdensity for "collapse" of voids
- RL,VSF = C.void_size_function_EST(R=R_Eul,z=zz,k=k,pk=pk,delta_v=-1.76,a=1.,p=0.)
+ RL,VSF = C.void_size_function(R=R_Eul,z=zz,k=k,pk=pk,delta_v=-1.76,a=1.,p=0.)
 
-The function :func:`~colibri.cosmology.cosmo.void_size_function_EST` returns two 2D arrays.
+The function :func:`~colibri.cosmology.cosmo.void_size_function` returns two 2D arrays.
 The first contains the Lagrangian radii at which the void size function is evaluated (first dimension is redshift).
 The second is the actual void size function evaluated at the given redshift and Lagrangian radius.
 

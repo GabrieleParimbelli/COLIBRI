@@ -1630,7 +1630,7 @@ class cosmo:
     #-------------------------------------------------------------------------------
     # VOID SIZE FUNCTION EXCURSION SET
     #-------------------------------------------------------------------------------
-    def void_size_function_EST(self, R, z, k, pk, delta_v = None, a = 1., p = 0.):
+    def void_size_function(self, R, z, k, pk, delta_v = None, a = 1., p = 0.):
         """
         This routine returns the void size function, i.e. the number of voids per
         unit volume per unit (Lagrangian) radius, according ot the Excursion Set of Troughs theory.
