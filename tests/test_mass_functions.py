@@ -18,6 +18,7 @@ C=cc.cosmo()
 #=============
 # Scales, redshift, masses
 #=============
+#zz   = np.atleast_1d(0.)
 zz   = np.linspace(0., 5., 6)
 kk   = np.logspace(-4.,2.,1001)
 logM = np.linspace(5.,16.,111)
@@ -28,26 +29,20 @@ nz, nk, nm = len(np.atleast_1d(zz)), len(np.atleast_1d(kk)), len(np.atleast_1d(l
 #=============
 k,pk=C.camb_Pk(z=zz)
 
-
 #=============
 # Mass variance in spheres
 #=============
-# The function returns a list of interpolated objects containing sigma^2[log10(M)] for each redshift
-sigma2_interp = C.sigma2(k=k,pk=pk)
-# Fill arrays
-sigma_squared = np.zeros((nz,nm))
-for iz in range(nz):
-    sigma_squared[iz] = sigma2_interp[iz](logM)
+# Routine to compute mass variance in sphere of different masses.
+# If one wants to use radii instead of masses, it is sufficient to run
+#  M = C.masses_in_radius(R); logM = np.log10(M)
+sigma_squared = C.mass_variance(logM = logM, k = k, pk = pk)
 
 #=============
 # Peak height
 #=============
-# The function returns a list of interpolated objects containing nu^2[log10(M)] for each redshift
-peak_height_interp = C.peak_height(k=k,pk=pk)
-# Fill arrays
-nu = np.zeros((nz,nm))
-for iz in range(nz):
-    nu[iz] = peak_height_interp[iz](logM)
+# Peak-background split quantity, i.e. nu = delta_c/sigma(M), where delta_c=1.686
+# is the linear overdensity for collapse
+nu_peak = C.peak_height(logM = logM, k = k, pk = pk)
 
 #=============
 # Sheth-Tormen
@@ -61,12 +56,7 @@ ShethTormen = C.ShethTormen_mass_function(sigma = sigma_squared**0.5, a = 0.707,
 #=============
 # We use the Sheth-Tormen mass function.
 # If 'mass_fun' == 'Tinker' or 'MICE', you should add 'z=zz' to the arguments of the function.
-# The function returns a list of interpolated objects containing dn/dM[log10(M)] for each redshift
-mass_functions = C.halo_mass_function(k = k, pk = pk, mass_fun = 'ShethTormen')
-# Fill arrays
-HMF = np.zeros((nz,nm))
-for iz in range(nz):
-    HMF[iz] = mass_functions [iz](logM)
+HMF = C.halo_mass_function(logM = logM, k = k, pk = pk, mass_fun = 'ShethTormen')
 
 #=============
 # Plot
@@ -75,26 +65,24 @@ fig, ax = plt.subplots(2,2,figsize=(14,14),sharex=True)
 L,R,T,B=0.13,0.96,0.96,0.13
 plt.subplots_adjust(left=L,right=R,top=T,bottom=B,wspace=0.2,hspace=0.)
 
-# Plot mass variance
+
 for iz in range(nz):
+    # Plot mass variance
     ax[0,0].loglog(10.**logM,sigma_squared[iz],c=colors[iz],label='$z=%i$' %(zz[iz]))
 
-# Plot peak height
-for iz in range(nz):
-    ax[0,1].loglog(10.**logM,nu[iz],c=colors[iz])
+    # Plot peak height
+    ax[0,1].loglog(10.**logM,nu_peak[iz],c=colors[iz])
 
-# Plot Sheth-Tormen
-for iz in range(nz):
+    # Plot Sheth-Tormen
     ax[1,0].loglog(10.**logM,ShethTormen[iz],c=colors[iz])
-ax[1,0].set_ylim(1e-5,1e0)
+    ax[1,0].set_ylim(1e-5,1e0)
 
-# Plot Sheth-Tormen
-for iz in range(nz):
+    # Plot halo mass function
     ax[1,1].loglog(10.**logM,10.**logM*HMF[iz],c=colors[iz])
-ax[1,1].set_ylim(1e-12,1e3)
+    ax[1,1].set_ylim(1e-12,1e3)
 
-# x limits
-ax[0,0].set_xlim(10.**logM.min(),10.**logM.max())
+    # x limits
+    ax[0,0].set_xlim(10.**logM.min(),10.**logM.max())
 
 # Labels
 for a in [0,1]:
