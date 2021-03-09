@@ -551,8 +551,8 @@ class angular_spectra():
 
         """
         # Compute galaxy bias from function
-        try:              K,Z = np.meshgrid(self.k, self.z)
-        except NameError: raise NameError("Scales and redshifts not found, remember to run self.load_power_spectra first")
+        try:                   K,Z = np.meshgrid(self.k, self.z)
+        except AttributeError: raise AttributeError("Scales and redshifts not found, remember to run self.load_power_spectra first")
         bias_array = bias_function(K, Z, **kwargs)
         # Select kind of interpolation
         if self.nz > 3: kind_of_interpolation = 'cubic'
