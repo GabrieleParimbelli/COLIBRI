@@ -592,8 +592,6 @@ class angular_spectra():
         :param lum_IA: Relative luminosity of galaxies :math:`L(z)/L_*(z)`.
         :type lum_IA: float or callable whose **only** argument is :math:`z`, default = 1
 
-        :param kwargs: Keyword arguments for the IA function.
-
         :return: 2D array containing the correction function :math:`F(k,z)` for intrinsic alignment
         """
         # Constants in front

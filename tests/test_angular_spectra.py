@@ -60,7 +60,7 @@ print("> Angular spectra instance loaded")
 kk = np.geomspace(1e-4, 1e2, 301)
 zz = np.linspace(0., 5., 51)
 _, pkz = C.camb_Pk(z = zz, k = kk, nonlinear = True, halofit = 'mead2020')
-#S.load_power_spectra(z = zz, k = kk, power_spectra = pkz)
+S.load_power_spectra(z = zz, k = kk, power_spectra = pkz)
 print("> Power spectra loaded")
 #-----------------
 
