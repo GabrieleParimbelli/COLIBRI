@@ -551,7 +551,8 @@ class angular_spectra():
 
         """
         # Compute galaxy bias from function
-        K,Z = np.meshgrid(self.k, self.z)
+        try:              K,Z = np.meshgrid(self.k, self.z)
+        except NameError: raise NameError("Scales and redshifts not found, remember to run self.load_power_spectra first")
         bias_array = bias_function(K, Z, **kwargs)
         # Select kind of interpolation
         if self.nz > 3: kind_of_interpolation = 'cubic'
@@ -589,7 +590,7 @@ class angular_spectra():
         :type beta_IA: float, default = 0
 
         :param lum_IA: Relative luminosity of galaxies :math:`L(z)/L_*(z)`.
-        :type lum_IA: float or array of same length as :math:`z`, default = 1
+        :type lum_IA: float or callable whose **only** argument is :math:`z`, default = 1
 
         :param kwargs: Keyword arguments for the IA function.
 
