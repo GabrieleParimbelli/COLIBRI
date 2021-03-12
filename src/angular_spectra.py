@@ -57,8 +57,8 @@ class angular_spectra():
         self.z_integration  = np.linspace(self.z_min, self.z_max, self.nz_integration)
 
         # Array of redshifts for computing window integrals (set number of redshift so that there is an integral at least each dz = 0.025)
-        dz_windows = 0.025
-        self.z_windows  = np.arange(self.z_min, self.z_max+dz_windows, dz_windows)
+        self.dz_windows = 0.025
+        self.z_windows  = np.arange(self.z_min, self.z_max+self.dz_windows, self.dz_windows)
         self.nz_windows = len(np.atleast_1d(self.z_windows))
 
 
@@ -433,6 +433,7 @@ class angular_spectra():
         if nz is not None and z is not None:
             nz = np.array(nz)
             z  = np.array(z)
+            assert np.all(np.diff(z)<self.dz_windows), "Distribution function arrays must be sampled with frequency dz<=%.3f" %(self.dz_windows)
             assert nz.ndim == 2, "'nz' must be 2-dimensional" 
             assert (nz.shape)[1] == z.shape[0], "Length of each 'nz[i]' must be the same of 'z'"
 
@@ -493,13 +494,14 @@ class angular_spectra():
 
         """
 
-        if (galaxy_distributions is None and z is None and nz is None):
-            raise ValueError("Either 'galaxy distribution' or 'z' AND 'nz' must be different from None")
-        if nz is not None and z is not None:
-            nz = np.array(nz)
-            z  = np.array(z)
-            assert nz.ndim == 2, "'nz' must be 2-dimensional" 
-            assert (nz.shape)[1] == z.shape[0], "Length of each 'nz[i]' must be the same of 'z'"
+        #if (galaxy_distributions is None and z is None and nz is None):
+        #    raise ValueError("Either 'galaxy distribution' or 'z' AND 'nz' must be different from None")
+        #if nz is not None and z is not None:
+        #    nz = np.array(nz)
+        #    z  = np.array(z)
+        #    assert np.all(np.diff(z)<self.dz_windows), "Distribution function arrays must be sampled with frequency dz<=%.3f" %(self.dz_windows)
+        #    assert nz.ndim == 2, "'nz' must be 2-dimensional" 
+        #    assert (nz.shape)[1] == z.shape[0], "Length of each 'nz[i]' must be the same of 'z'"
         # Set number of bins and normalize them
         if galaxy_distributions is not None:
             n_bins = len(galaxy_distributions)
@@ -542,7 +544,7 @@ class angular_spectra():
     #-----------------------------------------------------------------------------------------
     def load_galaxy_bias(self, bias_function, **kwargs):
         """
-        It loads an interpolator for galaxy bias. Use it only if you are computing angular galaxy clustering. For how this code is built, this function must be called after:func:`~colibri.angular_spectra.angular_spectra.load_power_spectra`
+        It loads an interpolator for galaxy bias. Use it only if you are computing angular galaxy clustering. For how this code is built, this function must be called after :func:`~colibri.angular_spectra.angular_spectra.load_power_spectra`
 
         :param bias_function: bias function for galaxies :math:`b(k,z)`.
         :type bias_function: a function whose two first arguments are scale k (in :math:`h/\mathrm{Mpc}`) and redshift :math:`z`.
