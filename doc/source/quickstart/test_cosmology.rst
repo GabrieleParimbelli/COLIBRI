@@ -3,14 +3,14 @@
 Basic usage of cosmological functions
 ======================================
 
-In this section some basic examples of how to use the class :func:`~src.cosmology.cosmo` is shown.
+In this section some basic examples of how to use the class :func:`colibri.cosmology.cosmo` is shown.
 If desired, there is a file in the folder ``tests`` named ``test_cosmology.py`` which can be run as is and provides the exact same results as here.
 
 
 Print cosmological parameters
 -------------------------------
 
-Let us start by importing all the necessary libraries and the :func:`~src.cosmology` library.
+Let us start by importing all the necessary libraries and the :func:`colibri.cosmology` library.
 
 .. code-block:: python
 
@@ -125,7 +125,7 @@ Power spectra
 -------------------------------------
 
 
-Generating power spectra requires the installation of the Python wrapper of `CAMB <https://camb.info/>`_ or `Class <http://class-code.net/>`_ , unless the Eisenstein-Hu formula is used (for which the function :func:`~src.cosmology.cosmo.EisensteinHu_Pk` is provided).
+Generating power spectra requires the installation of the Python wrapper of `CAMB <https://camb.info/>`_ or `Class <http://class-code.net/>`_ , unless the Eisenstein-Hu formula is used (for which the function :func:`colibri.cosmology.cosmo.EisensteinHu_Pk` is provided).
 
 Generating linear matter power spectra is as easy as typing
 
@@ -144,7 +144,7 @@ In this case, each line returns two things:
  * a 2D array of shape ``(len(z), len(k))`` containing the total matter power spectrum at the required redshifts and scales
 
 It may happen that, instead of the total matter, the linear cold dark matter only power spectrum is required.
-In this case, the routines :func:`~src.cosmology.cosmo.camb_XPk` and :func:`~src.cosmology.cosmo.class_XPk` will do:
+In this case, the routines :func:`colibri.cosmology.cosmo.camb_XPk` and :func:`colibri.cosmology.cosmo.class_XPk` will do:
 
 .. code-block:: python
 

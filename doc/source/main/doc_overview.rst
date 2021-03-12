@@ -30,7 +30,7 @@ Also, from a Python (2.x in this case) program:
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 The main file of COLIBRÌ is without doubt the ``cosmology.py`` file.
-This file contains one Python class, named :func:`~src.cosmology.cosmo()`, in whose initialization the cosmological parameters must be provided (otherwise the default values will be loaded).
+This file contains one Python class, named :func:`colibri.cosmology.cosmo()`, in whose initialization the cosmological parameters must be provided (otherwise the default values will be loaded).
 This class has all the routines necessary to compute distances, ages, density parameters, halo mass functions, void size functions and power spectra.
 For the latter, both Boltzmann solvers **CAMB** and **Class** can be used, provided their Python wrapper is correclty compiled (see :ref:`prerequisites`), as well as the Eisenstein-Hu formula (see `arXiv:9710252 <https://arxiv.org/abs/astro-ph/9710252>`_).
 
@@ -38,23 +38,23 @@ For the latter, both Boltzmann solvers **CAMB** and **Class** can be used, provi
 ^^^^^^^^^^^^^^^^^^
 
 There are three classes.
-The first one is called :func:`~src.nonlinear.HMcode2016` , which transforms a linear input power spectrum to its non-linear counterpart.
+The first one is called :func:`colibri.nonlinear.HMcode2016` , which transforms a linear input power spectrum to its non-linear counterpart.
 This class uses the Halofit model by Mead `et al.` (see `arXiv:1505.07833 <https://arxiv.org/abs/1505.07833>`_ and `arXiv:1602.02154 <https://arxiv.org/abs/1602.02154>`_), taking as inputs redshift, scales, power spectrum and a cosmology.
-The second class is called :func:`~src.nonlinear.HMcode2020` and does the same thing, except following `arXiv:2009.01858 <https://arxiv.org/abs/2009.01858>`_
-The last class :func:`~src.nonlinear.nonlinear_pk` uses the so-called `cold dark matter prescription` (see e.g. `arXiv:1311.0866 <https://arxiv.org/abs/1311.0866>`_, `arXiv:1311.1212 <https://arxiv.org/abs/1311.1212>`_, `arXiv:1311.1514 <https://arxiv.org/abs/1311.1514>`_ ), where the Halofit operator is applied only to the cold dark matter+baryons linear component, while the neutrino and the cross part are added linearly afterwards.
+The second class is called :func:`colibri.nonlinear.HMcode2020` and does the same thing, except following `arXiv:2009.01858 <https://arxiv.org/abs/2009.01858>`_
+The last class :func:`colibri.nonlinear.nonlinear_pk` uses the so-called `cold dark matter prescription` (see e.g. `arXiv:1311.0866 <https://arxiv.org/abs/1311.0866>`_, `arXiv:1311.1212 <https://arxiv.org/abs/1311.1212>`_, `arXiv:1311.1514 <https://arxiv.org/abs/1311.1514>`_ ), where the Halofit operator is applied only to the cold dark matter+baryons linear component, while the neutrino and the cross part are added linearly afterwards.
 
 `angular_spectra` module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :func:`~src.angular_spectra.angular_spectra` class inside this file is finalized to compute the shear power spectrum and correlation functions in the flat sky and Limber's approximations. In this file are provided the routines to compute non-linear power spectra, example functions for galaxy distributions (although different ones can be defined by the user outside the class) and window functions. The possibility to add the intrinsic alignment effect (see `arXiv:0406275 <https://arxiv.org/abs/astro-ph/0406275>`_) is included.
+The :func:`colibri.angular_spectra.angular_spectra` class inside this file is finalized to compute the shear power spectrum and correlation functions in the flat sky and Limber's approximations. In this file are provided the routines to compute non-linear power spectra, example functions for galaxy distributions (although different ones can be defined by the user outside the class) and window functions. The possibility to add the intrinsic alignment effect (see `arXiv:0406275 <https://arxiv.org/abs/astro-ph/0406275>`_) is included.
 
 `halo`, `galaxy`, `RSD`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This three files are linked with each other. The basis is ``halo.py`` : it contains the class :func:`~src.halo.halo` which computes the non-linear matter power spectrum according to the pure halo model (see for instance `arXiv:0206508 <https://arxiv.org/abs/astro-ph/0206508>`_).
+This three files are linked with each other. The basis is ``halo.py`` : it contains the class :func:`colibri.halo.halo` which computes the non-linear matter power spectrum according to the pure halo model (see for instance `arXiv:0206508 <https://arxiv.org/abs/astro-ph/0206508>`_).
 While this is known to return a poor description of the matter clustering, the class has routines able to compute properly halo mass functions and halo biases.
-In the file ``galaxy.py`` the class :func:`~src.galaxy.galaxy` is implemented, which uses the Halo Occupation Distribution (see e.g. `arXiv:0408564 <https://arxiv.org/pdf/astro-ph/0408564.pdf>`_) prescription to predict the galaxy power spectrum in real space.
-Conversely, the redshift-space power spectrum is provided by the class :func:`~src.RSD.RSD` in the file ``RSD.py``: currently the dispersion model is implemented (with both Gaussian and Lorentzian dampings) as well as a halo model based prescription.
+In the file ``galaxy.py`` the class :func:`colibri.galaxy.galaxy` is implemented, which uses the Halo Occupation Distribution (see e.g. `arXiv:0408564 <https://arxiv.org/pdf/astro-ph/0408564.pdf>`_) prescription to predict the galaxy power spectrum in real space.
+Conversely, the redshift-space power spectrum is provided by the class :func:`colibri.RSD.RSD` in the file ``RSD.py``: currently the dispersion model is implemented (with both Gaussian and Lorentzian dampings) as well as a halo model based prescription.
 
 `fourier` module
 ^^^^^^^^^^^^^^^^

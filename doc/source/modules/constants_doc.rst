@@ -3,5 +3,5 @@
 Constants
 ====================
 
-.. automodule:: src.constants
+.. automodule:: colibri.constants
     :members:

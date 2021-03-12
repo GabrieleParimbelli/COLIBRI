@@ -3,5 +3,5 @@
 Useful functions
 ==============================
 
-.. automodule:: src.useful_functions
+.. automodule:: colibri.useful_functions
     :members:

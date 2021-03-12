@@ -11,8 +11,8 @@ from six.moves import xrange
 
 class RSD(gc.galaxy):
 	"""
-	The ``RSD`` class inherits all the functions from the :func:`~src.galaxy.galaxy` class and
-	therefore from the :func:`~src.halo.halo` one.
+	The ``RSD`` class inherits all the functions from the :func:`colibri.galaxy.galaxy` class and
+	therefore from the :func:`colibri.halo.halo` one.
 	It computes the galaxy redshift-space power spectrum in the Halo Occupation Distribution (HOD)
 	prescription through the Kaiser effect and the dispersion model (both Gaussian and Lorentzian damping
 	functions are provided).
@@ -63,10 +63,10 @@ class RSD(gc.galaxy):
 	:param BAO_smearing: Whether to damp the BAO feature due to non-linearities.
 	:type BAO_smearing: boolean, default = True
 
-	:param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`~src.cosmology.cosmo` documentation).
+	:param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`colibri.cosmology.cosmo` documentation).
 	:type cosmology: ``cosmo`` instance, default = ``cosmology.cosmo()``
 
-	:return: The initialization automatically calls a ``galaxy`` instance (see :func:`~src.galaxy.galaxy`) and therefore all the quantities described there are also available here. Also, the key ``['galaxies']['redshift space']`` is added to the ``self.Pk`` dictionary.
+	:return: The initialization automatically calls a ``galaxy`` instance (see :func:`colibri.galaxy.galaxy`) and therefore all the quantities described there are also available here. Also, the key ``['galaxies']['redshift space']`` is added to the ``self.Pk`` dictionary.
 	"""
 	#-----------------------------------------------------------------------------------------
 	# INITIALIZATION FUNCTION
@@ -176,10 +176,10 @@ class RSD(gc.galaxy):
 		:type kwargs_satellite: dictionary
 		:param kwargs_satellite: Every key is a keyword parameter for the galaxy distribution and each value is a list of length equal to the size of the redshift required.
 
-		:param kwargs_mass_function: Keyword arguments to pass to :func:`~src.halo.halo.mass_fun_ST`.
+		:param kwargs_mass_function: Keyword arguments to pass to :func:`colibri.halo.halo.mass_fun_ST`.
 		:type kwargs_mass_function: dictionary, default = {}
 
-		:param kwargs_concentration: Keyword arguments to pass to :func:`~src.halo.halo.conc`.
+		:param kwargs_concentration: Keyword arguments to pass to :func:`colibri.halo.halo.conc`.
 		:type kwargs_concentration: dictionary, default = {}
 
 		:return: Nothing, but the following keys are added to the ``self.Pk`` dictionary
@@ -384,10 +384,10 @@ class RSD(gc.galaxy):
 		:type kwargs_satellite: dictionary
 		:param kwargs_satellite: Every key is a keyword parameter for the galaxy distribution and each value is a list of length equal to the size of the redshift required.
 
-		:param kwargs_mass_function: Keyword arguments to pass to :func:`~src.halo.halo.mass_fun_ST`.
+		:param kwargs_mass_function: Keyword arguments to pass to :func:`colibri.halo.halo.mass_fun_ST`.
 		:type kwargs_mass_function: dictionary, default = {}
 
-		:param kwargs_concentration: Keyword arguments to pass to :func:`~src.halo.halo.conc`.
+		:param kwargs_concentration: Keyword arguments to pass to :func:`colibri.halo.halo.conc`.
 		:type kwargs_concentration: dictionary, default = {}
 
 		:return: Nothing, but the key ``['galaxies']['redshift space']['multipoles']`` is added to the ``self.Pk`` dictionary. This in turn is a new dictionary whose keys are ``['number of multiple']``. Each of these new keys is a 2D array of shape ``(len(z), len(k))``
@@ -604,10 +604,10 @@ class RSD(gc.galaxy):
 		:type kwargs_satellite: dictionary
 		:param kwargs_satellite: Every key is a keyword parameter for the galaxy distribution and each value is a list of length equal to the size of the redshift required.
 
-		:param kwargs_mass_function: Keyword arguments to pass to :func:`~src.halo.halo.mass_fun_ST`.
+		:param kwargs_mass_function: Keyword arguments to pass to :func:`colibri.halo.halo.mass_fun_ST`.
 		:type kwargs_mass_function: dictionary, default = {}
 
-		:param kwargs_concentration: Keyword arguments to pass to :func:`~src.halo.halo.conc`.
+		:param kwargs_concentration: Keyword arguments to pass to :func:`colibri.halo.halo.conc`.
 		:type kwargs_concentration: dictionary, default = {}
 
 		:return: Nothing, but the following keys are added to the ``self.Pk`` dictionary

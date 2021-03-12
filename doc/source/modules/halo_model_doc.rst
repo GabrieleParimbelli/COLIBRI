@@ -3,7 +3,7 @@
 The halo model
 ====================
 
-.. automodule:: src.halo
+.. automodule:: colibri.halo
     :members:
 
 
@@ -12,7 +12,7 @@ The halo model
 Halo Occupation Distribution
 =============================
 
-.. automodule:: src.galaxy
+.. automodule:: colibri.galaxy
     :members:
 
 .. _RSD:
@@ -20,5 +20,5 @@ Halo Occupation Distribution
 Redshift-space distortions
 ============================
 
-.. automodule:: src.RSD
+.. automodule:: colibri.RSD
     :members:

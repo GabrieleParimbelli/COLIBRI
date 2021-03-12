@@ -3,7 +3,7 @@
 Halo mass function
 ======================================
 
-In this section we show how to compute the halo mass functions using the class :func:`~src.cosmology.cosmo`
+In this section we show how to compute the halo mass functions using the class :func:`colibri.cosmology.cosmo`
 We also provide alternatives to the test code.
 The text below refers to the file named ``test_mass_function.py`` provided in the ``tests`` directory in the GitHub repository.
 
@@ -11,7 +11,7 @@ The text below refers to the file named ``test_mass_function.py`` provided in th
 Initialization
 -------------------------------
 
-First of all, let us define scales, redshifts, masses and a :func:`~src.cosmology.cosmo` instance.
+First of all, let us define scales, redshifts, masses and a :func:`colibri.cosmology.cosmo` instance.
 Also, we load the linear power spectra, which are necessary to compute mass functions and related quantities.
 
 .. code-block:: python
@@ -33,7 +33,7 @@ Also, we load the linear power spectra, which are necessary to compute mass func
 Mass variances, peak height and mass functions
 -----------------------------------------------
 
-The :func:`~src.cosmology.cosmo` class has routines able to compute many interesting quantities for galaxy clustering.
+The :func:`colibri.cosmology.cosmo` class has routines able to compute many interesting quantities for galaxy clustering.
 In particular, the mass variance in spheres, the peak height for the computation of peak-background split and the halo mass function itself.
 
 .. code-block:: python

@@ -859,7 +859,7 @@ class cosmo:
         """
         Mass variance in spheres as a function of mass.
 
-        :param logM: logarithm (base 10!) of the masses at which to compute the variance, in units of :math:`M_\odot/h`. To compute these masses from radii, use :func:`~src.cosmology.cosmo.mass_in_radius()`
+        :param logM: logarithm (base 10!) of the masses at which to compute the variance, in units of :math:`M_\odot/h`. To compute these masses from radii, use :func:`colibri.cosmology.cosmo.mass_in_radius()`
         :type logM: array
 
         :param k: Scales of power spectrum in units of :math:`h/\mathrm{Mpc}`.
@@ -893,7 +893,7 @@ class cosmo:
 
         where :math:`W` is a window function, :math:`R` is a radius in :math:`\mathrm{Mpc}/h` and :math:`M` is the mass enclosed in such radius according to the window function.
 
-        :param logM: logarithm (base 10!) of the masses at which to compute the variance, in units of :math:`M_\odot/h`. To compute these masses from radii, use :func:`~src.cosmology.cosmo.mass_in_radius()`
+        :param logM: logarithm (base 10!) of the masses at which to compute the variance, in units of :math:`M_\odot/h`. To compute these masses from radii, use :func:`colibri.cosmology.cosmo.mass_in_radius()`
         :type logM: array
 
         :param k: Scales of power spectrum in units of :math:`h/\mathrm{Mpc}`.
@@ -1178,7 +1178,7 @@ class cosmo:
         """
         Peak height as a function of log10(M).
 
-        :param logM: logarithm (base 10!) of the masses at which to compute the variance, in units of :math:`M_\odot/h`. To compute these masses from radii, use :func:`~src.cosmology.cosmo.mass_in_radius()`
+        :param logM: logarithm (base 10!) of the masses at which to compute the variance, in units of :math:`M_\odot/h`. To compute these masses from radii, use :func:`colibri.cosmology.cosmo.mass_in_radius()`
         :type logM: array
 
         :param k: Scales of power spectrum in units of :math:`h/\mathrm{Mpc}`.
@@ -1497,7 +1497,7 @@ class cosmo:
         """
         Halo mass function, i.e. number of halos per unit volume per unit mass.
 
-        :param logM: logarithm (base 10!) of the masses at which to compute the variance, in units of :math:`M_\odot/h`. To compute these masses from radii, use :func:`~src.cosmology.cosmo.mass_in_radius()`.
+        :param logM: logarithm (base 10!) of the masses at which to compute the variance, in units of :math:`M_\odot/h`. To compute these masses from radii, use :func:`colibri.cosmology.cosmo.mass_in_radius()`.
         :type logM: array
 
         :param z: Redshift, used only if Tinker and MICE/Crocce mass functions are requested. Must be of same length as ``pk``.
@@ -1782,7 +1782,7 @@ class cosmo:
     def growth_cb(self, k, z):
         """
         Non normalized scale-dependent growth factor for cdm+baryons.
-        See :func:`~src.cosmology.cosmo.D_cb()` for further information
+        See :func:`colibri.cosmology.cosmo.D_cb()` for further information
         """
         LCDM = self.D_1(z)
 
@@ -1827,7 +1827,7 @@ class cosmo:
     def growth_cbnu(self, k, z):
         """
         Unnormalized scale-dependent growth factor for matter.
-        See :func:`~src.cosmology.cosmo.D_cb()` for further information
+        See :func:`colibri.cosmology.cosmo.D_cb()` for further information
         """
         LCDM = self.D_1(z)
         

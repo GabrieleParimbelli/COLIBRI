@@ -15,14 +15,14 @@ from math import sqrt
 #==================
 class angular_spectra():
     """
-    The class :func:`~src.angular_spectra.angular_spectra` contains all the functions useful to compute
+    The class :func:`colibri.angular_spectra.angular_spectra` contains all the functions useful to compute
     the angular power spectra and correlation functions in the flat sky and Limber's approximation.
     It also computes window functions and galaxy PDF. The initialization requires the redshifts and
     scales to integrate (this choice is dictated by the fact that in this way one can use power spectra
     from simulations). Also routines to compute the intrinsic alignment terms are present.
 
 
-    :param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`~src.cosmology.cosmo` documentation).
+    :param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`colibri.cosmology.cosmo` documentation).
     :type cosmology: ``cosmo`` instance, default = ``cosmology.cosmo()``
 
     :param z_limits: Lower and upper limit of integration along the line of sight. This arguments avoids useless integration at high redshift, where there are essentially no galaxies. Both numbers must be non-negative and the first number must be smaller than the second. If the lower limit is set to 0, it will be enhanced by 1e-10 to avoid divergences at the origin of the lightcone.
@@ -97,7 +97,7 @@ class angular_spectra():
 
          - [`'Class'`, `'class'`, `'Xclass'`, `'XClass'`] for `CLASS <http://class-code.net/>`_
          - [`'Camb'`, `'CAMB'`, `'camb'`, `'Xcamb'`, `'XCamb'`, `'XCAMB'`] for `CAMB <https://camb.info/>`_
-         - [`'EH'`, `'eh'`, `'Eisenstein-Hu'`] for Eisenstein-Hu (then turned non-linear with :func:`~src.nonlinear.HMcode2016`)
+         - [`'EH'`, `'eh'`, `'Eisenstein-Hu'`] for Eisenstein-Hu (then turned non-linear with :func:`colibri.nonlinear.HMcode2016`)
 
         :type code: string, default = `'Class'`.
 
@@ -406,7 +406,7 @@ class angular_spectra():
         :param nz: 2-D array or 2-D list where each sublist is the galaxy distribution of a given redshift bin
         :type nz: 2-D array with shape ``(n_bins, len(z))``, default = None
 
-        An example call can be, for 3 bins all with a :func:`~src.angular_spectra.angular_spectra.euclid_distribution` with default arguments for ``a`` and ``b`` but different bin edges ``zmin``, ``zmax``:
+        An example call can be, for 3 bins all with a :func:`colibri.angular_spectra.angular_spectra.euclid_distribution` with default arguments for ``a`` and ``b`` but different bin edges ``zmin``, ``zmax``:
 
         .. code-block:: python
 
@@ -477,8 +477,8 @@ class angular_spectra():
 
     def load_window_functions_flat(self, galaxy_distributions, z = None, nz = None):
         """
-        This function does the same as :func:`~src.angular_spectra.angular_spectra.load_window_functions` but for a flat Universe, with a speed-up in the calculation of a factor ~4.
-        When the function :func:`~src.angular_spectra.angular_spectra.load_window_functions` is called and :math:`\Omega_\mathrm{K}` is set to 0, this function is what is actually being run.
+        This function does the same as :func:`colibri.angular_spectra.angular_spectra.load_window_functions` but for a flat Universe, with a speed-up in the calculation of a factor ~4.
+        When the function :func:`colibri.angular_spectra.angular_spectra.load_window_functions` is called and :math:`\Omega_\mathrm{K}` is set to 0, this function is what is actually being run.
 
         :param galaxy_distributions: The distribution of galaxies in each bin for which the shear spectra need to be computed. A list of functions containing the distribution of galaxies in each bin considered. Every element of this list is in turn a list. The first element is the name of a defined function describing a galaxy distribution in redshift. The first argument of said function must be redshift. All the other arguments must be specified by the second element of the list, which is a dictionary.
         :type galaxy_distributions: nested list 
@@ -544,7 +544,7 @@ class angular_spectra():
     #-----------------------------------------------------------------------------------------
     def load_galaxy_bias(self, bias_function, **kwargs):
         """
-        It loads an interpolator for galaxy bias. Use it only if you are computing angular galaxy clustering. For how this code is built, this function must be called after :func:`~src.angular_spectra.angular_spectra.load_power_spectra`
+        It loads an interpolator for galaxy bias. Use it only if you are computing angular galaxy clustering. For how this code is built, this function must be called after :func:`colibri.angular_spectra.angular_spectra.load_power_spectra`
 
         :param bias_function: bias function for galaxies :math:`b(k,z)`.
         :type bias_function: a function whose two first arguments are scale k (in :math:`h/\mathrm{Mpc}`) and redshift :math:`z`.
@@ -641,7 +641,7 @@ class angular_spectra():
 
         :param kwargs: Keyword arguments to pass to intrinsic alignment model (used only if ``do_IA`` is ``True``)
 
-        :return: power spectrum :math:`C^{(ij)}(\ell)` for all bin pairs whose window function was generated by :func:`~src.angular_spectra.angular_spectra.load_window_functions`.
+        :return: power spectrum :math:`C^{(ij)}(\ell)` for all bin pairs whose window function was generated by :func:`colibri.angular_spectra.angular_spectra.load_window_functions`.
         :rtype:  dictionary containing the following keys:
 
             - ``'gg'``: shear power spectrum;
@@ -745,7 +745,7 @@ class angular_spectra():
                                               do_GC = False,
                                               **kwargs):
         """
-        This function computes the angular correlation functions for shear, intrinisic alignment and galaxy clustering using the Limber's and the flat-sky approximations. It first computes :func:`~src.angular_spectra.angular_spectra.compute_angular_power_spectra` and then computes its Hankel transform with :func:`~src.fourier.Hankel` (therefore this function requires the ``FFTlog`` package). The shear correlations function, the galaxy-galaxy lensing correlation function and the galaxy correlation function read, respectively
+        This function computes the angular correlation functions for shear, intrinisic alignment and galaxy clustering using the Limber's and the flat-sky approximations. It first computes :func:`colibri.angular_spectra.angular_spectra.compute_angular_power_spectra` and then computes its Hankel transform with :func:`colibri.fourier.Hankel` (therefore this function requires the ``FFTlog`` package). The shear correlations function, the galaxy-galaxy lensing correlation function and the galaxy correlation function read, respectively
 
         .. math::
 
@@ -773,7 +773,7 @@ class angular_spectra():
 
         :param kwargs: Keyword arguments to pass to intrinsic alignment model (used only if ``do_IA`` is ``True``)
 
-        :return: power spectrum :math:`C^{(ij)}(\ell)` for all bin pairs whose window function was generated by :func:`~src.angular_spectra.load_window_functions`.
+        :return: power spectrum :math:`C^{(ij)}(\ell)` for all bin pairs whose window function was generated by :func:`colibri.angular_spectra.load_window_functions`.
         :rtype:  dictionary containing the following keys:
 
             - ``'gg+'``: shear correlation function;
@@ -868,7 +868,7 @@ class angular_spectra():
     #-----------------------------------------------------------------------------------------
     def compute_shear_spectra(self, l, **kwargs):
         """
-        This function calls :func:`~src.angular_spectra.angular_spectra.compute_angular_power_spectra` and computes the shear angular power spectra.
+        This function calls :func:`colibri.angular_spectra.angular_spectra.compute_angular_power_spectra` and computes the shear angular power spectra.
         It assumes that IA is included.
 
         :param l: Multipoles at which to compute the shear power spectra.
@@ -876,7 +876,7 @@ class angular_spectra():
 
         :param kwargs: Keyword arguments to pass to intrinsic alignment model (used only if ``do_IA`` is ``True``)
 
-        :return: power spectrum :math:`C^{(ij)}(\ell)` for all bin pairs whose window function was generated by :func:`~src.angular_spectra.angular_spectra.load_window_functions`.
+        :return: power spectrum :math:`C^{(ij)}(\ell)` for all bin pairs whose window function was generated by :func:`colibri.angular_spectra.angular_spectra.load_window_functions`.
         :type:   3D-array of shape ``(n_bin, n_bin, n_l)``
 
         """
@@ -885,12 +885,12 @@ class angular_spectra():
 
     def compute_galaxy_clustering_spectra(self, l):
         """
-        This function calls :func:`~src.angular_spectra.angular_spectra.compute_angular_power_spectra` and computes the galaxy clustering angular power spectra.
+        This function calls :func:`colibri.angular_spectra.angular_spectra.compute_angular_power_spectra` and computes the galaxy clustering angular power spectra.
 
         :param l: Multipoles at which to compute the shear power spectra.
         :type l: array
 
-        :return: power spectrum :math:`C^{(ij)}(\ell)` for all bin pairs whose window function was generated by :func:`~src.angular_spectra.angular_spectra.load_window_functions`.
+        :return: power spectrum :math:`C^{(ij)}(\ell)` for all bin pairs whose window function was generated by :func:`colibri.angular_spectra.angular_spectra.load_window_functions`.
         :type:   3D-array of shape ``(n_bin, n_bin, n_l)``
 
         """
@@ -899,7 +899,7 @@ class angular_spectra():
 
     def compute_galaxy_galaxy_lensing_spectra(self, l, **kwargs):
         """
-        This function calls :func:`~src.angular_spectra.angular_spectra.compute_angular_power_spectra` and computes the galaxy-galaxy lensing angular power spectra.
+        This function calls :func:`colibri.angular_spectra.angular_spectra.compute_angular_power_spectra` and computes the galaxy-galaxy lensing angular power spectra.
         It assumes that IA is included.
 
         :param l: Multipoles at which to compute the shear power spectra.
@@ -907,7 +907,7 @@ class angular_spectra():
 
         :param kwargs: Keyword arguments to pass to intrinsic alignment model
 
-        :return: power spectrum :math:`C^{(ij)}(\ell)` for all bin pairs whose window function was generated by :func:`~src.angular_spectra.angular_spectra.load_window_functions`.
+        :return: power spectrum :math:`C^{(ij)}(\ell)` for all bin pairs whose window function was generated by :func:`colibri.angular_spectra.angular_spectra.load_window_functions`.
         :type:   3D-array of shape ``(n_bin, n_bin, n_l)``
 
         """

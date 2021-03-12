@@ -3,5 +3,5 @@
 Fourier and Hankel transforms
 =============================
 
-.. automodule:: src.fourier
+.. automodule:: colibri.fourier
     :members:

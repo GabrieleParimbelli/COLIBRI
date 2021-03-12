@@ -4,7 +4,7 @@ Fourier and Hankel analysis
 ======================================
 
 Two files in the folder ``tests`` (namely ``test_fft.py`` and ``test_fftlog.py``) show some brief and documented example of how to use the functions contained in :ref:`fourier`.
-Here we just want to show how to use the `FFTlog`-based functions :func:`~src.fourier.iFFT_iso_3D` function to switch from Fourier space and compute correlation functions in real space.
+Here we just want to show how to use the `FFTlog`-based functions :func:`colibri.fourier.iFFT_iso_3D` function to switch from Fourier space and compute correlation functions in real space.
 
 We know that the two-point correlation function is the 3D Fourier transform of the power spectrum, i.e.
 
