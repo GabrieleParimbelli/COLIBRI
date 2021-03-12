@@ -10,7 +10,7 @@ from six.moves import xrange
 
 class galaxy (hc.halo):
 	"""
-	The ``galaxy`` class inherits all the functions from :func:`~colibri.halo.halo` and has the final
+	The ``galaxy`` class inherits all the functions from :func:`~src.halo.halo` and has the final
 	goal to compute the galaxy power spectrum in the Halo Occupation Distribution (HOD)
 	prescription.
 	As such, the class contains some routies to compute the average number of central/
@@ -29,11 +29,11 @@ class galaxy (hc.halo):
 	:param BAO_smearing: Whether to damp the BAO feature due to non-linearities.
 	:type BAO_smearing: boolean, default = True
 
-	:param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`~colibri.cosmology.cosmo` documentation).
+	:param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`~src.cosmology.cosmo` documentation).
 	:type cosmology: ``cosmo`` instance, default = ``cosmology.cosmo()``
 
 
-	:return: The initialization automatically calls a ``halo`` instance (see :func:`~colibri.halo.halo`) and therefore all the quantities described there are also available here. Also, the key ``['galaxies']['real space']`` is added to the ``self.Pk`` dictionary.
+	:return: The initialization automatically calls a ``halo`` instance (see :func:`~src.halo.halo`) and therefore all the quantities described there are also available here. Also, the key ``['galaxies']['real space']`` is added to the ``self.Pk`` dictionary.
 
 	"""
 
@@ -150,7 +150,7 @@ class galaxy (hc.halo):
 	#-----------------------------------------------------------------------------------------
 	def load_HOD(self, kind_central = None, kind_satellite = None, kwargs_central = {}, kwargs_satellite = {}):
 		"""
-		This method loads the number of central and satellite galaxies for every redshift. It is an essential ingredient of the halo model for galaxies. One can load it here or while calling  the :func:`~colibri.galaxy.galaxy.galaxy_Pk` function.
+		This method loads the number of central and satellite galaxies for every redshift. It is an essential ingredient of the halo model for galaxies. One can load it here or while calling  the :func:`~src.galaxy.galaxy.galaxy_Pk` function.
 
 		:type kind_central: callable, default = None
 		:param kind_central: First argument must be mass (in :math:`M_\odot/h`), other specified by kwargs_central.
@@ -213,9 +213,9 @@ class galaxy (hc.halo):
 	#-----------------------------------------------------------------------------------------
 	def average_galaxy_density(self, **kwargs):
 		"""
-		Average number of galaxies given a HOD model at all the redshifts required. This function can be called only after having called :func:`~colibri.galaxy.galaxy.load_HOD`.
+		Average number of galaxies given a HOD model at all the redshifts required. This function can be called only after having called :func:`~src.galaxy.galaxy.load_HOD`.
 
-		:param kwargs: Keyword arguments to pass to :func:`~colibri.halo.halo.mass_fun_ST`
+		:param kwargs: Keyword arguments to pass to :func:`~src.halo.halo.mass_fun_ST`
 
 		:return: array of shape ``len(z)`` in units of :math:`h^3 \mathrm{Mpc}^{-3}`
 		"""
@@ -260,10 +260,10 @@ class galaxy (hc.halo):
 		:type kwargs_satellite: dictionary
 		:param kwargs_satellite: Every key is a keyword parameter for the galaxy distribution and each value is a list of length equal to the size of the redshift required.
 
-		:param kwargs_mass_function: Keyword arguments to pass to :func:`~colibri.halo.halo.mass_fun_ST`.
+		:param kwargs_mass_function: Keyword arguments to pass to :func:`~src.halo.halo.mass_fun_ST`.
 		:type kwargs_mass_function: dictionary, default = {}
 
-		:param kwargs_concentration: Keyword arguments to pass to :func:`~colibri.halo.halo.conc`.
+		:param kwargs_concentration: Keyword arguments to pass to :func:`~src.halo.halo.conc`.
 		:type kwargs_concentration: dictionary, default = {}
 
 		:return: Nothing, but the following keys are added to the ``self.Pk`` dictionary

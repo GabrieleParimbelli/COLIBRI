@@ -37,7 +37,7 @@ class HMcode2016():
     :param BAO_smearing: Whether to damp the BAO feature due to non-linearities.
     :type BAO_smearing: boolean, default = True
 
-    :param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`~colibri.cosmology.cosmo` documentation).
+    :param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`~src.cosmology.cosmo` documentation).
     :type cosmology: ``cosmo`` instance, default = ``cosmology.cosmo()``
 
 
@@ -263,7 +263,7 @@ class HMcode2016():
         :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.  If not given, it is computed at the given redshift with CAMB.
         :type pk: array
 
-        :return: array of shape ``len(self.mass)``, where ``self.mass`` is given in :func:`~colibri.nonlinear.HMcode2016`.
+        :return: array of shape ``len(self.mass)``, where ``self.mass`` is given in :func:`~src.nonlinear.HMcode2016`.
         """
 
         # Power spectrum
@@ -455,7 +455,7 @@ class HMcode2016():
         """
         Redshift of formation of a halo of its mass.
 
-        :return: 2D array of shape ``(len(self.z), len(self.mass))``, where ``self.mass`` is given in :func:`~colibri.nonlinear.HMcode2016`.
+        :return: 2D array of shape ``(len(self.z), len(self.mass))``, where ``self.mass`` is given in :func:`~src.nonlinear.HMcode2016`.
         """
         frac  = 0.01
         fm    = frac*self.mass
@@ -538,7 +538,7 @@ class HMcode2016():
         """
         This routine returns the Sheth-Tormen halo mass function at the points specified by the array ``self.mass`` in the initialization.
 
-        :return: array in :math:`h^4 \ \mathrm{Mpc}^{-3} \ M_\odot^{-1}` of size ``(len(self.z), len(self.mass))``, where ``self.mass`` is given in :func:`~colibri.nonlinear.HMcode2016`.
+        :return: array in :math:`h^4 \ \mathrm{Mpc}^{-3} \ M_\odot^{-1}` of size ``(len(self.z), len(self.mass))``, where ``self.mass`` is given in :func:`~src.nonlinear.HMcode2016`.
         """    
         m    = self.mass
         hmf  = np.zeros((self.nz, self.nm))
@@ -583,7 +583,7 @@ class HMcode2020():
     :param BAO_smearing: Whether to damp the BAO feature due to non-linearities.
     :type BAO_smearing: boolean, default = True
 
-    :param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`~colibri.cosmology.cosmo` documentation).
+    :param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`~src.cosmology.cosmo` documentation).
     :type cosmology: ``cosmo`` instance, default = ``cosmology.cosmo()``
 
 
@@ -837,7 +837,7 @@ class HMcode2020():
         :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.  If not given, it is computed at the given redshift with CAMB.
         :type pk: array
 
-        :return: array of shape ``len(self.mass)``, where ``self.mass`` is given in :func:`~colibri.nonlinear.HMcode2016`.
+        :return: array of shape ``len(self.mass)``, where ``self.mass`` is given in :func:`~src.nonlinear.HMcode2016`.
         """
 
         # Power spectrum
@@ -1058,7 +1058,7 @@ class HMcode2020():
         """
         Redshift of formation of a halo of its mass.
 
-        :return: 2D array of shape ``(len(self.z), len(self.mass))``, where ``self.mass`` is given in :func:`~colibri.nonlinear.HMcode2016`.
+        :return: 2D array of shape ``(len(self.z), len(self.mass))``, where ``self.mass`` is given in :func:`~src.nonlinear.HMcode2016`.
         """
         frac  = 0.01
         fm    = frac*self.mass
@@ -1141,7 +1141,7 @@ class HMcode2020():
         """
         This routine returns the Sheth-Tormen halo mass function at the points specified by the array ``self.mass`` in the initialization.
 
-        :return: array in :math:`h^4 \ \mathrm{Mpc}^{-3} \ M_\odot^{-1}` of size ``(len(self.z), len(self.mass))``, where ``self.mass`` is given in :func:`~colibri.nonlinear.HMcode2016`.
+        :return: array in :math:`h^4 \ \mathrm{Mpc}^{-3} \ M_\odot^{-1}` of size ``(len(self.z), len(self.mass))``, where ``self.mass`` is given in :func:`~src.nonlinear.HMcode2016`.
         """    
         m    = self.mass
         hmf  = np.zeros((self.nz, self.nm))
@@ -1188,7 +1188,7 @@ class HMcode2020_cdm():
     :param BAO_smearing: Whether to damp the BAO feature due to non-linearities.
     :type BAO_smearing: boolean, default = True
 
-    :param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`~colibri.cosmology.cosmo` documentation).
+    :param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`~src.cosmology.cosmo` documentation).
     :type cosmology: ``cosmo`` instance, default = ``cosmology.cosmo()``
 
 
@@ -1436,7 +1436,7 @@ class HMcode2020_cdm():
         :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.  If not given, it is computed at the given redshift with CAMB.
         :type pk: array
 
-        :return: array of shape ``len(self.mass)``, where ``self.mass`` is given in :func:`~colibri.nonlinear.HMcode2016`.
+        :return: array of shape ``len(self.mass)``, where ``self.mass`` is given in :func:`~src.nonlinear.HMcode2016`.
         """
 
         # Power spectrum
@@ -1607,7 +1607,7 @@ class HMcode2020_cdm():
         """
         Redshift of formation of a halo of its mass.
 
-        :return: 2D array of shape ``(len(self.z), len(self.mass))``, where ``self.mass`` is given in :func:`~colibri.nonlinear.HMcode2016`.
+        :return: 2D array of shape ``(len(self.z), len(self.mass))``, where ``self.mass`` is given in :func:`~src.nonlinear.HMcode2016`.
         """
         frac  = 0.01
         fm    = frac*self.mass
@@ -1690,7 +1690,7 @@ class HMcode2020_cdm():
         """
         This routine returns the Sheth-Tormen halo mass function at the points specified by the array ``self.mass`` in the initialization.
 
-        :return: array in :math:`h^4 \ \mathrm{Mpc}^{-3} \ M_\odot^{-1}` of size ``(len(self.z), len(self.mass))``, where ``self.mass`` is given in :func:`~colibri.nonlinear.HMcode2016`.
+        :return: array in :math:`h^4 \ \mathrm{Mpc}^{-3} \ M_\odot^{-1}` of size ``(len(self.z), len(self.mass))``, where ``self.mass`` is given in :func:`~src.nonlinear.HMcode2016`.
         """    
         m    = self.mass
         hmf  = np.zeros((self.nz, self.nm))
@@ -1736,7 +1736,7 @@ class nonlinear_pk(cc.cosmo):
     :param code: Boltzmann solver to compute the linear power spectrum, to be chosen between `'camb'` and `'class'`. Also Eisenstein-Hu can be used (by setting ``code = 'eh'``) but this method cannot deal with massive neutrinos and/or evolving dark energy.
     :type code: string, default = `'camb'`
 
-    :param kwargs_code: Keyword arguments to pass to :func:`~colibri.cosmology.cosmo.camb_XPk`, :func:`~colibri.cosmology.cosmo.class_XPk` or :func:`~colibri.cosmology.cosmo.EisensteinHu_Pk`.
+    :param kwargs_code: Keyword arguments to pass to :func:`~src.cosmology.cosmo.camb_XPk`, :func:`~src.cosmology.cosmo.class_XPk` or :func:`~src.cosmology.cosmo.EisensteinHu_Pk`.
     :type kwargs_code: dictionary, default = {}
 
     :param halofit: Version of halofit to use: currently available 'HMcode2016', 'HMcode2020'
@@ -1745,7 +1745,7 @@ class nonlinear_pk(cc.cosmo):
     :param BAO_smearing: Whether to damp the BAO feature due to non-linearities.
     :type BAO_smearing: boolean, default = True
 
-    :param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`~colibri.cosmology.cosmo` documentation).
+    :param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`~src.cosmology.cosmo` documentation).
     :type cosmology: ``cosmo`` instance, default = ``cosmology.cosmo()``
 
     :return: Nothing is explicitly returned, but the following quantities are created:

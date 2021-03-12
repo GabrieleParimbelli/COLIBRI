@@ -5,5 +5,5 @@ Non-linearities
 
 For examples of use, look at :ref:`nonlinear_test`.
 
-.. automodule:: colibri.nonlinear
+.. automodule:: src.nonlinear
     :members:

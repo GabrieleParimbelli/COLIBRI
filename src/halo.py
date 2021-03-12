@@ -24,7 +24,7 @@ class halo:
 	:param BAO_smearing: Whether to damp the BAO feature due to non-linearities.
 	:type BAO_smearing: boolean, default = False
 
-	:param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`~colibri.cosmology.cosmo` documentation).
+	:param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`~src.cosmology.cosmo` documentation).
 	:type cosmology: ``cosmo`` instance, default = ``cosmology.cosmo()``
 
 
@@ -256,7 +256,7 @@ class halo:
 		"""
 		This routine returns the halo mass function at the points specified by the array ``self.mass`` in the initialization.
 
-		:param kwargs: Keyword arguments to pass to :func:`~colibri.halo.halo.mass_fun_ST`.
+		:param kwargs: Keyword arguments to pass to :func:`~src.halo.halo.mass_fun_ST`.
 
 		:return: 2D array containing  the halo mass function in units of :math:`h^4 \ \mathrm{Mpc}^{-3}  \ M_\odot^{-1}.` Its shape is ``(len(z), len(M)``, where `M` = ``self.mass`` and redshifts are given in the initialization.
 
@@ -386,7 +386,7 @@ class halo:
 		:type M: array
 		:param M: Masses in :math:`M_\odot/h`
 
-		:param kwargs_concentration: Keyword arguments to pass to :func:`~colibri.halo.halo.conc`.
+		:param kwargs_concentration: Keyword arguments to pass to :func:`~src.halo.halo.conc`.
 		:type kwargs_concentration: dictionary, default = {}
 
 
@@ -406,7 +406,7 @@ class halo:
 		"""
 		Normalization to the 2-halo term (due to integration effects).
 
-		:param kwargs: Keyword arguments to pass to :func:`~colibri.halo.halo.mass_fun_ST`.
+		:param kwargs: Keyword arguments to pass to :func:`~src.halo.halo.mass_fun_ST`.
 
 		:return: array of size ``len(z)``
 		"""	
@@ -436,10 +436,10 @@ class halo:
 
 		  P^{(2h)}(k) = \left[ \int_0^\infty dM \ \\frac{M}{\\bar{\\rho}} \\frac{dn}{dM} \ b(M) \ u(k,M) \\right]^2 P_{lin}(k)
 
-		:param kwargs_mass_function: Keyword arguments to pass to :func:`~colibri.halo.halo.mass_fun_ST`.
+		:param kwargs_mass_function: Keyword arguments to pass to :func:`~src.halo.halo.mass_fun_ST`.
 		:type kwargs_mass_function: dictionary, default = {}
 
-		:param kwargs_concentration: Keyword arguments to pass to :func:`~colibri.halo.halo.conc`.
+		:param kwargs_concentration: Keyword arguments to pass to :func:`~src.halo.halo.conc`.
 		:type kwargs_concentration: dictionary, default = {}
 
 		:return: Nothing, but the following keys are added to the ``self.Pk`` dictionary

@@ -285,7 +285,7 @@ def feedback_suppression(k, z, log_Mc, eta_b, z_c):
 
 	.. warning::
 
-	 This function also exists in the class :func:`~colibri.cosmology.cosmo()`.
+	 This function also exists in the class :func:`~src.cosmology.cosmo()`.
 
 	:param k: Scales in units of :math:`h/\mathrm{Mpc}`.
 	:type k: array
@@ -339,7 +339,7 @@ def WDM_suppression(k, z, M_wdm, Omega_cdm, h, nonlinear = False):
 
 	.. warning::
 
-	 This function also exists in the class :func:`~colibri.cosmology.cosmo()`, where ``Omega_cdm`` and ``h`` are set to the values fixed at initialization of the class.
+	 This function also exists in the class :func:`~src.cosmology.cosmo()`, where ``Omega_cdm`` and ``h`` are set to the values fixed at initialization of the class.
 
 	.. warning::
 
