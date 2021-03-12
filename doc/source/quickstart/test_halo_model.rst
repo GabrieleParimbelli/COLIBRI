@@ -11,7 +11,7 @@ Despite it returns a poor description of matter clustering, it can be easily exp
 Matter power spectrum
 ---------------------
 
-Let us start defining a :func:`~colibri.halo.halo` instance:
+Let us start defining a :func:`~src.halo.halo` instance:
 
 
 .. code-block:: python
@@ -56,7 +56,7 @@ Galaxies are divided into central (max. 1 per halo) and satellites (from 0 to in
 
 To compute the power spectrum, one must provide the average amount of galaxies per halo.
 This is done in a few steps here.
-First, we define a :func:`~colibri.galaxy.galaxy` instance:
+First, we define a :func:`~src.galaxy.galaxy` instance:
 
 .. code-block:: python
 
@@ -72,7 +72,7 @@ First, we define a :func:`~colibri.galaxy.galaxy` instance:
 
 
 Second, we give to the code the 'ingredients' for the HOD.
-This is done through the function :func:`~colibri.galaxy.galaxy.load_HOD`
+This is done through the function :func:`~src.galaxy.galaxy.load_HOD`
 
 .. code-block:: python
 
@@ -82,7 +82,7 @@ This is done through the function :func:`~colibri.galaxy.galaxy.load_HOD`
             kwargs_central   = {'log_Mmin': [13., 12.4, 11.4], 'sigma_logM': [0.8, 0.5, 0.6]})
 
 The arguments ``kind_satellite`` and ``kind_central`` are callable functions whose first argument `must be the halo mass` in units of :math:`M_\odot/h`.
-In this case we have used the functions :func:`~colibri.galaxy.galaxy.power_law` and :func:`~colibri.galaxy.galaxy.logistic_function`.
+In this case we have used the functions :func:`~src.galaxy.galaxy.power_law` and :func:`~src.galaxy.galaxy.logistic_function`.
 The arguments ``kwargs_satellite`` and ``kwargs_central`` are dictionaries that contain all the remaining arguments to pass to the above functions.
 Each value of each key must be a list of same size of the redshifts required, otherwise the code will return an ``AssertionError``.
 
@@ -101,8 +101,8 @@ The last step consists of the actual computation of the galaxy power spectrum, w
 .. note::
 
  The last two steps can be combined together.
- In fact, when the function :func:`~colibri.galaxy.galaxy.galaxy_Pk` is called, it will search the quantities ``self.Ncen`` and ``self.Nsat`` which are generated only after the call of :func:`~colibri.galaxy.galaxy.load_HOD`.
- If these are not found, the code will try to compute them on the fly, provided that the arguments of :func:`~colibri.galaxy.galaxy.load_HOD` are given.
+ In fact, when the function :func:`~src.galaxy.galaxy.galaxy_Pk` is called, it will search the quantities ``self.Ncen`` and ``self.Nsat`` which are generated only after the call of :func:`~src.galaxy.galaxy.load_HOD`.
+ If these are not found, the code will try to compute them on the fly, provided that the arguments of :func:`~src.galaxy.galaxy.load_HOD` are given.
  In other words, the last two steps can be gathered in:
 
  .. code-block:: python
@@ -122,7 +122,7 @@ Galaxy power spectrum: redshift space
 -------------------------------------
 
 Galaxies in surveys are observed in redshift-space due to the fact that we only measure the recession velocity along the line-of-sight.
-The class :func:`~colibri.RSD.RSD` provides routines able to compute the power spectrum in redshift-space using different configurations of independent variables:
+The class :func:`~src.RSD.RSD` provides routines able to compute the power spectrum in redshift-space using different configurations of independent variables:
 
  - in :math:`(k,\mu)` space
  - in multipole space, using the Legendre expansion

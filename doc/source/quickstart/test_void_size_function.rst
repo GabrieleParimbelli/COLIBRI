@@ -3,7 +3,7 @@
 Void size function
 ======================================
 
-Here we show how to compute the void size functions and some related quantities using the class :func:`~colibri.cosmology.cosmo`.
+Here we show how to compute the void size functions and some related quantities using the class :func:`~src.cosmology.cosmo`.
 The text below refers to the file named ``test_vois_size_function.py`` provided in the ``tests`` directory in the GitHub repository.
 
 
@@ -79,7 +79,7 @@ The summary of all the previous lines is given by:
  # delta_v is the linear underdensity for "collapse" of voids
  RL,VSF = C.void_size_function(R=R_Eul,z=zz,k=k,pk=pk,delta_v=-1.76,a=1.,p=0.)
 
-The function :func:`~colibri.cosmology.cosmo.void_size_function` returns two 2D arrays.
+The function :func:`~src.cosmology.cosmo.void_size_function` returns two 2D arrays.
 The first contains the Lagrangian radii at which the void size function is evaluated (first dimension is redshift).
 The second is the actual void size function evaluated at the given redshift and Lagrangian radius.
 
