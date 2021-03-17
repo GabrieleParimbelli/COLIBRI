@@ -28,7 +28,7 @@ We first define a ``cosmo`` instance, without massive neutrinos to have a direct
  zz = np.linspace(0., 5., 6)
  kk = np.logspace(-4., 2., 201)
 
-Let us set then a method with which to compute the spectra. We will use the Mead method.
+Let us set then a method with which to compute the spectra. We will use the Mead method (it works the same for Takahashi and TakaBird).
 We compute at this point the non-linear power spectrum with CAMB
 
 .. code-block:: python
@@ -40,7 +40,7 @@ And then with COLIBRI via the :func:`colibri.nonlinear.HMcode2016` class:
 
 .. code-block:: python
 
- # 2) Use the `HMcode2016' class, which takes as arguments
+ # Use the `HMcode2016' class, which takes as arguments
  # Compute at first the linear power spectrum (in LCDM 'cb' and 'tot' is the same)
  k_l, pk_l    = C.camb_Pk(z = zz, k = kk, var_1 = 'cb', var_2 = 'cb')
  do_nonlinear = NL.HMcode2016(z = zz, k = k_l, pk = pk_l,
