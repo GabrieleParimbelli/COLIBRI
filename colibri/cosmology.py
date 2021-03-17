@@ -970,15 +970,18 @@ class cosmo:
         if window in ['TH','th','tophat', 'top-hat']:
             W = self.TopHat_window(k*r)
         elif window in ['gauss', 'Gaussian', 'Gauss', 'gaussian', 'g']:
-            W = np.exp(-(k*r)**2./2.)
+            W = np.exp(-k**2.*r**2./2.)
         else:
             raise NameError("Window not known")
         W = np.expand_dims(W,axis=0)
 
         # Second smoothing
-        if smooth: sm = np.exp(-k**2.*(r/R_sm)**2./2.)
-        else:      sm = 1.
-        sm = np.expand_dims(sm,axis=0)
+        if smooth:
+            sm = np.exp(-k**2.*(r/R_sm)**2./2.)
+            sm = np.expand_dims(sm,axis=0)
+        else:
+            sm = 1.
+
 
         # Integration in log-bins (with numpy)
         sigma2 = sint.simps(kappa**(3.+2.*j)*P_kappa/(2.*const.PI**2.)*W**2.*sm**2.,dx=dlnk,axis=-1)

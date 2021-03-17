@@ -6,23 +6,7 @@ Overview of the modules
 COLIBRÌ consists of simple Python files. One, named ``constants.py`` is just a collection of physical constants, useful numbers and conversion factors between different units of measurement. A second one, ``useful_functions.py`` contains some routines of everyday life for a cosmologist. The file ``fourier.py`` contains routines to perform Fourier and Hankel transforms. The remaining ones each contain one or more Python classes. Moreover, in the GitHub code, a folder ``tests`` is provided, which contains test functions for the libraries and providing some example of how to use them.
 
 In the following sections we briefly present the codes.
-The documentation for both classes and built-in methods is also inside the code itself and can be found using the following Python commands.
-
-For any COLIBRÌ file and function you can type the following commands.::
-
-    import file_name
-    help(file_name)                       # Info on classes, functions and routines in 'file_name'
-    help(file_name.myfunction)            # Info on specific function in 'file_name'
-    help(file_name.class_name.myfunction) # Info on specific function of 'class_name' in 'file_name'
-
-to report useful information about what the file itself contains and its functions do. Type `q` for exiting.
-
-Also, from a Python (2.x in this case) program:
-
-* ``print file_name.class_name.__doc__`` returns the documentation on initialization of a class
-* ``print file_name.class_name.__init__`` prints what the class returns
-* ``print file_name.class_name.__dict__.keys()`` lists the methods of the class
-* ``print file_name.class_name.method_name.__doc__`` prints the documentation of a given method of a class
+The documentation for both classes and built-in methods is inside the code as well as on `ReadTheDocs <https://colibri-cosmology.readthedocs.io/en/latest/>`_ .
 
 .. _cosmology_overview:
 
@@ -37,11 +21,12 @@ For the latter, both Boltzmann solvers **CAMB** and **Class** can be used, provi
 `nonlinear` module
 ^^^^^^^^^^^^^^^^^^
 
-There are three classes.
-The first one is called :func:`colibri.nonlinear.HMcode2016` , which transforms a linear input power spectrum to its non-linear counterpart.
-This class uses the Halofit model by Mead `et al.` (see `arXiv:1505.07833 <https://arxiv.org/abs/1505.07833>`_ and `arXiv:1602.02154 <https://arxiv.org/abs/1602.02154>`_), taking as inputs redshift, scales, power spectrum and a cosmology.
-The second class is called :func:`colibri.nonlinear.HMcode2020` and does the same thing, except following `arXiv:2009.01858 <https://arxiv.org/abs/2009.01858>`_
-The last class :func:`colibri.nonlinear.nonlinear_pk` uses the so-called `cold dark matter prescription` (see e.g. `arXiv:1311.0866 <https://arxiv.org/abs/1311.0866>`_, `arXiv:1311.1212 <https://arxiv.org/abs/1311.1212>`_, `arXiv:1311.1514 <https://arxiv.org/abs/1311.1514>`_ ), where the Halofit operator is applied only to the cold dark matter+baryons linear component, while the neutrino and the cross part are added linearly afterwards.
+There are four different classes included here.
+The first one is called ``HMcode2016`` , which transforms a linear input power spectrum to its non-linear counterpart.
+This class uses the Halofit model by Mead `et al.` (see `arXiv:1505.07833 <https://arxiv.org/abs/1505.07833>`_ ), taking as inputs redshift, scales, power spectrum and a cosmology.
+The parameters included here are valid for cold dark matter plus baryons (i.e. no neutrinos): to compute the total matter power spectrum (including the neutrino part), see two sentences below.
+The second and third classes are called ``Takahashi`` and  ``TakaBird`` and they do the very same thing, except following the prescription by Takahashi et al. for the former (see `arXiv:1208.2701 <https://arxiv.org/abs/1208.2701>`_ ) and the correction for the presence of massive neutrinos by Bird et al. for the latter (see `arXiv:1109.4416 <https://arxiv.org/abs/1109.4416>`_ ).
+Finally, the class ``nonlinear_Pk`` uses the so-called `cold dark matter prescription` (see e.g. `arXiv:1311.0866 <https://arxiv.org/abs/1311.0866>`_, `arXiv:1311.1212 <https://arxiv.org/abs/1311.1212>`_, `arXiv:1311.1514 <https://arxiv.org/abs/1311.1514>`_ ) to compute the total matter power spectrum, where the Halofit operator is applied only to the cold dark matter+baryons linear component, while the (weighted) neutrino and the cross part are added linearly afterwards.
 
 `angular_spectra` module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1,6 +1,6 @@
-src/*.pyc
-src/*.py~
-src/__pycache__/
+colibri/*.pyc
+colibri/*.py~
+colibri/__pycache__/
 doc/build
 colibri/perturbation_theory.py
 tests/test_spt.py
