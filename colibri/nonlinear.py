@@ -759,7 +759,7 @@ class Takahashi():
 
         .. math::
 
-          n_\mathrm{eff} = -3-\left.\\frac{\mathrm{d}\sigma^2}{\mathrm{d}\ln R}\\right|_{\sigma=1},
+          n_\mathrm{eff} = -3-\left.\\frac{\mathrm{d}\ln\sigma^2}{\mathrm{d}\ln R}\\right|_{\sigma=1},
 
         where :math:`R` is the radius that encloses a given mass in a Gaussian filter.
 
@@ -787,7 +787,7 @@ class Takahashi():
 
         .. math::
 
-          C = -\left.\\frac{\mathrm{d}^2\sigma^2}{\mathrm{d}\ln R^2}\\right|_{\sigma=1},
+          C = -\left.\\frac{\mathrm{d}^2\ln\sigma^2}{\mathrm{d}\ln R^2}\\right|_{\sigma=1},
 
         where :math:`R` is the radius that encloses a given mass in a Gaussian filter.
 
@@ -1047,7 +1047,7 @@ class TakaBird():
 
         .. math::
 
-          n_\mathrm{eff} = -3-\left.\\frac{\mathrm{d}\sigma^2}{\mathrm{d}\ln R}\\right|_{\sigma=1},
+          n_\mathrm{eff} = -3-\left.\\frac{\mathrm{d}\ln\sigma^2}{\mathrm{d}\ln R}\\right|_{\sigma=1},
 
         where :math:`R` is the radius that encloses a given mass in a Gaussian filter.
 
@@ -1075,7 +1075,7 @@ class TakaBird():
 
         .. math::
 
-          C = -\left.\\frac{\mathrm{d}^2\sigma^2}{\mathrm{d}\ln R^2}\\right|_{\sigma=1},
+          C = -\left.\\frac{\mathrm{d}^2\ln\sigma^2}{\mathrm{d}\ln R^2}\\right|_{\sigma=1},
 
         where :math:`R` is the radius that encloses a given mass in a Gaussian filter.
 
