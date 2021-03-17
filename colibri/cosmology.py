@@ -915,6 +915,7 @@ class cosmo:
 
          - `'th'`,`'th'`,`'tophat'`,`'top-hat'` for top-hat filter
          - `'gauss'`, `'Gaussian'`, `'Gauss'`, `'gaussian'`, `'g'`, for Gaussian
+         - `'sharp'`, `'heaviside'`, `'s'` for sharp-k filter
 
         :type window: string, default = 'th'
 
@@ -971,6 +972,8 @@ class cosmo:
             W = self.TopHat_window(k*r)
         elif window in ['gauss', 'Gaussian', 'Gauss', 'gaussian', 'g']:
             W = np.exp(-k**2.*r**2./2.)
+        elif window in ['sharp', 'heaviside', 's']:
+            W = np.heaviside(1.-k*r, 1.)
         else:
             raise NameError("Window not known")
         W = np.expand_dims(W,axis=0)
@@ -981,7 +984,6 @@ class cosmo:
             sm = np.expand_dims(sm,axis=0)
         else:
             sm = 1.
-
 
         # Integration in log-bins (with numpy)
         sigma2 = sint.simps(kappa**(3.+2.*j)*P_kappa/(2.*const.PI**2.)*W**2.*sm**2.,dx=dlnk,axis=-1)
@@ -1011,6 +1013,7 @@ class cosmo:
 
          - `'th'`,`'th'`,`'tophat'`,`'top-hat'` for top-hat filter
          - `'gauss'`, `'Gaussian'`, `'Gauss'`, `'gaussian'`, `'g'`, for Gaussian
+         - `'sharp'`, `'heaviside'`, `'s'` for sharp-k filter
         :type window: string, default = 'th'
 
 
@@ -1059,6 +1062,7 @@ class cosmo:
 
          - `'th'`,`'th'`,`'tophat'`,`'top-hat'` for top-hat filter
          - `'gauss'`, `'Gaussian'`, `'Gauss'`, `'gaussian'`, `'g'`, for Gaussian
+         - `'sharp'`, `'heaviside'`, `'s'` for sharp-k filter
         :type window: string, default = 'th'
 
 
@@ -1078,6 +1082,9 @@ class cosmo:
             return (3.*M/(4.*const.PI*rho_bg))**(1./3.)
         elif window in ['gauss', 'Gaussian', 'Gauss', 'gaussian', 'g']:
             return (M/rho_bg)**(1./3.)/(2.*const.PI)**0.5
+        elif window in ['sharp', 'heaviside', 's']:
+            c = 2.5
+            return (3.*M/(4.*const.PI*rho_bg))**(1./3.)/c
         else:
             raise NameError("window not known")
 
@@ -1104,6 +1111,7 @@ class cosmo:
 
          - `'th'`,`'th'`,`'tophat'`,`'top-hat'` for top-hat filter
          - `'gauss'`, `'Gaussian'`, `'Gauss'`, `'gaussian'`, `'g'`, for Gaussian
+         - `'sharp'`, `'heaviside'`, `'s'` for sharp-k filter
         :type window: string, default = 'th'
 
 
@@ -1115,6 +1123,9 @@ class cosmo:
             return 4./3.*const.PI*R**3.
         elif window in ['gauss', 'Gaussian', 'Gauss', 'gaussian', 'g']:
             return (2.*const.PI*R**2.)**1.5
+        elif window in ['sharp', 'heaviside', 's']:
+            c = 2.5
+            return 4./3.*const.PI*(c*R)**3.
         else:
             raise NameError("window not known, use 'TH' or 'gauss'")
 
@@ -1141,6 +1152,7 @@ class cosmo:
 
          - `'th'`,`'th'`,`'tophat'`,`'top-hat'` for top-hat filter
          - `'gauss'`, `'Gaussian'`, `'Gauss'`, `'gaussian'`, `'g'`, for Gaussian
+         - `'sharp'`, `'heaviside'`, `'s'` for sharp-k filter
         :type window: string, default = 'th'
 
 

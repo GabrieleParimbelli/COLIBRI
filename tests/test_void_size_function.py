@@ -39,9 +39,9 @@ k, pk = C.camb_Pk(z = zz)
 #==============
 # Mass variances multipoles, further smoothed for a Gaussian (useful for voids)
 #==============
-s0 = C.mass_variance_multipoles(logM=logM,k=k,pk=pk,j=0,smooth=True ,window='th',R_sm=5.5)
-s1 = C.mass_variance_multipoles(logM=logM,k=k,pk=pk,j=1,smooth=True ,window='th',R_sm=5.5)
-s2 = C.mass_variance_multipoles(logM=logM,k=k,pk=pk,j=2,smooth=True ,window='th',R_sm=5.5)
+s0 = C.mass_variance_multipoles(logM=logM,k=k,pk=pk,j=0,smooth=True,window='th',R_sm=5.5)
+s1 = C.mass_variance_multipoles(logM=logM,k=k,pk=pk,j=1,smooth=True,window='th',R_sm=5.5)
+s2 = C.mass_variance_multipoles(logM=logM,k=k,pk=pk,j=2,smooth=True,window='th',R_sm=5.5)
 
 # Compute sigma8
 s8 = C.compute_sigma_8(k=k,pk=pk)[0]
@@ -147,7 +147,7 @@ ax4.legend()
 for iz in range(nz):
     ax5.loglog(10.**logM, nu[iz]*f_nu[iz],     c=colors[iz])
     ax5.loglog(10.**logM, nu[iz]*f_high_nu[iz],c=colors[iz],ls=':')
-    ax5.axvline(M_of_nu1[iz], c='k',ls=':',lw=1.)
+    ax5.axvline(M_of_nu1[iz], c=colors[iz],ls=':',lw=1.)
 ax5.loglog(np.nan,np.nan, 'k:', label = 'approximation for $\\nu \gg 1$')
 ax5.axvline(np.nan, c='k',ls=':',lw=0.5,label='$M(\\nu=1)$')
 ax5.set_xlabel('$M \ [M_\odot/h]$')
@@ -158,7 +158,7 @@ ax5.legend()
 
 # Void size function
 for iz in range(nz):
-    ax6.loglog(R_Lag[iz], VSF[iz], 'k',c=colors[iz])
+    ax6.loglog(R_Lag[iz], VSF[iz],c=colors[iz])
 ax6.set_xticks([5,10,20,50])
 ax6.set_xlabel('$R_\mathrm{Lag} \ [\\mathrm{Mpc}/h]$')
 ax6.set_ylabel('$\\frac{dn}{dR} \ [(h/\\mathrm{Mpc})^4]$')
