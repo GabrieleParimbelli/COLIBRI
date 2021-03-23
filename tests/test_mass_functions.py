@@ -56,7 +56,7 @@ ShethTormen = C.ShethTormen_mass_function(sigma = sigma_squared**0.5, a = 0.707,
 #=============
 # We use the Sheth-Tormen mass function.
 # If 'mass_fun' == 'Tinker' or 'MICE', you should add 'z=zz' to the arguments of the function.
-HMF = C.halo_mass_function(logM = logM, k = k, pk = pk, mass_fun = 'ShethTormen')
+HMF = C.halo_mass_function(logM = logM, k = k, pk = pk, window = 'th', mass_fun = 'ShethTormen')
 
 #=============
 # Plot

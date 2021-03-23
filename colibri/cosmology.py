@@ -855,7 +855,7 @@ class cosmo:
     #-----------------------------------------------------------------------------------------
     # MASS VARIANCE
     #-----------------------------------------------------------------------------------------
-    def mass_variance(self, logM, k = [], pk = []):
+    def mass_variance(self, logM, k = [], pk = [], window = 'th', **kwargs):
         """
         Mass variance in spheres as a function of mass.
 
@@ -868,9 +868,17 @@ class cosmo:
         :param pk: Power spectrum in redshifts and scales in units of :math:`(\mathrm{Mpc}/h)^3`.
         :type pk: 2D array, one for each redshift, default = []
 
+        :param window: Window function used to filter.
+
+         - `'th'`,`'th'`,`'tophat'`,`'top-hat'` for top-hat filter
+         - `'gauss'`, `'Gaussian'`, `'Gauss'`, `'gaussian'`, `'g'`, for Gaussian
+         - `'sharp'`, `'heaviside'`, `'s'` for sharp-k filter
+
+        :type window: string, default = 'th'
+
         :return: An interpolated function that gives :math:`\\sigma^2(\log_{10}(M))`, evaluable between 2 and 18 (therefore between :math:`M = 10^2` and :math:`10^{18} \ M_\odot/h`).
         """
-        return self.mass_variance_multipoles(logM = logM, k = k, pk = pk)
+        return self.mass_variance_multipoles(logM = logM, k = k, pk = pk, window = window, **kwargs)
 
     #-----------------------------------------------------------------------------------------
     # SIGMA^2_j
@@ -883,7 +891,8 @@ class cosmo:
                                  window = 'th',
                                  j      = 0,
                                  smooth = False,
-                                 R_sm   = 5.5):
+                                 R_sm   = 5.5,
+                                 **kwargs):
         """
         Multipoles of the mass variance as function of mass, namely:
 
@@ -938,8 +947,8 @@ class cosmo:
         pk = np.atleast_2d(pk)
 
         # Assertions on scales, lengths and intervals
-        assert np.max(k)>=99.,    "k_max too low to obtain a convergent result. Use k_max>=99 h/Mpc."
-        assert np.min(k)<=0.001,  "k_min too high to obtain a convergent result. Use k_min<=0.001 h/Mpc."
+        assert np.max(k)>=10.,    "Maximum k of power spectrum is too low to obtain a convergent result. Use k_max>=10 h/Mpc."
+        assert np.min(k)<=0.001,  "Minimum k of power spectrum is too high to obtain a convergent result. Use k_min<=0.001 h/Mpc."
         assert len(k)>=100,       "size of 'k' too low to obtain a convergent result. At least 100 points."
         assert np.all([np.isclose(np.log(k[ind+1]/k[ind]), np.log(k[ind+2]/k[ind+1]),
                 atol = 1e-4, rtol = 1e-2) for ind in xrange(len(k[:-2]))]),"k are not regularly log-spaced"
@@ -964,7 +973,7 @@ class cosmo:
         rho = self.rho_crit(0.)*omega
         #M   = self.M
         M   = 10.**logM
-        R   = self.radius_of_mass(M, var = var, window = window)
+        R   = self.radius_of_mass(M, var = var, window = window, **kwargs)
 
         # Window function
         k,r = np.meshgrid(kappa,R)        
@@ -973,7 +982,7 @@ class cosmo:
         elif window in ['gauss', 'Gaussian', 'Gauss', 'gaussian', 'g']:
             W = np.exp(-k**2.*r**2./2.)
         elif window in ['sharp', 'heaviside', 's']:
-            W = np.heaviside(1.-k*r, 1.)
+            W = 0.5*(1.+2./np.pi*np.arctan((1.-k*r)/1e-2))
         else:
             raise NameError("Window not known")
         W = np.expand_dims(W,axis=0)
@@ -993,7 +1002,7 @@ class cosmo:
     #-----------------------------------------------------------------------------------------
     # MASS IN SPHERE
     #-----------------------------------------------------------------------------------------
-    def mass_in_radius(self, R, var = 'cb', window = 'th'):
+    def mass_in_radius(self, R, var = 'cb', window = 'th', prop_const = 2.5):
         """
         Mass contained in a sphere of radius R in :math:`M_\odot/h`.
 
@@ -1016,16 +1025,18 @@ class cosmo:
          - `'sharp'`, `'heaviside'`, `'s'` for sharp-k filter
         :type window: string, default = 'th'
 
+        :param prop_const: proportional constant of radius to mass, only used if a sharp-k window is used
+        :type prop_const: float, default = 2.5.
 
         :return: array.
         """
 
-        if   var == 'cb':        omega = self.Omega_cb
-        elif var == 'cdm':        omega = self.Omega_cdm
-        elif var == 'b':        omega = self.Omega_b
-        elif var == 'nu':        omega = self.Omega_nu
-        elif var == 'tot':        omega = self.Omega_m
-        else:                    raise NameError("Component unknown, use 'cb', 'cdm', 'b', 'nu', 'tot'")
+        if   var == 'cb':  omega = self.Omega_cb
+        elif var == 'cdm': omega = self.Omega_cdm
+        elif var == 'b':   omega = self.Omega_b
+        elif var == 'nu':  omega = self.Omega_nu
+        elif var == 'tot': omega = self.Omega_m
+        else:              raise NameError("Component unknown, use 'cb', 'cdm', 'b', 'nu', 'tot'")
 
         rho_bg = self.rho_crit(0.)*omega
 
@@ -1034,6 +1045,8 @@ class cosmo:
             return 4./3.*const.PI*rho_bg*R**3.
         elif window in ['gauss', 'Gaussian', 'Gauss', 'gaussian', 'g']:
             return rho_bg*(2.*const.PI*R**2.)**(3./2.)
+        elif window in ['gauss', 'Gaussian', 'Gauss', 'gaussian', 'g']:
+            return 4./3.*const.PI*rho_bg*(prop_const*R)**3.
         else:
             raise NameError("window not known")
         
@@ -1041,7 +1054,7 @@ class cosmo:
     #-----------------------------------------------------------------------------------------
     # RADIUS OF MASS
     #-----------------------------------------------------------------------------------------
-    def radius_of_mass(self, M, var = 'cb', window = 'th'):
+    def radius_of_mass(self, M, var = 'cb', window = 'th', prop_const = 2.5):
         """
         Radius that contains a certain amount of mass in :math:`\mathrm{Mpc}/h`.
 
@@ -1065,15 +1078,18 @@ class cosmo:
          - `'sharp'`, `'heaviside'`, `'s'` for sharp-k filter
         :type window: string, default = 'th'
 
+        :param prop_const: proportional constant of radius to mass, only used if a sharp-k window is used
+        :type prop_const: float, default = 2.5.
+
 
         :return: array.
         """
-        if   var == 'cb':        omega = self.Omega_cb
-        elif var == 'cdm':        omega = self.Omega_cdm
-        elif var == 'b':        omega = self.Omega_b
-        elif var == 'nu':        omega = self.Omega_nu
-        elif var == 'tot':        omega = self.Omega_m
-        else:                    raise NameError("Component unknown, use 'cb', 'cdm', 'b', 'nu', 'tot'")
+        if   var == 'cb':  omega = self.Omega_cb
+        elif var == 'cdm': omega = self.Omega_cdm
+        elif var == 'b':   omega = self.Omega_b
+        elif var == 'nu':  omega = self.Omega_nu
+        elif var == 'tot': omega = self.Omega_m
+        else:              raise NameError("Component unknown, use 'cb', 'cdm', 'b', 'nu', 'tot'")
 
         rho_bg = self.rho_crit(0.)*omega
 
@@ -1083,15 +1099,14 @@ class cosmo:
         elif window in ['gauss', 'Gaussian', 'Gauss', 'gaussian', 'g']:
             return (M/rho_bg)**(1./3.)/(2.*const.PI)**0.5
         elif window in ['sharp', 'heaviside', 's']:
-            c = 2.5
-            return (3.*M/(4.*const.PI*rho_bg))**(1./3.)/c
+            return (3.*M/(4.*const.PI*rho_bg))**(1./3.)/prop_const
         else:
             raise NameError("window not known")
 
     #-----------------------------------------------------------------------------------------
     # VOLUME OF RADIUS
     #-----------------------------------------------------------------------------------------
-    def volume_of_radius(self, R, window = 'th'):
+    def volume_of_radius(self, R, window = 'th', prop_const = 2.5):
         """
         Volume of a window function of a given radius in :math:`(\mathrm{Mpc}/h)^3`.
 
@@ -1114,6 +1129,9 @@ class cosmo:
          - `'sharp'`, `'heaviside'`, `'s'` for sharp-k filter
         :type window: string, default = 'th'
 
+        :param prop_const: proportional constant of radius to mass, only used if a sharp-k window is used
+        :type prop_const: float, default = 2.5.
+
 
         :return: array.
         """
@@ -1124,15 +1142,14 @@ class cosmo:
         elif window in ['gauss', 'Gaussian', 'Gauss', 'gaussian', 'g']:
             return (2.*const.PI*R**2.)**1.5
         elif window in ['sharp', 'heaviside', 's']:
-            c = 2.5
-            return 4./3.*const.PI*(c*R)**3.
+            return 4./3.*const.PI*(prop_const*R)**3.
         else:
             raise NameError("window not known, use 'TH' or 'gauss'")
 
     #-----------------------------------------------------------------------------------------
     # VOLUME OF MASS
     #-----------------------------------------------------------------------------------------
-    def volume_of_mass(self, M, var = 'cb', window = 'th'):
+    def volume_of_mass(self, M, var = 'cb', window = 'th', prop_const = 2.5):
         """
         Volume of a window function of a given mass in :math:`(\mathrm{Mpc}/h)^3`.
 
@@ -1155,11 +1172,14 @@ class cosmo:
          - `'sharp'`, `'heaviside'`, `'s'` for sharp-k filter
         :type window: string, default = 'th'
 
+        :param prop_const: proportional constant of radius to mass, only used if a sharp-k window is used
+        :type prop_const: float, default = 2.5.
+
 
         :return: array.
         """
-        R = self.radius_of_mass(M, var = var, window = window)
-        return self.volume_of_radius(R, window = window)
+        R = self.radius_of_mass(M, var = var, window = window, prop_const = prop_const)
+        return self.volume_of_radius(R, window = window, prop_const = prop_const)
 
 
     #-----------------------------------------------------------------------------------------
@@ -1236,6 +1256,36 @@ class cosmo:
         nu = np.abs(delta_th)/sigma
         n = nu**2.
         A = 1./(1. + 2.**(-p)*ss.gamma(0.5-p)/np.sqrt(const.PI))
+        ST = A * np.sqrt(2.*a*n/const.PI) * (1.+1./(a*n)**p) * np.exp(-a*n/2.)
+        return ST
+
+    #-----------------------------------------------------------------------------------------
+    # SHETH-TORMEN MASS FUNCTION
+    #-----------------------------------------------------------------------------------------
+    def Despali_mass_function(self, sigma, a = 0.794, p = 0.247, A = 0.3333, delta_th = None):
+        """
+        Universal mass function by Despali as function of the RMS mass fluctuation in spheres :math:`\sigma(M)`.
+
+        :param sigma: RMS mass fluctuation.
+        :type sigma: array
+
+        :param a: Sheth-Tormen mass function parameter.
+        :type a: float, default = 0.707
+
+        :param p: Sheth-Tormen mass function parameter.
+        :type p: float<0.5, default = 0.3
+
+        :param A: Amplitude of .
+        :type A: float, default = 0.3333.
+
+        :param delta_th': Threshold for collapse.
+        :type delta_th': float, default = None
+
+        :return: array
+        """
+        if delta_th == None: delta_th = self.delta_sc
+        nu = np.abs(delta_th)/sigma
+        n = nu**2.
         ST = A * np.sqrt(2.*a*n/const.PI) * (1.+1./(a*n)**p) * np.exp(-a*n/2.)
         return ST
 
@@ -1434,7 +1484,7 @@ class cosmo:
         :return: array
         """
         # Choose according the mass function
-        if mass_fun in ['Sheth-Tormen','ST','ShethTormen']:
+        if mass_fun in ['Sheth-Tormen','ST','ShethTormen','Despali','D']:
             return self.ShethTormen_bias(sigma = sigma, **kwargs)
         elif mass_fun in ['Press-Schechter', 'PS', 'PressSchechter']:
             return self.PressSchechter_bias(sigma = sigma)
@@ -1489,10 +1539,10 @@ class cosmo:
         conv   = np.log(10.)
 
         # halo mass function
-        HMF    = self.halo_mass_function(z = z, k = k, pk = pk, mass_fun = mass_fun, **kwargs)
+        HMF    = self.halo_mass_function(logM = logM, z = z, k = k, pk = pk, mass_fun = mass_fun, **kwargs)
 
         # mass variance in spheres
-        sigma2 = self.mass_variance(k = k, pk = pk)
+        sigma2 = self.mass_variance(logM = logM, k = k, pk = pk)
 
         # compute bias and interpolate in log10(mass)
         bias_eff = np.zeros(len(pk))
@@ -1508,7 +1558,7 @@ class cosmo:
     #-----------------------------------------------------------------------------------------
     # HALO MASS FUNCTION
     #-----------------------------------------------------------------------------------------
-    def halo_mass_function(self, logM, z = 0., k = [], pk = [], mass_fun = 'Sheth-Tormen', **kwargs):
+    def halo_mass_function(self, logM, z = 0., k = [], pk = [], window = 'th', mass_fun = 'Sheth-Tormen', prop_const = 2.5, **kwargs):
         """
         Halo mass function, i.e. number of halos per unit volume per unit mass.
 
@@ -1528,10 +1578,14 @@ class cosmo:
 
          - 'Sheth-Tormen','ST','ShethTormen' for Sheth-Tormen
          - 'Press-Schechter', 'PS', 'PressSchechter' for Press-Schechter
+         - 'Despali', 'D' for Despali et al. (2015)
          - 'Tinker', 'T', 'T08' for Tinker et al. (2008)
          - 'MICE', 'Crocce', 'C' for Crocce et al. (2010)
 
         :type mass_fun: string, default = `'ST'`
+
+        :param prop_const: proportional constant of radius to mass, only used if a sharp-k window is used
+        :type prop_const: float, default = 2.5.
 
         :param kwargs: Keyword arguments to pass to `'mass_fun'`.
 
@@ -1543,8 +1597,8 @@ class cosmo:
         if mass_fun in ['Tinker', 'T', 'T08','MICE', 'Crocce', 'C']:
             assert len(np.atleast_1d(z))==len(pk), "Redshifts are not of the same length as power spectra"
         # Check mass values
-        if logM.min()<2.1: raise ValueError("Minimum logM value must be > 2.1")
-        if logM.max()>17.9: raise ValueError("Maximum logM value must be < 17.9")
+        if logM.min()<2.1: raise ValueError("Minimum logM value must be > 2.1, found %.1f" %logM.min())
+        if logM.max()>17.9: raise ValueError("Maximum logM value must be < 17.9, found %.1f" %logM.max())
 
         # CDM density today
         rho = self.rho_crit(0.)*self.Omega_cb
@@ -1552,7 +1606,7 @@ class cosmo:
         Mtmp     = self.M[1:-1]
         logM_tmp = np.log10(Mtmp)
         # sigma^2
-        sigma2 = self.mass_variance(logM_tmp,k,pk)
+        sigma2 = self.mass_variance(logM_tmp,k,pk,window,prop_const=prop_const)
         sigma  = sigma2**.5
         # log-derivative
         log_der = []
@@ -1565,6 +1619,8 @@ class cosmo:
         # Choose according the mass function
         if mass_fun in ['Sheth-Tormen','ST','ShethTormen']:
             f_nu = self.ShethTormen_mass_function(sigma = sigma, **kwargs)
+        elif mass_fun in ['Despali', 'D']:
+            f_nu = self.Despali_mass_function(sigma = sigma, **kwargs)
         elif mass_fun in ['Tinker', 'T', 'T08']:
             f_nu = self.Tinker_mass_function(sigma = sigma, z = z, **kwargs)
         elif mass_fun in ['MICE', 'Crocce', 'C']:
@@ -2149,6 +2205,7 @@ class cosmo:
                 halofit = 'mead2015',
                 var_1 = 'tot',
                 var_2 = 'tot',
+                share_delta_neff = True,
                 **kwargs
                 ):
         """
@@ -2185,7 +2242,7 @@ class cosmo:
         :type var_2: string, default = `'tot'`
 
 
-        :param kwargs: Keyword arguments to be passed to ``camb.model.CAMBparams.InitPower.set_params``, ``camb.model.CAMBparams.InitPower.set_dark_energy`` and ``camb.model.CAMBparams.set_cosmology``. See CAMB documentation for further info: https://camb.readthedocs.io/en/latest/
+        :param kwargs: Keyword arguments to be passed to ``camb.set_params``. See CAMB documentation for further info: https://camb.readthedocs.io/en/latest/
 
         Returns
         -------
@@ -2196,45 +2253,39 @@ class cosmo:
         pk: 2D array of shape ``(len(z), len(k))``
             Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.
         """
-
-        # Setting cosmological parameters in CAMB
-        params = camb.model.CAMBparams()
-
-        # Find all the kwargs and their values
-        local_extra_parameter_values = locals()['kwargs']
-
-        # Find all the possible parameters in various CAMB functions (the [1:] is because the first is `self`)
-        all_params_initial     = params.InitPower.set_params.__code__.co_varnames[1:]
-        all_params_cosmology   = params.set_cosmology.__code__.co_varnames[1:]
-        all_params_dark_energy = params.set_dark_energy.__code__.co_varnames[1:]
-
-        # Assign kwargs to right function
-        kwargs_initial, kwargs_cosmology, kwargs_dark_energy = {}, {}, {}
-        for i in local_extra_parameter_values:
-            if   i in all_params_initial:     kwargs_initial[i]     = local_extra_parameter_values[i]
-            elif i in all_params_cosmology:   kwargs_cosmology[i]   = local_extra_parameter_values[i]
-            elif i in all_params_dark_energy: kwargs_dark_energy[i] = local_extra_parameter_values[i]
-            else: print("warning: %s parameter not being used" %i)
-
-        # Initial conditions
-        params.InitPower.set_params(ns = self.ns, As = self.As, **kwargs_initial)
-
-        # Cosmological parameters
-        params.set_cosmology(H0    = 100.*self.h,
-                             ombh2 = self.Omega_b*self.h**2.,
-                             omch2 = self.Omega_cdm*self.h**2.,
-                             mnu   = np.sum(self.M_nu),
-                             nnu   = self.N_eff,
-                             num_massive_neutrinos = self.massive_nu,
-                             standard_neutrino_neff = 3.046,
-                             omk   = self.Omega_K,
-                             tau   = self.tau,
-                             TCMB  = self.T_cmb,
-                             **kwargs_cosmology
-                             )
-
-        # Dark energy
-        params.set_dark_energy(w = self.w0, wa = self.wa, **kwargs_dark_energy)
+        # Neutrino part
+        #num_nu_massless – (float64) Effective number of massless neutrinos
+        #num_nu_massive – (integer) Total physical (integer) number of massive neutrino species
+        #nu_mass_eigenstates – (integer) Number of non-degenerate mass eigenstates
+        #nu_mass_degeneracies – (float64 array) Degeneracy of each distinct eigenstate
+        #nu_mass_fractions – (float64 array) Mass fraction in each distinct eigenstate
+        #nu_mass_numbers – (integer array) Number of physical neutrinos per distinct eigenstate
+        nu_mass_eigen   = len(np.unique([mm for mm in self.M_nu[np.where(self.M_nu!=0.)]])) if np.any(self.M_nu!=0.) else 0
+        nu_mass_numbers = [list(self.M_nu[np.where(self.M_nu!=0.)]).count(x) for x in set(list(self.M_nu[np.where(self.M_nu!=0.)]))]
+        nu_mass_numbers = sorted(nu_mass_numbers,reverse=True) if np.any(self.M_nu!=0.) else [0]
+        # Set parameters
+        cambparams = {
+                      'num_nu_massive': self.massive_nu,
+                      'num_nu_massless': self.massless_nu,
+                      'nu_mass_eigenstates': nu_mass_eigen, 
+                      'nu_mass_numbers': nu_mass_numbers,
+                      'nnu': self.N_eff,
+                      'omnuh2': np.sum(self.omega_nu[np.where(self.M_nu!=0.)]),
+                      'ombh2': self.omega_b,
+                      'omch2': self.omega_cdm+np.sum(self.omega_nu[np.where(self.M_nu==0.)]),
+                      'omk': self.Omega_K,
+                      'H0': 100.*self.h,
+                      'As': self.As,
+                      'ns': self.ns,
+                      'w': self.w0,
+                      'wa': self.wa,
+                      'TCMB': self.T_cmb,
+                      'tau': self.tau,
+                      'share_delta_neff':True}
+        # kwargs
+        for key, value in kwargs.items():
+            if not key in cambparams: cambparams[key] = value
+        params = camb.set_params(**cambparams)
 
         # Redshifts
         z  = np.atleast_1d(z)
@@ -2252,23 +2303,26 @@ class cosmo:
                       'Phi'  : 'Weyl'}            # Weyl: (phi+psi)/2 is proportional to lensing potential
 
         # Number of points (according to logint)
-        npoints = int(100*np.log10(k.max()/k.min()))
-        dlogk   = np.log10(k.max()/k.min())/npoints
+        logint  = 100
+        npoints = int(logint*np.log10(k.max()/k.min()))
+        dlogk   = 2.*np.log10(k.max()/k.min())/npoints
 
         # Halofit version
         if nonlinear == True:
-            #camb.nonlinear.Halofit(halofit_version = halofit)
             params.NonLinearModel.set_params(halofit_version=halofit)
             params.NonLinear = camb.model.NonLinear_both
 
         # Computing spectra
-        params.set_matter_power(redshifts = z, kmax = k.max()*10**dlogk, silent = True)
+        params.set_matter_power(redshifts=z,kmax=k.max()*10**dlogk,silent=True,k_per_logint=0,accurate_massive_neutrino_transfers=True)
         results = camb.get_results(params)
         kh, z, pkh = results.get_matter_power_spectrum(minkh = k.min()*10.**-dlogk, maxkh = k.max()*10**dlogk, npoints = npoints, var1 = components[var_1], var2 = components[var_2])
 
         # Interpolation to the required scales k's
-        power = si.interp1d(kh, pkh, kind = 'cubic')
-        pk = power(k)
+        # I use UnivariateSpline because it makes good extrapolation
+        pk = np.zeros((nz,len(np.atleast_1d(k))))
+        for iz in range(nz):
+            lnpower = si.InterpolatedUnivariateSpline(kh, np.log(pkh[iz]), k=3, ext=0, check_finite=False)
+            pk[iz] = np.exp(lnpower(k))
 
         return k, pk
 
@@ -2283,6 +2337,7 @@ class cosmo:
             halofit = 'mead2015',
             var_1 = ['tot'],
             var_2 = ['tot'],
+            share_delta_neff = True,
             **kwargs
             ):
         """
@@ -2320,7 +2375,7 @@ class cosmo:
         :type var_2: list of strings, default = ['tot']
 
 
-        :param kwargs: Keyword arguments to be passed to ``camb.model.CAMBparams.InitPower.set_params``, ``camb.model.CAMBparams.InitPower.set_dark_energy`` and ``camb.model.CAMBparams.set_cosmology``. See CAMB documentation for further info: https://camb.readthedocs.io/en/latest/
+        :param kwargs: Keyword arguments to be passed to ``camb.set_params``. See CAMB documentation for further info: https://camb.readthedocs.io/en/latest/
 
         Returns
         -------
@@ -2333,46 +2388,43 @@ class cosmo:
 
         """
 
-        # Setting cosmological parameters in CAMB
-        params = camb.model.CAMBparams()
+        # Neutrino part
+        #num_nu_massless – (float64) Effective number of massless neutrinos
+        #num_nu_massive – (integer) Total physical (integer) number of massive neutrino species
+        #nu_mass_eigenstates – (integer) Number of non-degenerate mass eigenstates
+        #nu_mass_degeneracies – (float64 array) Degeneracy of each distinct eigenstate
+        #nu_mass_fractions – (float64 array) Mass fraction in each distinct eigenstate
+        #nu_mass_numbers – (integer array) Number of physical neutrinos per distinct eigenstate
+        nu_mass_eigen   = len(np.unique([mm for mm in self.M_nu[np.where(self.M_nu!=0.)]])) if np.any(self.M_nu!=0.) else 0
+        nu_mass_numbers = [list(self.M_nu[np.where(self.M_nu!=0.)]).count(x) for x in set(list(self.M_nu[np.where(self.M_nu!=0.)]))]
+        nu_mass_numbers = sorted(nu_mass_numbers,reverse=True) if np.any(self.M_nu!=0.) else [0]
+        # Set parameters
+        cambparams = {
+                      'num_nu_massive': self.massive_nu,
+                      'num_nu_massless': self.massless_nu,
+                      'nu_mass_eigenstates': nu_mass_eigen, 
+                      'nu_mass_numbers': nu_mass_numbers,
+                      'nnu': self.N_eff,
+                      'omnuh2': np.sum(self.omega_nu[np.where(self.M_nu!=0.)]),
+                      'ombh2': self.omega_b,
+                      'omch2': self.omega_cdm+np.sum(self.omega_nu[np.where(self.M_nu==0.)]),
+                      'omk': self.Omega_K,
+                      'H0': 100.*self.h,
+                      'As': self.As,
+                      'ns': self.ns,
+                      'w': self.w0,
+                      'wa': self.wa,
+                      'TCMB': self.T_cmb,
+                      'tau': self.tau,
+                      'share_delta_neff':True}
+        # kwargs
+        for key, value in kwargs.items():
+            if not key in cambparams: cambparams[key] = value
+        params = camb.set_params(**cambparams)
 
-        # Find all the kwargs and their values
-        local_extra_parameter_names = locals()['kwargs']
-
-        # Find all the possible parameters in various CAMB functions (the [1:] is because the first is `self`)
-        all_params_initial     = params.InitPower.set_params.__code__.co_varnames[1:]
-        all_params_cosmology   = params.set_cosmology.__code__.co_varnames[1:]
-        all_params_dark_energy = params.set_dark_energy.__code__.co_varnames[1:]
-
-        # Assign kwargs to right function
-        kwargs_initial, kwargs_cosmology, kwargs_dark_energy = {}, {}, {}
-        for i in local_extra_parameter_names:
-            if   i in all_params_initial:     kwargs_initial[i]     = local_extra_parameter_names[i]
-            elif i in all_params_cosmology:   kwargs_cosmology[i]   = local_extra_parameter_names[i]
-            elif i in all_params_dark_energy: kwargs_dark_energy[i] = local_extra_parameter_names[i]
-            else: print("warning: %s parameter not being used" %local_extra_parameter_names[i])
-
-        # Initial conditions
-        params.InitPower.set_params(ns = self.ns, As = self.As, **kwargs_initial)
-
-        # Cosmological parameters
-        params.set_cosmology(H0    = 100.*self.h,
-                             ombh2 = self.Omega_b*self.h**2.,
-                             omch2 = self.Omega_cdm*self.h**2.,
-                             mnu   = np.sum(self.M_nu),
-                             nnu   = self.N_eff,
-                             num_massive_neutrinos = self.massive_nu,
-                             standard_neutrino_neff = 3.046,
-                             omk   = self.Omega_K,
-                             tau   = self.tau,
-                             TCMB  = self.T_cmb,
-                             **kwargs_cosmology
-                             )
-
-        # Dark energy
-        params.set_dark_energy(w = self.w0, wa = self.wa, **kwargs_dark_energy)
-
-        # Redshifts
+        # Redshifts and scales
+        k  = np.atleast_1d(k)
+        nk = len(k)
         z  = np.atleast_1d(z)
         nz = len(z)
         if nz > 3: spline = 'cubic'
@@ -2387,11 +2439,11 @@ class cosmo:
                       'rad'  : 'delta_photon',
                       'v_cdm': 'v_newtonian_cdm',
                       'v_b'  : 'v_newtonian_baryon',
-                      'Phi'  : 'Weyl'}                # Weyl: (phi+psi)/2 is proportional to lensing potential
+                      'Phi'  : 'Weyl'}
 
-        # Number of points (200 per logint)
+        # Number of points (according to logint)
         npoints = int(100*np.log10(k.max()/k.min()))
-        dlogk   = np.log10(k.max()/k.min())/npoints
+        dlogk   = 2.*np.log10(k.max()/k.min())/npoints
 
         # Halofit version
         if nonlinear == True:
@@ -2401,26 +2453,32 @@ class cosmo:
 
         # Initialize power spectrum as a dictionary and compute it
         pk = {}
-        params.set_matter_power(redshifts = z, kmax = k.max()*10**dlogk, silent = True)
+        params.set_matter_power(redshifts = z, kmax = k.max()*10**dlogk, silent = True,accurate_massive_neutrino_transfers=True)
         results = camb.get_results(params)
 
         # Fill the power spectrum array
         for c1 in var_1:
             for c2 in var_2:
                 string = c1+'-'+c2
-                kh, zz, ppkk = results.get_matter_power_spectrum(minkh = k.min()*10.**-dlogk, maxkh = k.max()*10**dlogk,
+                kh, zz, ppkk = results.get_matter_power_spectrum(minkh = k.min()*10.**-dlogk,
+                                                                 maxkh = k.max()*10**dlogk,
                                                                  npoints = npoints,
                                                                  var1 = components[c1],
                                                                  var2 = components[c2])
+
+                pk[string] = np.zeros((nz,nk))
+                for iz in range(nz):
+                    lnpower = si.InterpolatedUnivariateSpline(kh,np.log(ppkk[iz]),k=3,ext=0, check_finite=False)
+                    pk[string][iz] = np.exp(lnpower(k))
                 
-                if nz != 1:
-                    power = si.interp2d(kh, zz, ppkk, kind = spline)
-                    pk[string] = power(k, z)
-                    pk[string] = np.nan_to_num(pk[string])
-                else:
-                    power = si.interp1d(kh, ppkk, kind = spline)
-                    pk[string] = power(k)
-                    pk[string] = np.nan_to_num(pk[string])
+                #if nz != 1:
+                #    power = si.interp2d(kh, zz, ppkk, kind = spline)
+                #    pk[string] = power(k, z)
+                #    pk[string] = np.nan_to_num(pk[string])
+                #else:
+                #    power = si.interp1d(kh, ppkk, kind = spline)
+                #    pk[string] = power(k)
+                #    pk[string] = np.nan_to_num(pk[string])
 
         return k, pk
 
