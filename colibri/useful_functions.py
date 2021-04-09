@@ -183,7 +183,7 @@ def neutrino_masses(M_nu, hierarchy = 'normal'):
 	return m1, m2, m3
 
 #-------------------------------------------------------------------------------
-# TOP-HAT WINDOW FUNCTION IN FOURIER SPACE
+# WINDOW FUNCTIONS
 #-------------------------------------------------------------------------------
 def TopHat_window(x):
 	"""
@@ -195,6 +195,45 @@ def TopHat_window(x):
 	:return: array
 	"""
 	return 3./(x)**3*(np.sin(x)-x*np.cos(x))
+
+def Gaussian_window(self, x):
+    """
+    Gaussian window function.
+
+    :param x: Abscissa.
+    :type x: array
+
+    :return: array.
+    """
+    return np.exp(-x**2./2.)
+
+def Sharp_k_window(self, x, step=1e-2):
+    """
+    Sharp window function in Fourier space.
+
+    :param x: Abscissa.
+    :type x: array
+
+    :param step: Transition width from 0 to 1.
+    :type step: float, default = 1e-2
+
+    :return: array.
+    """
+    return 0.5*(1.+2./np.pi*np.arctan((1.-x)/1e-2))
+
+def Smooth_k_window(self, x, beta):
+    """
+    Smooth window function in Fourier space.
+
+    :param x: Abscissa.
+    :type x: array
+
+    :param beta: Transition width from 0 to 1.
+    :type beta: float, default = 1e-2
+
+    :return: array.
+    """
+    return 1./(1.+x**beta)
 
 
 #-------------------------------------------------------------------------------

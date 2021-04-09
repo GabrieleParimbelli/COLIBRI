@@ -3,8 +3,12 @@ colibri/*.py~
 colibri/__pycache__/
 doc/build
 colibri/perturbation_theory.py
+colibri/limber.py
+tests/test_limber.py
 tests/test_spt.py
 tests/test_temporary.py
+tests/*.ipynb
+tests/.ipynb_checkpoints/
 build/
 dist/
 colibri_cosmology.egg-info/

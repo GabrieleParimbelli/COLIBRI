@@ -490,18 +490,8 @@ class angular_spectra():
         :type nz: 2-D array with shape ``(n_bins, len(z))``, default = None
 
         :return: Nothing, but the quantities ``self.window_function`` and ``self.window_function_IA`` will be created: these are lists of length ``len(galaxy_distributions)`` of interpolated functions from ``z_limits.min()`` to ``z_limits.max()``.
-
-
         """
 
-        #if (galaxy_distributions is None and z is None and nz is None):
-        #    raise ValueError("Either 'galaxy distribution' or 'z' AND 'nz' must be different from None")
-        #if nz is not None and z is not None:
-        #    nz = np.array(nz)
-        #    z  = np.array(z)
-        #    assert np.all(np.diff(z)<self.dz_windows), "Distribution function arrays must be sampled with frequency dz<=%.3f" %(self.dz_windows)
-        #    assert nz.ndim == 2, "'nz' must be 2-dimensional" 
-        #    assert (nz.shape)[1] == z.shape[0], "Length of each 'nz[i]' must be the same of 'z'"
         # Set number of bins and normalize them
         if galaxy_distributions is not None:
             n_bins = len(galaxy_distributions)

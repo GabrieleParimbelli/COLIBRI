@@ -336,12 +336,32 @@ class cosmo:
         """
         mnu  = np.atleast_1d(self.M_nu)
         zz   = np.atleast_1d(np.array(z))
-        onuz = np.zeros((len(mnu),len(np.atleast_1d(z))))
+        onuz = np.zeros((len(mnu),len(zz)))
         for i in xrange(len(mnu)):
             y = mnu[i]/((1.+zz)*const.kB*self.T_nu)
             F = np.array(list(map(self.FermiDirac_integral,y)))
             onuz[i] = 15./const.PI**4.*self.Omega_gamma*F*self.Gamma_nu**4.*(1.+zz)**4.*self.H0**2./self.H(zz)**2.
         return onuz
+
+    #-------------------------------------------------------------------------------
+    # WARM DARK MATTER TEMPERATURE
+    #-------------------------------------------------------------------------------
+    def T_wdm(self, Omega_wdm, M_wdm):
+        """
+        Temperature of any warm dark matter component (also neutrinos).
+
+        :param Omega_wdm: WDM density parameter today.
+        :type Omega_wdm: float
+
+        :param M_wdm: WDM mass in keV.
+        :type M_wdm: float
+
+        :return: float.
+        
+        """
+        M_wdm *= 1e3 # switch to eV
+        denominator = np.pi**4.*const.kB*self.T_cmb / (15*self.Gamma_nu**3.*self.omega_gamma*1.5*ss.zeta(3))*self.h**2
+        return self.Gamma_nu*(Omega_wdm*denominator/M_wdm)**(1./3.)*self.T_cmb
 
     #-------------------------------------------------------------------------------
     # OMEGA MATTER (as function of z)
@@ -535,7 +555,7 @@ class cosmo:
 
 
     #-------------------------------------------------------------------------------
-    # TOP-HAT WINDOW FUNCTION IN FOURIER SPACE
+    # WINDOW FUNCTIONS
     #-------------------------------------------------------------------------------
     def TopHat_window(self, x):
         """
@@ -547,6 +567,45 @@ class cosmo:
         :return: array.
         """
         return 3./(x)**3*(np.sin(x)-x*np.cos(x))
+
+    def Gaussian_window(self, x):
+        """
+        Gaussian window function.
+
+        :param x: Abscissa.
+        :type x: array
+
+        :return: array.
+        """
+        return np.exp(-x**2./2.)
+
+    def Sharp_k_window(self, x, step=1e-2):
+        """
+        Sharp window function in Fourier space.
+
+        :param x: Abscissa.
+        :type x: array
+
+        :param step: Transition width from 0 to 1.
+        :type step: float, default = 1e-2
+
+        :return: array.
+        """
+        return 0.5*(1.+2./np.pi*np.arctan((1.-x)/step))
+
+    def Smooth_k_window(self, x, beta):
+        """
+        Smooth window function in Fourier space.
+
+        :param x: Abscissa.
+        :type x: array
+
+        :param beta: Transition width from 0 to 1.
+        :type beta: float, default = 1e-2
+
+        :return: array.
+        """
+        return 1./(1.+x**beta)
 
 
     #-------------------------------------------------------------------------------
@@ -892,6 +951,7 @@ class cosmo:
                                  j      = 0,
                                  smooth = False,
                                  R_sm   = 5.5,
+                                 beta   = 2.,
                                  **kwargs):
         """
         Multipoles of the mass variance as function of mass, namely:
@@ -925,8 +985,12 @@ class cosmo:
          - `'th'`,`'th'`,`'tophat'`,`'top-hat'` for top-hat filter
          - `'gauss'`, `'Gaussian'`, `'Gauss'`, `'gaussian'`, `'g'`, for Gaussian
          - `'sharp'`, `'heaviside'`, `'s'` for sharp-k filter
+         - `'smooth'`, `'smoothk'`, `'sm'` for smooth-k filter
 
         :type window: string, default = 'th'
+
+        :param beta: slope of the smooth-k window (used only if `window==smooth`)
+        :type beta: float, default = 2
 
         :param j: Order of multipole.
         :type j: even integer, default = 0
@@ -980,9 +1044,11 @@ class cosmo:
         if window in ['TH','th','tophat', 'top-hat']:
             W = self.TopHat_window(k*r)
         elif window in ['gauss', 'Gaussian', 'Gauss', 'gaussian', 'g']:
-            W = np.exp(-k**2.*r**2./2.)
+            W = self.Gaussian_window(k*r)
         elif window in ['sharp', 'heaviside', 's']:
-            W = 0.5*(1.+2./np.pi*np.arctan((1.-k*r)/1e-2))
+            W = self.Sharp_k_window(k*r)
+        elif window in ['smooth', 'smoothk', 'sm']:
+            W = self.Smooth_k_window(k*r,beta=beta)
         else:
             raise NameError("Window not known")
         W = np.expand_dims(W,axis=0)
@@ -1023,9 +1089,10 @@ class cosmo:
          - `'th'`,`'th'`,`'tophat'`,`'top-hat'` for top-hat filter
          - `'gauss'`, `'Gaussian'`, `'Gauss'`, `'gaussian'`, `'g'`, for Gaussian
          - `'sharp'`, `'heaviside'`, `'s'` for sharp-k filter
+         - `'smooth'`, `'smoothk'`, `'sm'` for smooth-k filter
         :type window: string, default = 'th'
 
-        :param prop_const: proportional constant of radius to mass, only used if a sharp-k window is used
+        :param prop_const: proportional constant of radius to mass (used only if `window==sharp`)
         :type prop_const: float, default = 2.5.
 
         :return: array.
@@ -1045,7 +1112,7 @@ class cosmo:
             return 4./3.*const.PI*rho_bg*R**3.
         elif window in ['gauss', 'Gaussian', 'Gauss', 'gaussian', 'g']:
             return rho_bg*(2.*const.PI*R**2.)**(3./2.)
-        elif window in ['gauss', 'Gaussian', 'Gauss', 'gaussian', 'g']:
+        elif window in ['sharp', 'heaviside', 's', 'smooth', 'smoothk', 'sm']:
             return 4./3.*const.PI*rho_bg*(prop_const*R)**3.
         else:
             raise NameError("window not known")
@@ -1076,9 +1143,10 @@ class cosmo:
          - `'th'`,`'th'`,`'tophat'`,`'top-hat'` for top-hat filter
          - `'gauss'`, `'Gaussian'`, `'Gauss'`, `'gaussian'`, `'g'`, for Gaussian
          - `'sharp'`, `'heaviside'`, `'s'` for sharp-k filter
+         - `'smooth'`, `'smoothk'`, `'sm'` for smooth-k filter
         :type window: string, default = 'th'
 
-        :param prop_const: proportional constant of radius to mass, only used if a sharp-k window is used
+        :param prop_const: proportional constant of radius to mass (used only if `window==sharp`)
         :type prop_const: float, default = 2.5.
 
 
@@ -1098,7 +1166,7 @@ class cosmo:
             return (3.*M/(4.*const.PI*rho_bg))**(1./3.)
         elif window in ['gauss', 'Gaussian', 'Gauss', 'gaussian', 'g']:
             return (M/rho_bg)**(1./3.)/(2.*const.PI)**0.5
-        elif window in ['sharp', 'heaviside', 's']:
+        elif window in ['sharp', 'heaviside', 's', 'smooth', 'smoothk', 'sm']:
             return (3.*M/(4.*const.PI*rho_bg))**(1./3.)/prop_const
         else:
             raise NameError("window not known")
@@ -1127,9 +1195,10 @@ class cosmo:
          - `'th'`,`'th'`,`'tophat'`,`'top-hat'` for top-hat filter
          - `'gauss'`, `'Gaussian'`, `'Gauss'`, `'gaussian'`, `'g'`, for Gaussian
          - `'sharp'`, `'heaviside'`, `'s'` for sharp-k filter
+         - `'smooth'`, `'smoothk'`, `'sm'` for smooth-k filter
         :type window: string, default = 'th'
 
-        :param prop_const: proportional constant of radius to mass, only used if a sharp-k window is used
+        :param prop_const: proportional constant of radius to mass (used only if `window==sharp`)
         :type prop_const: float, default = 2.5.
 
 
@@ -1141,7 +1210,7 @@ class cosmo:
             return 4./3.*const.PI*R**3.
         elif window in ['gauss', 'Gaussian', 'Gauss', 'gaussian', 'g']:
             return (2.*const.PI*R**2.)**1.5
-        elif window in ['sharp', 'heaviside', 's']:
+        elif window in ['sharp', 'heaviside', 's', 'smooth', 'smoothk', 'sm']:
             return 4./3.*const.PI*(prop_const*R)**3.
         else:
             raise NameError("window not known, use 'TH' or 'gauss'")
@@ -1170,9 +1239,10 @@ class cosmo:
          - `'th'`,`'th'`,`'tophat'`,`'top-hat'` for top-hat filter
          - `'gauss'`, `'Gaussian'`, `'Gauss'`, `'gaussian'`, `'g'`, for Gaussian
          - `'sharp'`, `'heaviside'`, `'s'` for sharp-k filter
+         - `'smooth'`, `'smoothk'`, `'sm'` for smooth-k filter
         :type window: string, default = 'th'
 
-        :param prop_const: proportional constant of radius to mass, only used if a sharp-k window is used
+        :param prop_const: proportional constant of radius to mass (used only if `window==sharp`)
         :type prop_const: float, default = 2.5.
 
 
@@ -1558,7 +1628,7 @@ class cosmo:
     #-----------------------------------------------------------------------------------------
     # HALO MASS FUNCTION
     #-----------------------------------------------------------------------------------------
-    def halo_mass_function(self, logM, z = 0., k = [], pk = [], window = 'th', mass_fun = 'Sheth-Tormen', prop_const = 2.5, **kwargs):
+    def halo_mass_function(self, logM, z = 0., k = [], pk = [], window = 'th', mass_fun = 'Sheth-Tormen', beta = 2., prop_const = 2.5, **kwargs):
         """
         Halo mass function, i.e. number of halos per unit volume per unit mass.
 
@@ -1584,7 +1654,10 @@ class cosmo:
 
         :type mass_fun: string, default = `'ST'`
 
-        :param prop_const: proportional constant of radius to mass, only used if a sharp-k window is used
+        :param beta: slope of the smooth-k window (used only if `window==smooth`)
+        :type beta: float, default = 2
+
+        :param prop_const: proportional constant of radius to mass (used only if `window==sharp`)
         :type prop_const: float, default = 2.5.
 
         :param kwargs: Keyword arguments to pass to `'mass_fun'`.
@@ -1606,7 +1679,7 @@ class cosmo:
         Mtmp     = self.M[1:-1]
         logM_tmp = np.log10(Mtmp)
         # sigma^2
-        sigma2 = self.mass_variance(logM_tmp,k,pk,window,prop_const=prop_const)
+        sigma2 = self.mass_variance(logM_tmp,k,pk,window,prop_const=prop_const,beta=beta)
         sigma  = sigma2**.5
         # log-derivative
         log_der = []
@@ -2389,12 +2462,6 @@ class cosmo:
         """
 
         # Neutrino part
-        #num_nu_massless – (float64) Effective number of massless neutrinos
-        #num_nu_massive – (integer) Total physical (integer) number of massive neutrino species
-        #nu_mass_eigenstates – (integer) Number of non-degenerate mass eigenstates
-        #nu_mass_degeneracies – (float64 array) Degeneracy of each distinct eigenstate
-        #nu_mass_fractions – (float64 array) Mass fraction in each distinct eigenstate
-        #nu_mass_numbers – (integer array) Number of physical neutrinos per distinct eigenstate
         nu_mass_eigen   = len(np.unique([mm for mm in self.M_nu[np.where(self.M_nu!=0.)]])) if np.any(self.M_nu!=0.) else 0
         nu_mass_numbers = [list(self.M_nu[np.where(self.M_nu!=0.)]).count(x) for x in set(list(self.M_nu[np.where(self.M_nu!=0.)]))]
         nu_mass_numbers = sorted(nu_mass_numbers,reverse=True) if np.any(self.M_nu!=0.) else [0]
@@ -2553,7 +2620,6 @@ class cosmo:
 
         # Set neutrino masses
         # If all masses are zero, then no m_ncdm
-        #if np.count_nonzero(np.atleast_1d(self.M_nu))!=len(np.atleast_1d(self.M_nu)):
         params['N_ur']   = self.massless_nu
         params['N_ncdm'] = self.massive_nu
         if self.massive_nu != 0:
@@ -2584,7 +2650,6 @@ class cosmo:
         cosmo.empty()
 
         return k, pk
-
 
     #-------------------------------------------------------------------------------
     # CLASS_XPk
