@@ -17,8 +17,8 @@ Please, cite this repository ( `<https://github.com/GabrieleParimbelli/COLIBRI>`
 FYI, "colibrì" is the Italian for `"hummingbird" <https://en.wikipedia.org/wiki/Hummingbird>`_.
 
 
-Prerequisites and installation
-==============================
+Prerequisites
+==============
 
 COLIBRÌ works properly provided that the usual Python packages such as NumPy and SciPy are installed.
 However, some of the routines require some external libraries and Boltzmann solvers to be installed.
@@ -53,13 +53,6 @@ The best way to install **COLIBRÌ** is to clone the GitHub repository `<https:/
 A second way consists of cloning the repository and add the libraries to your ``PYTHONPATH`` editing your ``.bashrc`` file.::
 
     export PYTHONPATH="${PYTHONPATH}:/path/to/COLIBRI/"
-
-[comment]: <> Finally, **COLIBRÌ** is also available on `pip <https://pypi.org/project/colibri-cosmology/>`__, but it is less frequently updated.
-[comment]: <> To install it is sufficient to run::
-[comment]: <> 
-[comment]: <>     pip install colibri-cosmology
-[comment]: <> 
-[comment]: <> 
 
 So, set your preferences and get started!
 

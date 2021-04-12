@@ -39,12 +39,5 @@ A second way consists of cloning the repository and add the libraries to your ``
 
     export PYTHONPATH="${PYTHONPATH}:/path/to/COLIBRI/"
 
-[comment]: <> Finally, **COLIBRÌ** is also available on `pip <https://pypi.org/project/colibri-cosmology/>`__, but it is less frequently updated.
-[comment]: <> To install it is sufficient to run::
-[comment]: <> 
-[comment]: <>     pip install colibri-cosmology
-[comment]: <> 
-[comment]: <> 
-
 So, set your preferences and get started!
 
