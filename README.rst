@@ -6,7 +6,7 @@ Presentation
 ==================
 
 
-**COLIBRÌ** is a set of Python files containing useful routines to compute cosmological quantities such as ages, distances, power spectra, correlation functions. It supports Lambda-CDM cosmologies plus extensions including massive neutrinos, non-flat geometries, evolving dark energy (w0-wa) models and numerical recipes for f(R) gravity.
+**COLIBRÌ** (which roughly stands for 'Cosmological Libraries') is a set of Python files containing useful routines to compute cosmological quantities such as ages, distances, power spectra and correlation functions. It supports Lambda-CDM cosmologies plus extensions including massive neutrinos, non-flat geometries, evolving dark energy (w0-wa) models and numerical recipes for f(R) gravity.
 These files are built especially for large-scale structure purposes.
 
 It is compatible with both Python 2 and 3 (soon Python 2 compatibility will be deprecated).
@@ -20,7 +20,7 @@ FYI, "colibrì" is the Italian for `"hummingbird" <https://en.wikipedia.org/wiki
 Prerequisites and installation
 ==============================
 
-COLIBRÌ work properly provided that the usual Python packages such as NumPy and SciPy are installed.
+COLIBRÌ works properly provided that the usual Python packages such as NumPy and SciPy are installed.
 However, some of the routines require some external libraries and Boltzmann solvers to be installed.
 The list that follows itemizes all the packages needed to let all the routines work.
 
@@ -39,7 +39,7 @@ Here we report briefly what the various packages are needed for.
 
 * FFTLog is needed to use the Fourier and Hankel transforms for log-spaced arrays in ``fourier.py``.
 
-* CAMB and/or Class are needed to compute power spectra given a cosmological model. These packages are required in many routines across all the COLIBRÌ files. If you wish, you can install only one of the two, although it is a good thing to have them both also for comparisons.
+* CAMB and/or Class are needed to compute power spectra given a cosmological model. If you wish, you can install only one of the two, although it is a good thing to have them both also for comparisons.
 
 * Cython is just needed to compile the Python wrapper of Class: thus if you do not want to install Class, Cython is not necessary as well.
 
@@ -54,11 +54,12 @@ A second way consists of cloning the repository and add the libraries to your ``
 
     export PYTHONPATH="${PYTHONPATH}:/path/to/COLIBRI/"
 
-Finally, **COLIBRÌ** is also available on `pip <https://pypi.org/project/colibri-cosmology/>`__, but it is less frequently updated.
-To install it is sufficient to run::
-
-    pip install colibri-cosmology
-
+[comment]: <> Finally, **COLIBRÌ** is also available on `pip <https://pypi.org/project/colibri-cosmology/>`__, but it is less frequently updated.
+[comment]: <> To install it is sufficient to run::
+[comment]: <> 
+[comment]: <>     pip install colibri-cosmology
+[comment]: <> 
+[comment]: <> 
 
 So, set your preferences and get started!
 
