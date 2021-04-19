@@ -46,7 +46,7 @@ C      = cc.cosmo()
 # RSD instance
 #---------------------
 Z = rsd.RSD(z            = zz,								# Redshift
-			k            = np.geomspace(0.0005, 10., 101), 	# Scales in h/Mpc
+			k            = np.geomspace(0.0005, 10., 201), 	# Scales in h/Mpc
 			mu           = np.linspace(0., 1., 31),			# Cosine of angles with LOS
 			k_par        = np.linspace(0.01, 1., 51),		# Scales parallel in h/Mpc
 			k_perp       = np.linspace(0.01, 1., 31),		# Scales perpendicular in h/Mpc

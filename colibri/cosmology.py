@@ -163,7 +163,7 @@ class cosmo:
         self.delta_sc     = 3./20.*(12.*const.PI)**(2./3.)
         self.eta_sc       = 3.48752242
         self.delta_v      = - 3./20.*(6.*(np.sinh(self.eta_sc)-self.eta_sc))**(2./3.)
-        self.M            = np.logspace(2., 18., 512)
+        self.M            = np.logspace(2.1, 17.9, 512)
 
         #-------------------------------------
         # Other cosmological parameters
@@ -1617,10 +1617,11 @@ class cosmo:
         # compute bias and interpolate in log10(mass)
         bias_eff = np.zeros(len(pk))
         for iz in range(len(pk)):
-            bias           = np.array(self.halo_bias(sigma2[iz](logM)**.5, mass_fun = mass_fun, **kwargs))
+            bias           = np.array(self.halo_bias(sigma2[iz]**.5, mass_fun = mass_fun, **kwargs))
             bias_interp    = si.interp1d(logM, bias, kind = 'cubic')
-            numerator, _   = sint.quad(lambda m: HMF[iz](m)*bias_interp(m)*conv*10.**m, np.log10(M_min), np.log10(M_max))
-            denominator, _ = sint.quad(lambda m: HMF[iz](m)*conv*10.**m,                np.log10(M_min), np.log10(M_max))
+            HMF_int        = si.interp1d(logM, HMF[iz], 'cubic')
+            numerator, _   = sint.quad(lambda m: HMF_int(m)*bias_interp(m)*conv*10.**m, np.log10(M_min), np.log10(M_max))
+            denominator, _ = sint.quad(lambda m: HMF_int(m)*conv*10.**m,                np.log10(M_min), np.log10(M_max))
             bias_eff[iz]   = numerator/denominator
         return bias_eff
 
