@@ -120,6 +120,18 @@ class HMcode2016():
     # nonlinear_pk
     #-----------------------------------------------------------------------------------------
     def compute_nonlinear_pk(self):
+        """
+        It returns the non-linear power spectra at ``self.k`` and ``self.z``.
+
+        Returns
+        -------
+
+        self.k: array
+            Scales (in :math:`h/\mathrm{Mpc}`).
+
+        self.pk_nl: 2D array
+            Non-linear power spectra (in :math:`(\mathrm{Mpc}/h)^3`).
+        """
 
         # Compute sigma8 and sigma^2
         self.sig8 = np.zeros(self.nz)
@@ -209,6 +221,9 @@ class HMcode2016():
     # SMOOTHING RADIUS
     #-----------------------------------------------------------------------------------------
     def radius_of_mass(self, M):
+        """
+        Radius :math:`\mathrm{Mpc}/h` which contains a certain amount of mass.
+        """
         return (3.*M/(4.*np.pi*self.rho_field))**(1./3.)
 
 
@@ -216,6 +231,9 @@ class HMcode2016():
     # SIGMA^2
     #-----------------------------------------------------------------------------------------
     def sigma2(self, k, pk):
+        """
+        Mass variance in spheres as a function of mass itself
+        """
 
         # Power spectrum
         k_ext, pk_ext = UF.extrapolate_log(k, pk, 1e-6, 1e8)
@@ -237,6 +255,9 @@ class HMcode2016():
     # SIGMA_d(R)
     #-----------------------------------------------------------------------------------------
     def sigma_d(self, R):
+        """
+        Displacement with a window function of size R
+        """    
     
         integral = np.zeros(self.nz)
         for i in xrange(self.nz):
@@ -255,6 +276,9 @@ class HMcode2016():
     # SIGMA_d0(R)
     #-----------------------------------------------------------------------------------------
     def sigma_d0(self):
+        """
+        Displacement with a constant window function.
+        """        
         integral = np.zeros(self.nz)
         for i in xrange(self.nz):
             # Scales and power
@@ -273,42 +297,64 @@ class HMcode2016():
     # DELTA_c
     #-----------------------------------------------------------------------------------------
     def delta_c(self, sig8, omm):
+        """
+        Critical density at collapse as function of :math:`\Omega_m(z)` and :math:`\sigma_8(z)`
+        """
         return (1.59 + 0.0314*np.log(sig8))*(1.+0.0123*np.log10(omm))*(1.+0.262*self.cosmology.f_nu_tot)
 
     #-----------------------------------------------------------------------------------------
     # DELTA_v
     #-----------------------------------------------------------------------------------------
     def Delta_v(self, omm):
+        """
+        Overdensity of a collapsed object as function of :math:`\Omega_m(z)`.
+        """
         return 418.*omm**(-0.352)*(1.+0.916*self.cosmology.f_nu_tot)
 
     #-----------------------------------------------------------------------------------------
     # ALPHA
     #-----------------------------------------------------------------------------------------
     def alp(self, neff):
+        """
+        Quasi-linear softening as function of effective spectral index.
+        """
         return 3.24*1.85**neff
 
     #-----------------------------------------------------------------------------------------
     # FD
     #-----------------------------------------------------------------------------------------
     def fd(self, sigd100):
+        """
+        2-halo damping parameter
+        """
         return 0.0095*sigd100**1.37
 
     #-----------------------------------------------------------------------------------------
     # ETA_BLOAT
     #-----------------------------------------------------------------------------------------
     def eta_bloat(self, sig8):
+        """
+        Halo bloating parameter
+        """
         return 0.98-0.12*self.A_bar-0.3*sig8
 
     #-----------------------------------------------------------------------------------------
     # K_S
     #-----------------------------------------------------------------------------------------
     def k_s(self, sigd):
+        """
+        1-halo damping parameter
+        """
         return 0.584*sigd**(-1)
 
     #-----------------------------------------------------------------------------------------
     # FOURIER TRANSFORM OF NFW PROFILE
     #-----------------------------------------------------------------------------------------
     def u_NFW(self, c, x):
+        """
+        NFW profile in Fourier space
+        """
+
         (Si_1,Ci_1) = ss.sici(x)
         (Si_2,Ci_2) = ss.sici((1.+c)*x)
         den  = np.log(1.+c)-c*1./(1.+c)
@@ -321,6 +367,9 @@ class HMcode2016():
     # REDSHIFT OF FORMATION OF HALOS
     #-----------------------------------------------------------------------------------------
     def z_form(self):
+        """
+        Redshift of formation of a halo of its mass.
+        """
         frac  = 0.01
         fm    = frac*self.mass
         z_tmp = np.linspace(0., 30., 1001)
@@ -348,12 +397,19 @@ class HMcode2016():
     # CONCENTRATION PARAMETER
     #-----------------------------------------------------------------------------------------
     def c_bull(self, zf, z):
+        """
+        Bullock concentration parameter
+        """
         return self.A_bar*(1.+zf)/(1.+z)    
 
     #-----------------------------------------------------------------------------------------
     # M STAR
     #-----------------------------------------------------------------------------------------
     def M_star(self):
+        """
+        This routine computes the typical halo mass at redshift :math:`z=0`. This is defined as the
+        mass for which the peak height :math:`\\frac{\delta_c}{\sigma(M)}` is unity. Result in :math:`M_\odot/h`.
+        """
         nu = self.nu[0]
         func = si.interp1d(nu, self.mass, 'cubic')
         value = func(1.)
@@ -364,6 +420,9 @@ class HMcode2016():
     # SHETH-TORMEN MASS FUNCTION
     #-----------------------------------------------------------------------------------------
     def ST_mass_fun(self, nu):
+        """
+        Sheth-Tormen mass function.
+        """
         a = 0.707
         p = 0.3
         n = nu**2.
@@ -376,6 +435,9 @@ class HMcode2016():
     # HALO MASS FUNCTION
     #-----------------------------------------------------------------------------------------
     def dndM(self):
+        """
+        Halo mass function according to Sheth-Tormen.
+        """  
         m    = self.mass
         hmf  = np.zeros((self.nz, self.nm))
         for i in xrange(self.nz):    
@@ -485,6 +547,18 @@ class HMcode2020():
     # nonlinear_pk
     #-----------------------------------------------------------------------------------------
     def compute_nonlinear_pk(self):
+        """
+        It returns the non-linear power spectra at ``self.k`` and ``self.z``.
+
+        Returns
+        -------
+
+        self.k: array
+            Scales (in :math:`h/\mathrm{Mpc}`).
+
+        self.pk_nl: 2D array
+            Non-linear power spectra (in :math:`(\mathrm{Mpc}/h)^3`).
+        """
         # Compute sigma8 and sigma^2
         sig8_cc = np.array([self.cosmology.compute_sigma_8(k=self.k,pk=self.pk_cc[iz]) for iz in range(self.nz)])
         sig2_cc = self.cosmology.mass_variance(self.logmass,k=self.k,pk=self.pk_cc)
@@ -566,6 +640,9 @@ class HMcode2020():
     # NON-NORMALIZED GROWTH FACTORS
     #-----------------------------------------------------------------------------------------
     def growth_factors(self, z):
+        """
+        Non-normalized growth factors as functions of redshift (see Mead's paper)
+        """
 
         # Functions to integrate
         def derivatives(y, a):
@@ -611,6 +688,9 @@ class HMcode2020():
     # CRITICAL DENSITY FOR COLLAPSE - LINEAR
     #-----------------------------------------------------------------------------------------
     def delta_c(self, z, f_nu, Omz, g, G):
+        """
+        Linearly-extrapolated critical density for collapse (see Mead's paper)
+        """
         a = 1/(1+z)
         alpha_1, alpha_2 = 1,0
         delta_c0 = 1.686*(1-0.041*f_nu)
@@ -621,6 +701,9 @@ class HMcode2020():
     # CRITICAL DENSITY FOR COLLAPSE - NON-LINEAR
     #-----------------------------------------------------------------------------------------
     def Delta_v(self, z, f_nu, Omz, g, G):
+        """
+        Virial density (see Mead's paper)
+        """
         a = 1/(1+z)
         alpha_3, alpha_4 = 1,2
         Delta_v0 = 177.7*(1+0.763*f_nu)
@@ -632,6 +715,9 @@ class HMcode2020():
     # REDSHIFT OF FORMATION OF HALOS
     #-----------------------------------------------------------------------------------------
     def z_form(self, z, mass, deltac, sig2):
+        """
+        Redshift of formation of a halo of its mass.
+        """
         frac  = 0.01
         fm    = frac*mass
         nm    = len(np.atleast_1d(mass))
@@ -662,6 +748,9 @@ class HMcode2020():
     # FOURIER TRANSFORM OF NFW PROFILE
     #-----------------------------------------------------------------------------------------
     def FFT_NFW_profile(self, c, x):
+        """
+        Fourier transform of the NFW profile.
+        """
         (Si_1,Ci_1) = ss.sici(x)
         (Si_2,Ci_2) = ss.sici((1.+c)*x)
         den  = np.log(1.+c)-c*1./(1.+c)
@@ -675,6 +764,9 @@ class HMcode2020():
     # SHETH-TORMEN MASS FUNCTION
     #-----------------------------------------------------------------------------------------
     def ST_mass_fun(self, nu):
+        """
+        Sheth-Tormen mass function
+        """
         a = 0.707
         p = 0.3
         n = nu**2.
@@ -687,6 +779,9 @@ class HMcode2020():
     # HALO MASS FUNCTION
     #-----------------------------------------------------------------------------------------
     def dndM(self, z, M, peak_height):
+        """
+        Halo mass function according to Sheth-Tormen
+        """
         nz, nm = len(np.atleast_1d(z)), len(np.atleast_1d(M))
         dlnm   = np.diff(np.log(M))[0]
         hmf    = np.zeros((nz, nm))
@@ -822,6 +917,22 @@ class Takahashi():
     # MASS VARIANCE
     #-----------------------------------------------------------------------------------------
     def mass_variance(self, k, pk):
+        """
+        Mass variance in spheres as a function of mass itself, with a Gaussian smoothing.
+
+        .. warning::
+
+         The Takahashi method uses a Gaussian smoothing filter.
+
+        :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
+        :type k: array
+
+        :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.
+        :type pk: array
+
+        :return: array of shape ``len(self.mass)``, where ``self.mass`` is given in :func:`colibri.nonlinear.HMcode2016`.
+        """
+
         return self.cosmology.mass_variance_multipoles(logM   = self.logmass,
                                                        k      = k,
                                                        pk     = pk,
@@ -832,6 +943,11 @@ class Takahashi():
     # k_SIGMA
     #-----------------------------------------------------------------------------------------
     def nonlinear_scale(self):
+        """
+        This routine computes the non-linear scale :math:`k_\sigma` in units of :math:`h/\mathrm{Mpc}`, i.e. the scale at which :math:`\sigma^2(1/k_\sigma)=1`.
+
+        :return: array of size ``len(z)``
+        """    
         nz = self.nz
         # Mass variance
         sigma2_array = self.sigma2
@@ -856,6 +972,18 @@ class Takahashi():
     # EFFECTIVE INDEX
     #-----------------------------------------------------------------------------------------
     def effective_index(self):
+        """
+        This routine returns the effective index of the power spectrum.
+
+        .. math::
+
+          n_\mathrm{eff} = -3-\left.\\frac{\mathrm{d}\ln\sigma^2}{\mathrm{d}\ln R}\\right|_{\sigma=1},
+
+        where :math:`R` is the radius that encloses a given mass in a Gaussian filter.
+
+        :return: array of same length as the required redshifts in the initialization.
+        """    
+
         nz = self.nz
         # Mass variance
         sigma2_array  = self.sigma2
@@ -872,6 +1000,18 @@ class Takahashi():
     # EFFECTIVE CURVATURE
     #-----------------------------------------------------------------------------------------
     def effective_curvature(self):
+        """
+        This routine returns the effective curvature parameter of the power spectrum.
+
+        .. math::
+
+          C = -\left.\\frac{\mathrm{d}^2\ln\sigma^2}{\mathrm{d}\ln R^2}\\right|_{\sigma=1},
+
+        where :math:`R` is the radius that encloses a given mass in a Gaussian filter.
+
+        :return: array of same length as the required redshifts in the initialization.
+        """     
+
         nz = self.nz
         # Mass variance
         sigma2_array  = self.sigma2
@@ -888,6 +1028,18 @@ class Takahashi():
     # COMPUTE NONLINEAR P(k)
     #-----------------------------------------------------------------------------------------
     def compute_nonlinear_pk(self):
+        """
+        It returns the non-linear power spectra at ``self.z`` and ``self.k``.
+
+        Returns
+        -------
+
+        self.k: array
+            Scales (in :math:`h/\mathrm{Mpc}`).
+
+        self.pk_nl: 2D array
+            Non-linear power spectra (in :math:`(\mathrm{Mpc}/h)^3`).
+        """
         self.pk_nl  = np.zeros_like(self.pk)
 
         an     = np.expand_dims(self.an,    0).T
@@ -1030,6 +1182,22 @@ class TakaBird():
     # MASS VARIANCE
     #-----------------------------------------------------------------------------------------
     def mass_variance(self, k, pk):
+        """
+        Mass variance in spheres as a function of mass itself, with a Gaussian smoothing.
+
+        .. warning::
+
+         The Takahashi method uses a Gaussian smoothing filter.
+
+        :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
+        :type k: array
+
+        :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.
+        :type pk: array
+
+        :return: array of shape ``len(self.mass)``, where ``self.mass`` is given in :func:`colibri.nonlinear.HMcode2016`.
+        """
+
         return self.cosmology.mass_variance_multipoles(logM   = self.logmass,
                                                        k      = k,
                                                        pk     = pk,
@@ -1041,6 +1209,11 @@ class TakaBird():
     # k_SIGMA
     #-----------------------------------------------------------------------------------------
     def nonlinear_scale(self):
+        """
+        This routine computes the non-linear scale :math:`k_\sigma` in units of :math:`h/\mathrm{Mpc}`, i.e. the scale at which :math:`\sigma^2(1/k_\sigma)=1`.
+
+        :return: array of size ``len(z)``
+        """    
         nz = self.nz
         # Mass variance
         sigma2_array = self.sigma2
@@ -1065,6 +1238,18 @@ class TakaBird():
     # EFFECTIVE INDEX
     #-----------------------------------------------------------------------------------------
     def effective_index(self):
+        """
+        This routine returns the effective index of the power spectrum.
+
+        .. math::
+
+          n_\mathrm{eff} = -3-\left.\\frac{\mathrm{d}\ln\sigma^2}{\mathrm{d}\ln R}\\right|_{\sigma=1},
+
+        where :math:`R` is the radius that encloses a given mass in a Gaussian filter.
+
+        :return: array of same length as the required redshifts in the initialization.
+        """       
+
         nz = self.nz
         # Mass variance
         sigma2_array  = self.sigma2
@@ -1081,6 +1266,18 @@ class TakaBird():
     # EFFECTIVE CURVATURE
     #-----------------------------------------------------------------------------------------
     def effective_curvature(self):
+        """
+        This routine returns the effective curvature parameter of the power spectrum.
+
+        .. math::
+
+          C = -\left.\\frac{\mathrm{d}^2\ln\sigma^2}{\mathrm{d}\ln R^2}\\right|_{\sigma=1},
+
+        where :math:`R` is the radius that encloses a given mass in a Gaussian filter.
+
+        :return: array of same length as the required redshifts in the initialization.
+        """    
+
         nz = self.nz
         # Mass variance
         sigma2_array  = self.sigma2
@@ -1097,6 +1294,18 @@ class TakaBird():
     # COMPUTE NONLINEAR P(k)
     #-----------------------------------------------------------------------------------------
     def compute_nonlinear_pk(self):
+        """
+        It returns the non-linear power spectra at ``self.z`` and ``self.k``.
+
+        Returns
+        -------
+
+        self.k: array
+            Scales (in :math:`h/\mathrm{Mpc}`).
+
+        self.pk_nl: 2D array
+            Non-linear power spectra (in :math:`(\mathrm{Mpc}/h)^3`).
+        """
         self.pk_nl  = np.zeros_like(self.pk)
 
         an     = np.expand_dims(self.an,    0).T
