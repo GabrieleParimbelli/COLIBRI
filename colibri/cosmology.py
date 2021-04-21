@@ -2137,6 +2137,44 @@ class cosmo:
             return (1.+(alpha*K)**(nu*l))**(-s/nu)
 
     #-------------------------------------------------------------------------------
+    # DDM suppression
+    #-------------------------------------------------------------------------------
+    def decaying_dark_matter_suppression(self, k, z, tau, f_ddm):
+        """
+        Suppression of the matter power spectrum due to decaying dark matter (DDM), according to Hubert et al., 2021. It predicts the correct shape at up to :math:`k>10 h/\mathrm{Mpc}` and :math:`z<2.35`.
+
+        .. warning::
+
+         This function returns the total suppression in power. To obtain the suppression in the transfer function, take the square root of the output.
+
+        :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
+        :type k: array
+
+        :param z: Redshifts.
+        :type z: array
+
+        :param tau: Half-life time of the particle in Gyr
+        :type tau: float
+
+        :param f_ddm: fraction of DDM.
+        :type f_ddm: float between 0 and 1
+
+        :return: 2D array of shape ``(len(z), len(k))``
+        """
+        K,Z = np.meshgrid(k*self.h,z)
+        a = 0.7208+2.027/tau+3.0310/(1+1.1*Z)-0.180
+        b = 0.0120+2.786/tau+0.6699/(1+1.1*Z)-0.090
+        p = 1.0450+1.225/tau+0.2207/(1+1.1*Z)-0.099
+        q = 0.9922+1.735/tau+0.2154/(1+1.1*Z)-0.056
+        u,v,w = self.omega_b/0.0216,self.h/0.6776,self.omega_m/0.14116
+        alpha = (5.323-1.4644*u-1.391*v)+(-2.055+1.329*u+0.8672*v)*w+(0.2682-0.3509*u)*w**2
+        beta  = 0.9260 + (0.05735-0.02690*v)*w + (-0.01373+0.006713*v)*w**2
+        gamma = (9.553-0.7860*v)+(0.4884+0.1754*v)*w+(-0.2512+0.07558*v)*w**2
+        eps_lin    = alpha/tau**beta*(1+0.105*Z)**(-gamma)
+        eps_nonlin = eps_lin*(1.+a*K**p)/(1.+b*K**q)*f_ddm
+        return 1.-eps_nonlin
+
+    #-------------------------------------------------------------------------------
     # f(R) enhancement
     #-------------------------------------------------------------------------------
     def fR_correction(self, k, z, f_R0, nonlinear = True):
