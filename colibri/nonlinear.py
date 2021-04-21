@@ -2,11 +2,11 @@ import colibri.constants as const
 import colibri.cosmology as cc
 import numpy as np
 import colibri.useful_functions as UF
-import scipy
-import scipy.special
+import scipy.special as ss
 import scipy.interpolate as si
 import scipy.integrate as sint
 import scipy.misc as sm
+import scipy.optimize as so
 import warnings
 from six.moves import xrange
 
@@ -59,33 +59,15 @@ class HMcode2016():
         # Assertion on k
         assert len(k)>200,     "k must have a length greater than 200 points"
         assert k.max()>=10.,   "Maximum wavenumber must be greater than 10 Mpc/h in order to achieve convergence"
-        assert k.min()<=0.001, "Minimum wavenumber must be lowerer than 0.001 h/Mpc in order to achieve convergence"
+        assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
 
         # Reading all cosmological parameters
-        self.Omega_m      = cosmology.Omega_m
-        self.Omega_cdm    = cosmology.Omega_cdm
-        self.Omega_b      = cosmology.Omega_b
-        self.Omega_lambda = cosmology.Omega_lambda
-        self.Omega_K      = cosmology.Omega_K
-        self.Omega_nu     = np.sum(cosmology.Omega_nu)
-        self.Omega_cb     = cosmology.Omega_cb
-        self.M_nu         = cosmology.M_nu
-        self.N_nu         = cosmology.N_nu
-        self.N_eff        = cosmology.N_eff
-        self.Gamma_nu     = cosmology.Gamma_nu
-        self.massive_nu   = cosmology.massive_nu
-        self.massless_nu  = cosmology.N_eff - cosmology.massive_nu
-        self.log10_As     = cosmology.log10_As
-        self.As           = cosmology.As
-        self.ns           = cosmology.ns
-        self.w0           = cosmology.w0
-        self.wa           = cosmology.wa
-        self.T_cmb        = cosmology.T_cmb
-        self.h            = cosmology.h
-        self.H0           = 100.*self.h
         self.f_nu         = np.sum(cosmology.f_nu)
-        self.f_cb         = cosmology.f_cb
         self.cosmology    = cosmology
+
+        # Raise warning if neutrino mass is not zero:
+        if np.any(self.cosmology.M_nu!=0.):
+            warnings.warn("Neutrino mass is different from zero. This version of HMcode2016 works with zero neutrino mass, maybe better to use TakaBird or HMcode2020?")
 
         # Minimum halo concentration by Mead et al.
         self.A_bar  = 3.13
@@ -164,7 +146,7 @@ class HMcode2016():
         
         # Omega_m(z)
         self.omz    = self.cosmology.Omega_m_z(self.z)
-        self.ocz    = self.cosmology.Omega_m_z(self.z)*self.Omega_cb/self.Omega_m
+        self.ocz    = self.cosmology.Omega_m_z(self.z)*self.cosmology.Omega_cb/self.cosmology.Omega_m
 
         # Parameters fitted by Mead et al.
         self.Deltav = self.Delta_v(self.ocz)
@@ -188,7 +170,7 @@ class HMcode2016():
         for i in xrange(self.nz):
             # Find the mass at which sigma(M) = delta_c
             sig_int_2  = si.interp1d(np.log10(self.mass), self.sig2[i]-self.deltac[i]**2., 'cubic')
-            try:               M_1 = 10.**(scipy.optimize.root(sig_int_2, 13.-1.75*(1+self.z[i]))['x'][0])
+            try:               M_1 = 10.**(so.root(sig_int_2, 13.-1.75*(1+self.z[i]))['x'][0])
             except ValueError: M_1 = 10.**(13.-1.75*(1+self.z[i])) # "interpolated value"
             # Spline the sigma^2(M) function and take derivative at M_1
             s2_spl      = si.InterpolatedUnivariateSpline(self.lnmass, np.log(self.sig2[i]), k = 4)
@@ -240,12 +222,7 @@ class HMcode2016():
     #-----------------------------------------------------------------------------------------
     def radius_of_mass(self, M):
         """
-        This function computes the radius :math:`\mathrm{Mpc}/h` which contains a certain amount of mass.
-
-        :param M: Masses in :math:`M_\odot/h`
-        :type M: array
-
-        :return: array
+        Radius :math:`\mathrm{Mpc}/h` which contains a certain amount of mass.
         """
         return (3.*M/(4.*np.pi*self.rho_field))**(1./3.)
 
@@ -256,14 +233,6 @@ class HMcode2016():
     def sigma2(self, k, pk):
         """
         Mass variance in spheres as a function of mass itself
-
-        :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
-        :type k: array
-
-        :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.
-        :type pk: array
-
-        :return: array of shape ``len(self.mass)``, where ``self.mass`` is given in :func:`colibri.nonlinear.HMcode2016`.
         """
 
         # Power spectrum
@@ -287,12 +256,7 @@ class HMcode2016():
     #-----------------------------------------------------------------------------------------
     def sigma_d(self, R):
         """
-        Computes the displacement with a window function of size R
-
-        :param R: Radii in :math:`\mathrm{Mpc}/h`.
-        :type R: array
-
-        :return: array of shape ``(len(self.z), len(R))``
+        Displacement with a window function of size R
         """    
     
         integral = np.zeros(self.nz)
@@ -313,9 +277,7 @@ class HMcode2016():
     #-----------------------------------------------------------------------------------------
     def sigma_d0(self):
         """
-        Computes the displacement with a constant window function.
-
-        :return: array of length ``len(self.z)``
+        Displacement with a constant window function.
         """        
         integral = np.zeros(self.nz)
         for i in xrange(self.nz):
@@ -336,18 +298,7 @@ class HMcode2016():
     #-----------------------------------------------------------------------------------------
     def delta_c(self, sig8, omm):
         """
-        Computes the critical density at collapse as function of :math:`\Omega_m(z)` and :math:`\sigma_8(z)`
-
-        Parameters
-        ----------
-
-        :param sig8: Normalization of power spectrum
-        :type sig8: array
-
-        :param omm: Matter density parameters
-        :type omm: array, same size of ``sig8``
-
-        :return: array
+        Critical density at collapse as function of :math:`\Omega_m(z)` and :math:`\sigma_8(z)`
         """
         return (1.59 + 0.0314*np.log(sig8))*(1.+0.0123*np.log10(omm))*(1.+0.262*self.cosmology.f_nu_tot)
 
@@ -356,12 +307,7 @@ class HMcode2016():
     #-----------------------------------------------------------------------------------------
     def Delta_v(self, omm):
         """
-        Computes the overdensity of a collapsed object as function of :math:`\Omega_m(z)`.
-
-        :param omm: Matter density parameters
-        :type omm: array
-
-        :return: array
+        Overdensity of a collapsed object as function of :math:`\Omega_m(z)`.
         """
         return 418.*omm**(-0.352)*(1.+0.916*self.cosmology.f_nu_tot)
 
@@ -370,15 +316,7 @@ class HMcode2016():
     #-----------------------------------------------------------------------------------------
     def alp(self, neff):
         """
-        Computes the quasi-linear softening as function of effective spectral index.
-
-        Parameters
-        ----------
-
-        :type neff: array
-        :param neff: Effective spectral index
-
-        :return: array
+        Quasi-linear softening as function of effective spectral index.
         """
         return 3.24*1.85**neff
 
@@ -387,12 +325,7 @@ class HMcode2016():
     #-----------------------------------------------------------------------------------------
     def fd(self, sigd100):
         """
-        Computes the 2-halo damping parameter
-
-        :param sigd100: Displacement with a window function of size 100 :math:`\mathrm{Mpc}/h`.
-        :type sigd100: array
-
-        :return: array
+        2-halo damping parameter
         """
         return 0.0095*sigd100**1.37
 
@@ -401,12 +334,7 @@ class HMcode2016():
     #-----------------------------------------------------------------------------------------
     def eta_bloat(self, sig8):
         """
-        Computes the halo bloating parameter
-
-        :type sig8: array
-        :param sig8: Normalization of power spectrum, must be same size of 'self.z'.
-
-        :return: array
+        Halo bloating parameter
         """
         return 0.98-0.12*self.A_bar-0.3*sig8
 
@@ -415,12 +343,7 @@ class HMcode2016():
     #-----------------------------------------------------------------------------------------
     def k_s(self, sigd):
         """
-        Computes the 1-halo damping parameter
-
-        :param sigd: Displacement with no window function.
-        :type sigd: array
-
-        :return: array
+        1-halo damping parameter
         """
         return 0.584*sigd**(-1)
 
@@ -429,19 +352,11 @@ class HMcode2016():
     #-----------------------------------------------------------------------------------------
     def u_NFW(self, c, x):
         """
-        It returns the Navarro-Frenk-White (NFW) profile in Fourier space, normalized such that its integral is equal to unity.
-
-        :param x: Abscissa.
-        :type x: array
-
-        :type c: float
-        :param c: Concentration parameter.
-
-        :return: array of size ``len(x)``
+        NFW profile in Fourier space
         """
 
-        (Si_1,Ci_1) = scipy.special.sici(x)
-        (Si_2,Ci_2) = scipy.special.sici((1.+c)*x)
+        (Si_1,Ci_1) = ss.sici(x)
+        (Si_2,Ci_2) = ss.sici((1.+c)*x)
         den  = np.log(1.+c)-c*1./(1.+c)
         num1 = np.sin(x)*(Si_2-Si_1)
         num2 = np.sin(c*x)
@@ -454,8 +369,6 @@ class HMcode2016():
     def z_form(self):
         """
         Redshift of formation of a halo of its mass.
-
-        :return: 2D array of shape ``(len(self.z), len(self.mass))``, where ``self.mass`` is given in :func:`colibri.nonlinear.HMcode2016`.
         """
         frac  = 0.01
         fm    = frac*self.mass
@@ -485,15 +398,7 @@ class HMcode2016():
     #-----------------------------------------------------------------------------------------
     def c_bull(self, zf, z):
         """
-        This parameter enters in the Fourier transform of the NFW profile. It is defined as the ratio between the virial radius of the halo and the scale radius that appears in the definition of the NFW density profile in configuration space. The concentration parameter has been shown to follow a log-normal distribution with mean given by `arXiv:9908159 <https://arxiv.org/abs/astro-ph/9908159>`_.
-
-        :param zf: Redshift of formation.
-        :type zf: float
-
-        :param z: Redshifts.
-        :type z: array
-
-        :return: array of size ``len(z)``
+        Bullock concentration parameter
         """
         return self.A_bar*(1.+zf)/(1.+z)    
 
@@ -516,17 +421,12 @@ class HMcode2016():
     #-----------------------------------------------------------------------------------------
     def ST_mass_fun(self, nu):
         """
-        This routine returns the universal mass function by Sheth-Tormen as function of the peak height :math:`\\frac{\delta_c}{\sigma(M)}`.
-
-        :type nu: array
-        :param nu: Peak height
-
-        :return: array of same shape of ``nu``.
+        Sheth-Tormen mass function.
         """
         a = 0.707
         p = 0.3
         n = nu**2.
-        A = 1./(1. + 2.**(-p)*scipy.special.gamma(0.5-p)/np.sqrt(np.pi))
+        A = 1./(1. + 2.**(-p)*ss.gamma(0.5-p)/np.sqrt(np.pi))
         ST = A * np.sqrt(2.*a*n/np.pi) * (1.+1./(a*nu**2.)**p) * np.exp(-a*nu**2./2.)
         return ST
 
@@ -536,10 +436,8 @@ class HMcode2016():
     #-----------------------------------------------------------------------------------------
     def dndM(self):
         """
-        This routine returns the Sheth-Tormen halo mass function at the points specified by the array ``self.mass`` in the initialization.
-
-        :return: array in :math:`h^4 \ \mathrm{Mpc}^{-3} \ M_\odot^{-1}` of size ``(len(self.z), len(self.mass))``, where ``self.mass`` is given in :func:`colibri.nonlinear.HMcode2016`.
-        """    
+        Halo mass function according to Sheth-Tormen.
+        """  
         m    = self.mass
         hmf  = np.zeros((self.nz, self.nm))
         for i in xrange(self.nz):    
@@ -555,6 +453,346 @@ class HMcode2016():
             hmf[i] = self.rho_field/m**2.*log_der*mass_fun
         
         return hmf
+
+
+
+########################################################################################################################
+# HMcode2020: applies Halofit to a given power spectrum
+########################################################################################################################
+class HMcode2020():
+    """
+    The class ``HMcode2020`` transforms a linear input power spectrum to its non-linear counterpart using
+    the Halofit model by Mead et al. (see `arXiv:2009.01858 <https://arxiv.org/pdf/2009.01858.pdf>`_ .
+
+    .. warning::
+
+     It is quite slower than the one installed in CAMB or Class.
+
+
+    By calling this class, the total matter non-linear power spectrum is returned. It accepts the following arguments,
+    with the default values specified:
+
+    :param z: Redshift.
+    :type z: float, default = 0.0
+
+    :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
+    :type k: array
+
+    :param pk_cc: Linear cold dark matter (plus baryons) power spectra evaluated in ``z`` and ``k`` in units of :math:`(\mathrm{Mpc}/h)^3`.
+    :type pk_cc: 2D array of shape ``(len(z), len(k))``
+
+    :param pk_mm: Linear total matter power spectra evaluated in ``z`` and ``k`` in units of :math:`(\mathrm{Mpc}/h)^3`.
+    :type pk_mm: 2D array of shape ``(len(z), len(k))``
+
+    :param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`colibri.cosmology.cosmo` documentation).
+    :type cosmology: ``cosmo`` instance, default = ``cosmology.cosmo()``
+
+
+    When the instance is called, the array ``self.mass = np.logspace(0., 18., 512)``, i.e. an array of masses spanning from :math:`1 M_\odot/h` to :math:`10^{18} M_\odot/h` is created, where all the mass functions are computed.
+
+        
+    :return: Nothing, but the quantity ``self.pk_nl`` is generated, a 2D array of shape ``(len(z), len(k))`` containing the non-linear matter power spectra in units of :math:`(\mathrm{Mpc}/h)^3`.
+
+    """
+
+    def __init__(self,
+                 z,
+                 k,
+                 pk_cc,
+                 pk_mm,
+                 cosmology = cc.cosmo()):
+
+        # Assertion on k
+        assert len(k)>200,     "k must have a length greater than 200 points"
+        assert k.max()>=10.,   "Maximum wavenumber must be greater than 10 Mpc/h in order to achieve convergence"
+        assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
+
+        # Reading all cosmological parameters
+        self.f_nu         = np.sum(cosmology.f_nu[np.where(cosmology.M_nu!=0.)])
+        self.cosmology    = cosmology
+
+        # Redshift and scales at which all must be computed
+        self.nz    = len(np.atleast_1d(z))
+        self.nk    = len(np.atleast_1d(k))
+        self.z     = np.atleast_1d(z)
+        self.k     = np.atleast_1d(k)
+        self.pk_cc = pk_cc
+        self.pk_mm = pk_mm
+
+        # Introduce smearing if required
+        self.pk_nw = np.array([self.cosmology.remove_bao(self.k, self.pk_mm[i]) for i in range(self.nz)])
+        sv2        = np.expand_dims([1./(6.*np.pi**2.)*np.trapz(self.k*self.pk_mm[i],x=np.log(self.k)) for i in range(self.nz)],1)
+        self.pk_dw = self.pk_mm-(1.-np.exp(-self.k**2.*sv2))*(self.pk_mm-self.pk_nw)
+
+        if np.shape(pk_cc) != (self.nz,self.nk):
+            raise IndexError("pk_cc must be of shape (len(z), len(k))")
+        if np.shape(pk_mm) != (self.nz,self.nk):
+            raise IndexError("pk_mm must be of shape (len(z), len(k))")
+
+        # cdm+b density
+        self.rho_field  = self.cosmology.rho_crit(0.)*self.cosmology.Omega_cb*(1.+self.f_nu)
+
+        # Initialize mass
+        self.mass    = np.logspace(0., 18., 512)
+        self.lnmass  = np.log(self.mass)
+        self.logmass = np.log10(self.mass)
+        self.dlnm    = np.log(self.mass[1]/self.mass[0])
+        self.nm      = len(self.mass)
+        self.rr      = self.cosmology.radius_of_mass(self.mass,var='cb',window='th')
+
+        self.compute_nonlinear_pk()
+
+
+    #-----------------------------------------------------------------------------------------
+    # nonlinear_pk
+    #-----------------------------------------------------------------------------------------
+    def compute_nonlinear_pk(self):
+        """
+        It returns the non-linear power spectra at ``self.k`` and ``self.z``.
+
+        Returns
+        -------
+
+        self.k: array
+            Scales (in :math:`h/\mathrm{Mpc}`).
+
+        self.pk_nl: 2D array
+            Non-linear power spectra (in :math:`(\mathrm{Mpc}/h)^3`).
+        """
+        # Compute sigma8 and sigma^2
+        sig8_cc = np.array([self.cosmology.compute_sigma_8(k=self.k,pk=self.pk_cc[iz]) for iz in range(self.nz)])
+        sig2_cc = self.cosmology.mass_variance(self.logmass,k=self.k,pk=self.pk_cc)
+
+        # Compute growth factors
+        g_growth, G_growth = self.growth_factors(self.z)
+        
+        # Omega_m(z)
+        omz = self.cosmology.Omega_m_z(self.z)
+
+        # Overdensities
+        Deltav = self.Delta_v(self.z, self.f_nu, omz, g_growth, G_growth)
+        deltac = self.delta_c(self.z, self.f_nu, omz, g_growth, G_growth)
+
+        # Parameters fitted by Mead et al.
+        kdamp  = 0.05699*sig8_cc**(-1.0890)
+        f_2h   = 0.26960*sig8_cc**( 0.9403)
+        kstar  = 0.05617*sig8_cc**(-1.0130)
+        eta    = 0.12810*sig8_cc**(-0.3644)
+        nd_2h  = 2.85300
+        B_halo = 5.19600
+        
+        # nu(z, M)
+        peak_height = (deltac/sig2_cc.T**0.5).T
+
+        # Redshift of formation
+        zf = self.z_form(self.z, self.mass, deltac, sig2_cc)
+
+        # Concentration
+        conc = B_halo*(1+zf)/np.expand_dims(1.+self.z, 1)
+
+        # Virial radius
+        rv = ((3*np.expand_dims(self.mass,0))/(4*np.pi*self.rho_field*np.expand_dims(Deltav,1)))**(1./3.)
+
+        # Scale radius
+        rs = rv/conc
+
+        # n_eff(z) and quasi-linear softening
+        n_eff_cc = np.zeros(self.nz)
+        for i in xrange(self.nz):
+            # Find the mass at which sigma(M) = delta_c
+            sig_int_2  = si.interp1d(self.logmass, sig2_cc[i]-deltac[i]**2.,'cubic', fill_value=0.,bounds_error=False)
+            try:               M_1 = 10.**(so.root(sig_int_2, 13.-1.75*(1+self.z[i]))['x'][0])
+            except ValueError: M_1 = 10.**(13.-1.75*(1+self.z[i])) # "interpolated value"
+            # Spline the sigma^2(M) function and take derivative at M_1
+            s2_spl      = si.InterpolatedUnivariateSpline(self.lnmass, np.log(sig2_cc[i]), k = 3)
+            spl_logder  = s2_spl.derivative()
+            logder      = spl_logder(np.log(M_1))
+            # effective spectral index
+            n_eff_cc[i] = - 3. - 3.*logder
+
+        # Quasi-linear softening
+        alpha  = np.expand_dims(1.875*1.603**n_eff_cc,1)
+        
+        # NFW profile, already normalized for bloating and corrected for neutrino fraction
+        u_NFW = np.zeros((self.nz, self.nm, self.nk))
+        eta_tmp = np.array([eta for x in xrange(self.nm)]).T
+        R_bloat = peak_height**eta_tmp*rs
+        for ik in range(self.nk):
+            u_NFW[:,:,ik] = self.FFT_NFW_profile(conc, self.k[ik]*R_bloat)*(1-self.f_nu)
+
+        # Halo mass function
+        hmf = self.dndM(self.z, self.mass, peak_height)
+
+        # power spectrum
+        k_over_kdamp = np.outer(1./kdamp,self.k)
+        k_over_kstar = np.outer(1./kstar,self.k)
+        self.pk_1h   = np.zeros((self.nz, self.nk))
+        self.pk_2h   = np.zeros((self.nz, self.nk))
+        for iz in xrange(self.nz):
+            for ik in xrange(self.nk):
+                integrand            = ((self.mass/self.rho_field)**2.*hmf[iz]*u_NFW[iz,:,ik]**2.)*self.mass
+                self.pk_1h[iz,ik] = np.trapz(integrand,x=self.lnmass)
+        self.pk_2h  = self.pk_dw*(1.-f_2h*k_over_kdamp**nd_2h/(1.+k_over_kdamp**nd_2h))
+        self.pk_1h *= k_over_kstar**4./(1.+k_over_kstar**4.)
+        self.pk_nl  = (self.pk_1h**alpha + self.pk_2h**alpha)**(1./alpha)
+
+    #-----------------------------------------------------------------------------------------
+    # NON-NORMALIZED GROWTH FACTORS
+    #-----------------------------------------------------------------------------------------
+    def growth_factors(self, z):
+        """
+        Non-normalized growth factors as functions of redshift (see Mead's paper)
+        """
+
+        # Functions to integrate
+        def derivatives(y, a):
+            # Cosmology
+            z        = 1./a-1.
+            Hz_prime = sm.derivative(self.cosmology.H,z,dx=1e-5,n=1)
+            Hz       = self.cosmology.H(z)
+            Omz      = self.cosmology.Omega_m_z(z)
+            # Function 
+            g,omega,G = y
+            # Derivatives
+            dydt = [omega,-(3.-Hz_prime/Hz/a)*omega/a+3/2*Omz*g/a**2.,g/a]
+            return dydt
+        # Initial conditions
+        epsilon = 0.01
+        y0      = [epsilon, 1., epsilon]
+        # Steps of integral
+        a = np.sort(np.append([epsilon], 1/(1.+np.array(z))))#np.linspace(epsilon, 1, 51)
+        # Solution
+        g,_,G = sint.odeint(derivatives, y0, a).T
+        # Remove first (z=99)
+        g,G=np.flip(g[1:]),np.flip(G[1:])
+        return g,G
+
+    #-----------------------------------------------------------------------------------------
+    # FUNCTIONS FOR delta_c AND Delta_V
+    #-----------------------------------------------------------------------------------------
+    def f1(self,x,y):
+        p10,p11,p12,p13=-0.0069,-0.0208,0.0312,0.0021
+        return p10+p11*(1-x)+p12*(1-x)**2.+p13*(1-y)
+    def f2(self,x,y):
+        p20,p21,p22,p23=0.0001,-0.0647,-0.0417,0.0646
+        return p20+p21*(1-x)+p22*(1-x)**2.+p23*(1-y)
+    def f3(self,x,y):
+        p30,p31,p32,p33=-0.79,-10.17,2.51,6.51
+        return p30+p31*(1-x)+p32*(1-x)**2.+p33*(1-y)
+    def f4(self,x,y):
+        p40,p41,p42,p43=-1.89,0.38,18.8,-15.87
+        return p40+p41*(1-x)+p42*(1-x)**2.+p43*(1-y)
+
+
+    #-----------------------------------------------------------------------------------------
+    # CRITICAL DENSITY FOR COLLAPSE - LINEAR
+    #-----------------------------------------------------------------------------------------
+    def delta_c(self, z, f_nu, Omz, g, G):
+        """
+        Linearly-extrapolated critical density for collapse (see Mead's paper)
+        """
+        a = 1/(1+z)
+        alpha_1, alpha_2 = 1,0
+        delta_c0 = 1.686*(1-0.041*f_nu)
+        factor = 1.+(self.f1(g/a,G/a)*np.log10(Omz)**alpha_1+self.f2(g/a,G/a)*np.log10(Omz)**alpha_2)
+        return delta_c0*factor
+
+    #-----------------------------------------------------------------------------------------
+    # CRITICAL DENSITY FOR COLLAPSE - NON-LINEAR
+    #-----------------------------------------------------------------------------------------
+    def Delta_v(self, z, f_nu, Omz, g, G):
+        """
+        Virial density (see Mead's paper)
+        """
+        a = 1/(1+z)
+        alpha_3, alpha_4 = 1,2
+        Delta_v0 = 177.7*(1+0.763*f_nu)
+        factor = 1.+(self.f3(g/a,G/a)*np.log10(Omz)**alpha_3+self.f4(g/a,G/a)*np.log10(Omz)**alpha_4)
+        return Delta_v0*factor
+
+
+    #-----------------------------------------------------------------------------------------
+    # REDSHIFT OF FORMATION OF HALOS
+    #-----------------------------------------------------------------------------------------
+    def z_form(self, z, mass, deltac, sig2):
+        """
+        Redshift of formation of a halo of its mass.
+        """
+        frac  = 0.01
+        fm    = frac*mass
+        nm    = len(np.atleast_1d(mass))
+        nz    = len(z)
+        z_tmp = np.linspace(0., 30., 1001)
+        res   = np.zeros((nz, nm))
+        rhs   = np.zeros((nz, nm))
+        
+        Dzf  = self.cosmology.D_1(z_tmp)
+        zf_D = si.interp1d(Dzf, z_tmp, 'cubic')
+
+        for iz in xrange(nz):
+            m_ext, sig_ext = UF.extrapolate_log(mass, sig2[iz]**0.5, 1.e-1*frac*mass[0], 1.e1*mass[-1])
+            sig_int        = si.interp1d(m_ext, sig_ext, 'cubic')
+            s_fmz          = sig_int(fm)
+            rhs[iz]        = self.cosmology.D_1(z[iz])*deltac[iz]/s_fmz
+            for im in xrange(nm):
+                try:
+                    res[iz, im] = zf_D(rhs[iz,im])
+                    if zf_D(rhs[iz,im]) < z[iz]:
+                        res[iz, im] = z[iz]
+                except ValueError: res[iz, im] = z[iz]
+
+        return res
+        
+
+    #-----------------------------------------------------------------------------------------
+    # FOURIER TRANSFORM OF NFW PROFILE
+    #-----------------------------------------------------------------------------------------
+    def FFT_NFW_profile(self, c, x):
+        """
+        Fourier transform of the NFW profile.
+        """
+        (Si_1,Ci_1) = ss.sici(x)
+        (Si_2,Ci_2) = ss.sici((1.+c)*x)
+        den  = np.log(1.+c)-c*1./(1.+c)
+        num1 = np.sin(x)*(Si_2-Si_1)
+        num2 = np.sin(c*x)
+        num3 = np.cos(x)*(Ci_2-Ci_1)
+        return 1./den*(num1+num3-num2*1./((1.+c)*x))
+
+
+    #-----------------------------------------------------------------------------------------
+    # SHETH-TORMEN MASS FUNCTION
+    #-----------------------------------------------------------------------------------------
+    def ST_mass_fun(self, nu):
+        """
+        Sheth-Tormen mass function
+        """
+        a = 0.707
+        p = 0.3
+        n = nu**2.
+        A = 1./(1. + 2.**(-p)*ss.gamma(0.5-p)/np.sqrt(np.pi))
+        ST = A * np.sqrt(2.*a*n/np.pi) * (1.+1./(a*n)**p)*np.exp(-a*n/2.)
+        return ST
+
+
+    #-----------------------------------------------------------------------------------------
+    # HALO MASS FUNCTION
+    #-----------------------------------------------------------------------------------------
+    def dndM(self, z, M, peak_height):
+        """
+        Halo mass function according to Sheth-Tormen
+        """
+        nz, nm = len(np.atleast_1d(z)), len(np.atleast_1d(M))
+        dlnm   = np.diff(np.log(M))[0]
+        hmf    = np.zeros((nz, nm))
+        mass_fun = self.ST_mass_fun(peak_height)
+        for iz in xrange(nz):    
+            # derivative
+            log_der = np.gradient(peak_height[iz], dlnm, edge_order = 2)/peak_height[iz]
+            # Halo mass function
+            hmf[iz] = self.rho_field/M**2.*log_der*mass_fun[iz]
+        return hmf
+
 
 
 
@@ -599,31 +837,11 @@ class Takahashi():
         # Assertion on k
         assert len(k)>200,     "k must have a length greater than 200 points"
         assert k.max()>=10.,   "Maximum wavenumber must be greater than 10 Mpc/h in order to achieve convergence"
-        assert k.min()<=0.001, "Minimum wavenumber must be lowerer than 0.001 h/Mpc in order to achieve convergence"
+        assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
 
         # Reading all cosmological parameters
-        self.Omega_m      = cosmology.Omega_m
-        self.Omega_cdm    = cosmology.Omega_cdm
-        self.Omega_b      = cosmology.Omega_b
-        self.Omega_lambda = cosmology.Omega_lambda
-        self.Omega_K      = cosmology.Omega_K
-        self.Omega_nu     = np.sum(cosmology.Omega_nu)
-        self.Omega_cb     = cosmology.Omega_cb
-        self.M_nu         = cosmology.M_nu
-        self.N_nu         = cosmology.N_nu
-        self.N_eff        = cosmology.N_eff
-        self.Gamma_nu     = cosmology.Gamma_nu
-        self.massive_nu   = cosmology.massive_nu
-        self.massless_nu  = cosmology.N_eff - cosmology.massive_nu
-        self.log10_As     = cosmology.log10_As
-        self.As           = cosmology.As
-        self.ns           = cosmology.ns
         self.w0           = cosmology.w0
         self.wa           = cosmology.wa
-        self.T_cmb        = cosmology.T_cmb
-        self.h            = cosmology.h
-        self.H0           = 100.*self.h
-        self.f_cb         = cosmology.f_cb
         self.cosmology    = cosmology
 
         # Raise warning if neutrino mass is not zero:
@@ -891,32 +1109,10 @@ class TakaBird():
         # Assertion on k
         assert len(k)>200,     "k must have a length greater than 200 points"
         assert k.max()>=10.,   "Maximum wavenumber must be greater than 10 Mpc/h in order to achieve convergence"
-        assert k.min()<=0.001, "Minimum wavenumber must be lowerer than 0.001 h/Mpc in order to achieve convergence"
+        assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
 
         # Reading all cosmological parameters
-        self.Omega_m      = cosmology.Omega_m
-        self.Omega_cdm    = cosmology.Omega_cdm
-        self.Omega_b      = cosmology.Omega_b
-        self.Omega_lambda = cosmology.Omega_lambda
-        self.Omega_K      = cosmology.Omega_K
-        self.Omega_nu     = np.sum(cosmology.Omega_nu)
-        self.Omega_cb     = cosmology.Omega_cb
-        self.M_nu         = cosmology.M_nu
-        self.N_nu         = cosmology.N_nu
-        self.N_eff        = cosmology.N_eff
-        self.Gamma_nu     = cosmology.Gamma_nu
-        self.massive_nu   = cosmology.massive_nu
-        self.massless_nu  = cosmology.N_eff - cosmology.massive_nu
-        self.log10_As     = cosmology.log10_As
-        self.As           = cosmology.As
-        self.ns           = cosmology.ns
-        self.w0           = cosmology.w0
-        self.wa           = cosmology.wa
-        self.T_cmb        = cosmology.T_cmb
-        self.h            = cosmology.h
-        self.H0           = 100.*self.h
         self.f_nu         = np.sum(cosmology.f_nu[np.where(cosmology.M_nu!=0.)])
-        self.f_cb         = cosmology.f_cb
         self.cosmology    = cosmology
 
         # Redshift and scales at which all must be computed
@@ -1204,7 +1400,7 @@ class nonlinear_pk():
         # Assertion on k
         assert len(k)>200,     "k must have a length greater than 200 points"
         assert k.max()>=10.,   "Maximum wavenumber must be greater than 10 Mpc/h in order to achieve convergence"
-        assert k.min()<=0.001, "Minimum wavenumber must be lowerer than 0.001 h/Mpc in order to achieve convergence"
+        assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
 
         # Initialize cosmology
         self.cosmology = cosmology
