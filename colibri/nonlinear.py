@@ -400,7 +400,7 @@ class HMcode2016():
 class HMcode2020():
     """
     The class ``HMcode2020`` transforms a linear input power spectrum to its non-linear counterpart using
-    the Halofit model by Mead et al. (see `arXiv:2009.01858 <https://arxiv.org/pdf/2009.01858.pdf>`_ .
+    the Halofit model by Mead et al. (see `arXiv:2009.01858 <https://arxiv.org/pdf/2009.01858.pdf>`_ ).
 
     .. warning::
 
@@ -563,27 +563,33 @@ class HMcode2020():
         self.pk_nl  = (self.pk_1h**alpha + self.pk_2h**alpha)**(1./alpha)
 
     #-----------------------------------------------------------------------------------------
+    # SIMPLIFIED HUBBLE PARAMETER AND Omega_m(a) (needed to speed up growth factor calculations)
+    #-----------------------------------------------------------------------------------------
+    def Hubble(self, a):
+        return self.cosmology.H0*(self.cosmology.Omega_m*a**(-3) + 1.-self.cosmology.Omega_m)**0.5
+
+    def Omega_m_a(self, a):
+        return self.cosmology.Omega_m*a**(-3.)*(self.cosmology.H0/self.Hubble(a))**2.
+
+
+    #-----------------------------------------------------------------------------------------
     # NON-NORMALIZED GROWTH FACTORS
     #-----------------------------------------------------------------------------------------
     def growth_factors(self, z):
 
         # Functions to integrate
         def derivatives(y, a):
-            # Cosmology
-            z        = 1./a-1.
-            Hz_prime = sm.derivative(self.cosmology.H,z,dx=1e-5,n=1)
-            Hz       = self.cosmology.H(z)
-            Omz      = self.cosmology.Omega_m_z(z)
             # Function 
             g,omega,G = y
             # Derivatives
-            dydt = [omega,-(3.-Hz_prime/Hz/a)*omega/a+3/2*Omz*g/a**2.,g/a]
+            Oma  = self.Omega_m_a(a)
+            dydt = [omega,-(3-1.5*Oma)*omega/a+1.5*Oma*g/a**2.,g/a]
             return dydt
         # Initial conditions
         epsilon = 0.01
         y0      = [epsilon, 1., epsilon]
         # Steps of integral
-        a = np.sort(np.append([epsilon], 1/(1.+np.array(z))))#np.linspace(epsilon, 1, 51)
+        a = np.sort(np.append([epsilon], 1/(1.+np.array(z))))
         # Solution
         g,_,G = sint.odeint(derivatives, y0, a).T
         # Remove first (z=99)
@@ -657,7 +663,6 @@ class HMcode2020():
 
         return res
         
-
     #-----------------------------------------------------------------------------------------
     # FOURIER TRANSFORM OF NFW PROFILE
     #-----------------------------------------------------------------------------------------
@@ -669,7 +674,6 @@ class HMcode2020():
         num2 = np.sin(c*x)
         num3 = np.cos(x)*(Ci_2-Ci_1)
         return 1./den*(num1+num3-num2*1./((1.+c)*x))
-
 
     #-----------------------------------------------------------------------------------------
     # SHETH-TORMEN MASS FUNCTION

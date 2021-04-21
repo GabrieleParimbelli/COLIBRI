@@ -13,7 +13,7 @@ colors = ['b','r','g','m','gray','c']
 # 'mead2020'    (good for neutrinos)
 # 'takahashi'   (not good for neutrinos)
 # 'bird'        (good for neutrinos)
-set_halofit = 'mead'
+set_halofit = 'mead2020'
 #########################
 
 #=================
