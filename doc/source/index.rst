@@ -32,6 +32,7 @@ FYI, "colibrì" is the Italian for `"hummingbird" <https://en.wikipedia.org/wiki
    quickstart/test_mass_function
    quickstart/test_void_size_function
    quickstart/test_angular_spectra
+   quickstart/test_limber
    quickstart/test_nonlinear
    quickstart/test_halo_model
    quickstart/test_fourier
@@ -42,6 +43,7 @@ FYI, "colibrì" is the Italian for `"hummingbird" <https://en.wikipedia.org/wiki
 
    modules/cosmology_doc
    modules/angular_spectra_doc
+   modules/limber_doc
    modules/nonlinear_doc
    modules/halo_model_doc
    modules/fourier_doc

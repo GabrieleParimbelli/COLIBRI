@@ -81,7 +81,7 @@ class HMcode2016():
 
         # Introduce smearing if required
         if BAO_smearing:
-            self.pk_nw = [self.cosmology.remove_bao(self.k, self.pk[i]) for i in range(self.nz)]
+            self.pk_nw = [self.cosmology.remove_bao(self.k, self.pk[i],self.cosmology.k_eq()) for i in range(self.nz)]
             sv2        = [1./(6.*np.pi**2.)*np.trapz(self.k*self.pk[i], x = np.log(self.k)) for i in range(self.nz)]
             self.pk_dw = [(self.pk[i]-self.pk_nw[i])*np.exp(-self.k**2.*sv2[i]) + self.pk_nw[i] for i in range(self.nz)]
         else:
@@ -458,7 +458,7 @@ class HMcode2020():
         self.pk_mm = pk_mm
 
         # Introduce smearing if required
-        self.pk_nw = np.array([self.cosmology.remove_bao(self.k, self.pk_mm[i]) for i in range(self.nz)])
+        self.pk_nw = np.array([self.cosmology.remove_bao(self.k,self.pk_mm[i],self.cosmology.k_eq()) for i in range(self.nz)])
         sv2        = np.expand_dims([1./(6.*np.pi**2.)*np.trapz(self.k*self.pk_mm[i],x=np.log(self.k)) for i in range(self.nz)],1)
         self.pk_dw = self.pk_mm-(1.-np.exp(-self.k**2.*sv2))*(self.pk_mm-self.pk_nw)
 
@@ -766,7 +766,7 @@ class Takahashi():
 
         # Introduce smearing if required
         if BAO_smearing:
-            self.pk_nw = [self.cosmology.remove_bao(self.k, self.pk[i]) for i in range(self.nz)]
+            self.pk_nw = [self.cosmology.remove_bao(self.k, self.pk[i],self.cosmology.k_eq()) for i in range(self.nz)]
             sv2        = [1./(6.*np.pi**2.)*np.trapz(self.k*self.pk[i], x = np.log(self.k)) for i in range(self.nz)]
             self.pk_dw = [(self.pk[i]-self.pk_nw[i])*np.exp(-self.k**2.*sv2[i]) + self.pk_nw[i] for i in range(self.nz)]
         else:
@@ -976,7 +976,7 @@ class TakaBird():
 
         # Introduce smearing if required
         if BAO_smearing:
-            self.pk_nw = [self.cosmology.remove_bao(self.k, self.pk[i]) for i in range(self.nz)]
+            self.pk_nw = [self.cosmology.remove_bao(self.k, self.pk[i],self.cosmology.k_eq()) for i in range(self.nz)]
             sv2        = [1./(6.*np.pi**2.)*np.trapz(self.k*self.pk[i], x = np.log(self.k)) for i in range(self.nz)]
             self.pk_dw = [(self.pk[i]-self.pk_nw[i])*np.exp(-self.k**2.*sv2[i]) + self.pk_nw[i] for i in range(self.nz)]
         else:
@@ -1241,7 +1241,7 @@ class nonlinear_pk():
 
         # Smooth BAO if required
         if BAO_smearing:
-            pk_nw = [self.cosmology.remove_bao(self.k_tmp, pk_cbcb[i]) for i in range(self.nz)]
+            pk_nw = [self.cosmology.remove_bao(self.k_tmp, pk_cbcb[i],self.cosmology.k_eq()) for i in range(self.nz)]
             sv2   = [1./(6.*np.pi**2.)*np.trapz(self.k_tmp*pk_cbcb[i], x = np.log(self.k_tmp)) for i in range(self.nz)]
             pk_dw = [(pk_cbcb[i]-pk_nw[i])*np.exp(-self.k_tmp**2.*sv2[i]) + pk_nw[i] for i in range(self.nz)]
         else:

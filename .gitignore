@@ -4,8 +4,6 @@ colibri/__pycache__/
 doc/build
 colibri/perturbation_theory.py
 tests/test_spt.py
-colibri/limber.py
-tests/test_limber.py
 tests/test_temporary.py
 notebooks/
 build/

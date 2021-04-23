@@ -23,7 +23,7 @@ set_halofit = 'mead2020'
 #=================
 
 # Cosmology, redshifts and scales
-C  = cc.cosmo(Omega_m = 0.3089, M_nu = 0.0, Omega_b = 0.0486, As = 2.14e-9, ns = 0.9667, h = 0.6774)
+C  = cc.cosmo(Omega_m = 0.3089, M_nu = 0.3, Omega_b = 0.0486, As = 2.14e-9, ns = 0.9667, h = 0.6774)
 zz = np.linspace(0., 5., 6)
 kk = np.logspace(-4., 2., 201)
 
@@ -111,8 +111,8 @@ for i in range(len(zz)):
 	ax2.semilogx(kk,(pk_nl_colibri[i]/pk_nl_camb[i]-1.)*100.,colors[i],ls='-',lw=2.0)
 
 
-ax1.loglog(0,0,'k', ls = '-',  lw = 2.0, label = "CAMB halofit %s" %set_halofit)
-ax1.loglog(0,0,'k', ls = '--', lw = 2.0, label = "`nonlinear' module %s" %set_class)
+ax1.loglog(0,0,'k', ls = '',  lw = 2.0, label = "CAMB halofit %s" %set_halofit)
+ax1.loglog(0,0,'k', ls = '-', lw = 2.0, label = "`nonlinear' module %s" %set_class)
 ax1.set_ylabel('$P(k) \ [(\mathrm{Mpc}/h)^3]$')
 ax1.set_xlim(kk.min(), kk.max())
 ax1.set_ylim(5e-2, 1e5)
