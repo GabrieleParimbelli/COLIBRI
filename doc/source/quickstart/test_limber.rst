@@ -1,7 +1,7 @@
 .. _limber_test:
 
-Generate weak lensing spectra
-===================================
+Power spectra in Limber's approximation
+========================================
 
 Here is show an example of how to compute shear and galaxy power spectra using the class :func:`colibri.limber.limber_3x2pt` .
 In a flat Universe such spectra are given by:
