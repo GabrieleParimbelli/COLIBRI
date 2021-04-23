@@ -99,10 +99,10 @@ With the settings above, ``GL`` and ``GG`` will be zero, since ``do_GC`` is set 
 .. image:: ../_static/limber_spectrum.png
    :width: 700
 
-Shear correlation functions
-----------------------------
+Angular correlation functions
+------------------------------
 
-Equivalently, the two shear correlation functions can be computed with
+Equivalently, the angular correlation functions can be computed with
 
 .. code-block:: python
 
