@@ -4,7 +4,7 @@ Void size function
 ======================================
 
 Here we show how to compute the void size functions and some related quantities using the class :func:`colibri.cosmology.cosmo`.
-The text below refers to the file named ``test_vois_size_function.py`` provided in the ``tests`` directory in the GitHub repository.
+The text below refers to the file named ``test_void_size_function.py`` provided in the ``tests`` directory or similarly to ``test_void_size_function.ipynb`` provided in the ``notebooks`` folder.
 
 
 Initialization

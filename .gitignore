@@ -5,7 +5,6 @@ doc/build
 colibri/perturbation_theory.py
 tests/test_spt.py
 tests/test_temporary.py
-notebooks/
 build/
 dist/
 colibri_cosmology.egg-info/

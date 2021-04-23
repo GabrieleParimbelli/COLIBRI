@@ -5,7 +5,7 @@ Halo mass function
 
 In this section we show how to compute the halo mass functions using the class :func:`colibri.cosmology.cosmo`
 We also provide alternatives to the test code.
-The text below refers to the file named ``test_mass_function.py`` provided in the ``tests`` directory in the GitHub repository.
+The text below refers to the file named ``test_mass_function.py`` provided in the ``tests`` directory or similarly to ``test_mass_function.ipynb`` provided in the ``notebooks`` folder.
 
 
 Initialization

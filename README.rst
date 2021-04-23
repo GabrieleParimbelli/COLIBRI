@@ -60,7 +60,7 @@ So, set your preferences and get started!
 Overview of the modules
 ==============================
 
-COLIBRÌ consists of simple Python files: one, named ``constants.py`` is just a collection of physical constants, useful numbers and conversion factors between different units of measurement. A second one, ``useful_functions.py`` contains some routines of everyday life for a cosmologist. The remaining ones each contain one or more Python classes. Moreover also a folder ``Tests`` is provided, which contains test functions for the libraries and providing some example of how to use them.
+COLIBRÌ consists of simple Python files: one, named ``constants.py`` is just a collection of physical constants, useful numbers and conversion factors between different units of measurement. A second one, ``useful_functions.py`` contains some routines of everyday life for a cosmologist. The remaining ones each contain one or more Python classes. Moreover two folders (``tests`` and ``notebooks``) containing Python files and notebooks are provided with the code.
 
 In the following sections we briefly present the codes.
 The documentation for both classes and built-in methods is inside the code as well as on `ReadTheDocs <https://colibri-cosmology.readthedocs.io/en/latest/>`_ .
@@ -124,6 +124,6 @@ The file contains (as is obvious) useful functions such as extrapolation of arra
 Tests
 ^^^^^
 
-Together with the files, a folder named ``tests`` containing some useful and explanatory tests is provided. Each of them is adequately commented, so check them out and run them!
+Together with the files, a folder named ``tests`` and another called ``notebooks`` containing some useful and explanatory tests are provided. Each of them is adequately commented, so check them out and run them!
 
 

@@ -4,7 +4,7 @@ Basic usage of cosmological functions
 ======================================
 
 In this section some basic examples of how to use the class :func:`colibri.cosmology.cosmo` is shown.
-If desired, there is a file in the folder ``tests`` named ``test_cosmology.py`` which can be run as is and provides the exact same results as here.
+If desired, there is a file in the folder ``tests`` named ``test_cosmology.py`` and a notebook ``test_cosmology.ipynb`` in the ``notebooks`` folder. They can be run as they are and provide similar results to here.
 
 
 Print cosmological parameters
@@ -164,7 +164,7 @@ the quantity ``pk_camb`` is a dictionary with keys ``['cb-cb']``, ``['nu-nu']``,
 
 
 
-The file named ``test_pk.py`` in the ``tests`` folder contains different well-documented examples of how this can be done.
+The file named ``test_pk.py`` in the ``tests`` folder or the notebook ``test_pk.ipynb`` in the ``notebooks`` folder contains different well-documented examples of how this can be done.
 This is an example of computing the linear total matter power spectrum at :math:`z=0` with 3 different methods
 
 .. image:: ../_static/linear_spectra.png

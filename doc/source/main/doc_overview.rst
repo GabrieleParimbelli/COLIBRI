@@ -3,7 +3,7 @@
 Overview of the modules
 ==============================
 
-COLIBRÌ consists of simple Python files. One, named ``constants.py`` is just a collection of physical constants, useful numbers and conversion factors between different units of measurement. A second one, ``useful_functions.py`` contains some routines of everyday life for a cosmologist. The file ``fourier.py`` contains routines to perform Fourier and Hankel transforms. The remaining ones each contain one or more Python classes. Moreover, in the GitHub code, a folder ``tests`` is provided, which contains test functions for the libraries and providing some example of how to use them.
+COLIBRÌ consists of simple Python files. One, named ``constants.py`` is just a collection of physical constants, useful numbers and conversion factors between different units of measurement. A second one, ``useful_functions.py`` contains some routines of everyday life for a cosmologist. The file ``fourier.py`` contains routines to perform Fourier and Hankel transforms. The remaining ones each contain one or more Python classes. Moreover two folders cotaining tests and Python notebooks are provided with the code.
 
 In the following sections we briefly present the codes.
 The documentation for both classes and built-in methods is inside the code as well as on `ReadTheDocs <https://colibri-cosmology.readthedocs.io/en/latest/>`_ .
@@ -68,7 +68,7 @@ The file contains (as is obvious) useful functions such as extrapolation of arra
 Tests
 ^^^^^
 
-If the code has been cloned from GitHub, together with the files, a folder containing some useful and explanatory tests is provided. Each of them is adequately commented, so check them out and run them!
+Together with the files, two folder containing some useful and explanatory tests and Python example notebooks are provided. Each of them is adequately commented, so check them out and run them!
 
 Otherwise, you may want to go the :ref:`cosmology_test` section.
 
