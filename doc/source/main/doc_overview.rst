@@ -21,12 +21,8 @@ For the latter, both Boltzmann solvers **CAMB** and **Class** can be used, provi
 `nonlinear` module
 ----------------------------
 
-There are five different classes included here.
-The first one is called ``HMcode2016`` , which transforms a linear input power spectrum to its non-linear counterpart.
-This class uses the Halofit model by Mead `et al.` (see `arXiv:1505.07833 <https://arxiv.org/abs/1505.07833>`_ ), taking as inputs redshift, scales, power spectrum and a cosmology.
-The parameters included here are valid for cold dark matter plus baryons (i.e. no neutrinos): to compute the total matter power spectrum (including the neutrino part), see two sentences below.
-A second class employing the updated version ``HMcode2020`` by Mead `et al.` (see `arxiv:2009.01858 <https://arxiv.org/abs/2009.01858>`_) is also provided.
-The third and fourth classes are called ``Takahashi`` and  ``TakaBird`` and they do the very same thing, except following the prescription by Takahashi et al. for the former (see `arXiv:1208.2701 <https://arxiv.org/abs/1208.2701>`_ ) and the correction for the presence of massive neutrinos by Bird et al. for the latter (see `arXiv:1109.4416 <https://arxiv.org/abs/1109.4416>`_ ).
+Included here are several different ways to compute the non-linear matter power spectrum from a linear one.
+These methods include ``HMcode2016`` by Mead `et al.` (see `arXiv:1505.07833 <https://arxiv.org/abs/1505.07833>`_ ),  ``HMcode2020`` by Mead `et al.` (see `arXiv:2009.01858 <https://arxiv.org/abs/2009.01858>`_ ) ``Takahashi`` and  ``TakaBird`` following the prescription by Takahashi et al. for the former (see `arXiv:1208.2701 <https://arxiv.org/abs/1208.2701>`_ ) and the correction for the presence of massive neutrinos by Bird et al. for the latter (see `arXiv:1109.4416 <https://arxiv.org/abs/1109.4416>`_ ).
 Finally, the class ``nonlinear_Pk`` uses the so-called `cold dark matter prescription` (see e.g. `arXiv:1311.0866 <https://arxiv.org/abs/1311.0866>`_, `arXiv:1311.1212 <https://arxiv.org/abs/1311.1212>`_, `arXiv:1311.1514 <https://arxiv.org/abs/1311.1514>`_ ) to compute the total matter power spectrum, where the Halofit operator is applied only to the cold dark matter+baryons linear component, while the (weighted) neutrino and the cross part are added linearly afterwards.
 
 `limber` module

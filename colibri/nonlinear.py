@@ -1249,14 +1249,16 @@ class nonlinear_pk():
             pk_dw = pk_cbcb
 
         # Use halofit operator on P_{cb-cb}(k)
-        if self.halofit == 'HMcode2016':
+        if   self.halofit == 'HMcode2016':
             HO = HMcode2016(z = self.z, k = self.k_tmp, pk = pk_cbcb, field = 'cb', BAO_smearing = BAO_smearing, cosmology = self.cosmology)
         elif self.halofit == 'Takahashi':
             HO = Takahashi(z = self.z, k = self.k_tmp, pk = pk_cbcb, BAO_smearing = BAO_smearing, cosmology = self.cosmology)
+        elif self.halofit == 'HMcode2020':
+            raise ValueError("HMcode2020 model is built to include neutrinos already, so it is useless to use it in the cold dark matter prescription. Use Takahashi or HMcode2016 to do a similar operation.")
         elif self.halofit == 'TakaBird':
-            raise ValueError("TakaBird model is built to include neutrinos already, so it is useless to use it in the cold dark matter prescription. Use Takahashi to do a similar operation.")
+            raise ValueError("TakaBird model is built to include neutrinos already, so it is useless to use it in the cold dark matter prescription. Use Takahashi or HMcode2016 to do a similar operation.")
         else:
-            raise ValueError('model not recognized')
+            raise ValueError('non-linear model not recognized')
 
         # Set nonlinear quantities, de-wiggled and no-wiggle power spectra
         pk_nl_cbcb   = HO.pk_nl     # Non-linear cb-cb power spectrum
