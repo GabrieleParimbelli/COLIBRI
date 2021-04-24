@@ -94,7 +94,6 @@ The returned object is a dictionary that contains the following keys: ``gg``, ``
 The first three represent the cosmological signal of cosmic shear, the cross spectrum with intrinsic alignment effect, the pure intrinsic alignment signal, respectively.
 The ``LL`` key is the sum of the previous three, ``GL`` is the galaxy-galaxy lensing signal and the ``GG`` is the galaxy clustering angular power spectrum.
 Each of these keys is a 3D array, in this case of shape ``(3, 3, 51)``, containing the quantity :math:`C^{(ij)}(\ell)`.
-With the settings above, ``GL`` and ``GG`` will be zero, since ``do_GC`` is set to ``False``
 
 .. image:: ../_static/limber_spectrum.png
    :width: 700
