@@ -909,7 +909,7 @@ class Takahashi():
         # Proxy for scales
         y = np.outer(1./self.k_nl,self.k)
         # Linear term
-        Delta_lin_2 = self.pk*k**3./(2.*np.pi**2.)
+        Delta_lin_2 = self.pk_dw*k**3./(2.*np.pi**2.)
         # Quasi-linear term
         Delta_Q_2 = Delta_lin_2*(1.+Delta_lin_2)**betan/(1.+alphan*Delta_lin_2)*np.exp(-(y/4.+y**2./8.))
         # Halo term
@@ -1118,7 +1118,7 @@ class TakaBird():
         # Proxy for scales
         y = np.outer(1./self.k_nl,self.k)
         # Linear term
-        Delta_lin_2 = self.pk*k**3./(2.*np.pi**2.)
+        Delta_lin_2 = self.pk_dw*k**3./(2.*np.pi**2.)
         # Quasi-linear term
         Delta_lin_2_tilde = Delta_lin_2*(1.+47.48*self.f_nu*k**2./(1+1.5*k**2.))
         Delta_Q_2 = Delta_lin_2*(1.+Delta_lin_2_tilde)**betan/(1.+alphan*Delta_lin_2_tilde)*np.exp(-(y/4.+y**2./8.))

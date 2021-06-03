@@ -1711,59 +1711,18 @@ class cosmo:
         return hmf
 
     #-------------------------------------------------------------------------------
-    # USEFUL PEAK FUNCTIONS
+    # VOID SIZE FUNCTION EXCURSION SET
     #-------------------------------------------------------------------------------
     def F_BBKS(self, x):
-        """
-        Function related to peak number density. 'x' is a quantity related to the derivative
-        of the density field with respect to the RMS mass fluctuation.
-
-
-        :param x: Abscissa.
-        :type x: array
-
-        :return: array.
-        """
         num1 = (x**3.-3.*x)/2.*(ss.erf(x*np.sqrt(5./2.)) + ss.erf(x*np.sqrt(5./8.)))
         num2 = np.sqrt(2./(5.*const.PI))*(31.*x**2./4. + 8./5.)*np.exp(-5.*x**2./8.)
         num3 = np.sqrt(2./(5.*const.PI))*(x**2./2. - 8./5.)*np.exp(-5.*x**2./2.)
         return (num1 + num2 + num3)
 
     def Gauss(self, x, mean, var):
-        """
-        Normalized Gaussian function.
-
-        :param x: Abscissa.
-        :type x: array
-
-        :param mean: Mean of the Gaussian.
-        :type mean: float
-
-        :param var: Variance of the Gaussian, i.e. the square of the standard deviation.
-        :type var: float
-
-
-        :return: array.
-        """
         return np.exp(-(x-mean)**2./(2.*var))/np.sqrt(2.*const.PI*var)
 
     def G_n_BBKS(self, n, gamma_p, nu):
-        """
-        Functions related to peaks number density and mass function, as described in Bardeen et al. (1986).
-
-
-        :param n: Order of integral.
-        :type n: integer
-            
-
-        :param gamma_p: Index in excursion set.
-        :type gamma_p: float
-
-        :param nu: Peak height.
-        :type nu: array
-
-        :return: array
-        """
         var  = 1.-np.array(gamma_p)**2.
         mean = np.array(gamma_p*nu)
         G    = np.array(list(map(lambda m, v: sint.quad(lambda x: x**n*self.F_BBKS(x)*self.Gauss(x,m,v), 0., np.inf)[0], mean, var)))
@@ -1772,18 +1731,14 @@ class cosmo:
         G[indices] = gamma_p[indices]*nu[indices]*((nu[indices]**3.-3*nu[indices])*gamma_p[indices]**3.)
         return G
 
-    #-------------------------------------------------------------------------------
-    # VOID SIZE FUNCTION EXCURSION SET
-    #-------------------------------------------------------------------------------
     def void_size_function(self, R, z, k, pk, delta_v = None, a = 1., p = 0.):
         """
         This routine returns the void size function, i.e. the number of voids per
         unit volume per unit (Lagrangian) radius, according ot the Excursion Set of Troughs theory.
-        It returns as many interpolated objects in radii as the redshifts required
-        (from :math:`R_\mathrm{min} = X \ \mathrm{Mpc}/h` to :math:`R_\mathrm{max} = Y \ \mathrm{Mpc}/h`.
-        Units of :math:`(h/\mathrm{Mpc})^3`.
+        It returns two 2D arrays containing the Lagrangian radii as function of redshift and the void size 
+        function in units of :math:`(h/\mathrm{Mpc})^4`.
 
-        :param R: Radii of voids, in :math:`\mathrm{Mpc}/h`.
+        :param R: (Eulerian) radii of voids, in :math:`\mathrm{Mpc}/h`.
         :type R: array
 
         :param z: Redshifts.
@@ -1795,7 +1750,7 @@ class cosmo:
         :param pk: Power spectrum in redshifts and scales in units of :math:`(\mathrm{Mpc}/h)^3`.
         :type pk: 2D array, first dimension must match ``len(z)``
 
-        :param delta_v: Critical underdensity in linear theory. If None, it is substituted by -2.71.
+        :param delta_v: Critical underdensity in linear theory. If None, it is substituted by -1.76.
         :type delta_v: float, default = None
 
         :param a: Sheth-Tormen-like parameter
@@ -1860,6 +1815,95 @@ class cosmo:
             dndR_tmp = f_nu[iz]/V*dnu_dr
             dndR[iz] = si.interp1d(RLtmp[iz],dndR_tmp,'cubic')(RL[iz])
         return RL,dndR
+
+    #-------------------------------------------------------------------------------
+    # VOID SIZE FUNCTION SPHERICAL EVOLUTION
+    #-------------------------------------------------------------------------------
+    def f_ln_sigma(self, sigma, delta_c = None, delta_v = None, max_index = 200):
+        if max_index<200: raise ValueError("max_index for sum must be at least 200 for convergence")
+        dc   = self.delta_sc if delta_c is None else delta_c
+        dv   = np.abs(self.delta_v) if delta_c is None else delta_v
+        D    = dv/(dc+dv)
+        x    = D/dv*sigma
+        jpi  = np.array([j*np.pi for j in range(max_index)])
+        X, JPI = np.meshgrid(x,jpi,indexing='ij')
+        return 2.*np.sum(np.exp(-(JPI*X)**2./2.)*JPI*X**2.*np.sin(JPI*D),axis=1)
+
+    def linear_underdensity_collapse_voids(self,Delta_NL,z):
+        assert Delta_NL < 0., "Non-linear underdensity for collapsed voids must be lower than 0"
+        assert Delta_NL > -1., "Non-linear underdensity for collapsed voids must be larger than -1"
+        D1 = self.D_1(z)
+        return ((1.+Delta_NL)**(-1/self.delta_sc)-1.)*self.delta_sc/D1
+
+    def void_size_function_new(self, R, z, k, pk, model, Delta_NL, delta_c = None, **kwargs):
+        """
+        This routine returns the void size function, i.e. the number of voids per
+        unit volume per unit radius, following three different recipes which can all be
+        found listed in Jennings, Li, Hu (2013).
+        
+        :param R: (Eulerian) radii of voids, in :math:`\mathrm{Mpc}/h`.
+        :type R: array
+
+        :param z: Redshifts.
+        :type z: array
+
+        :param k: Scales of power spectrum in units of :math:`h/\mathrm{Mpc}`.
+        :type k: array
+
+        :param pk: Power spectrum in redshifts and scales in units of :math:`(\mathrm{Mpc}/h)^3`.
+        :type pk: 2D array, first dimension must match ``len(z)``
+
+        :param model: Model to use, choose among 'linear', 'SvdW', 'Vdn'
+        :type model: string
+
+        :param Delta_NL: Critical (non-linear) underdensity for collapse of voids.
+        :type Delta_NL: float between 0 and -1
+
+        :param delta_c: Critical overdensity for collapse. If ``None`` the standard value 1.686 is used
+        :type delta_c: float, default None
+
+        :param kwargs: keyword arguments
+
+
+        Returns
+        -------
+
+        RL: 2D array
+            Lagrangian radii corresponding, at each redshift, to the comoving ones in input.
+
+        dndR: 2D array
+            Containing :math:`\\frac{dn}{d\ln R}` in :math:`h^3 \ \mathrm{Mpc}^{-3}`
+        """
+        # Checks
+        z           = np.atleast_1d(z)
+        assert model in ['linear','SvdW','Vdn'], "Model for VSF not recognized"
+        # Fixed parameters
+        window      = 'th'
+        delta_v     = np.abs(self.linear_underdensity_collapse_voids(Delta_NL,z))
+        if delta_c is None: delta_c = self.delta_sc
+        ratio_radii = 1. if model == 'linear' else (1+Delta_NL)**(-1/3)
+        # Masses and radii
+        logM_tmp    = np.log10(self.M)
+        R_tmp       = self.radius_of_mass(self.M,'cb',window)*ratio_radii
+        # Mass variance
+        sigma       = self.mass_variance(logM_tmp,k,pk,window)**0.5
+        # Universal function
+        flns        = np.array([self.f_ln_sigma(sigma[iv], delta_c, delta_v[iv], **kwargs) for iv in range(len(delta_v))])
+        # Derivative of sigma
+        deriv = np.zeros_like(sigma)
+        for iz in range(len(pk)):
+            sig_interp = si.interp1d(np.log(R_tmp),np.log(1./sigma[iz]),'cubic',fill_value='extrapolate',bounds_error=False)
+            deriv[iz]  = sm.derivative(sig_interp,np.log(R_tmp),dx=1e-3,n=1,order=3)
+        # Void size function
+        if model == 'Vdn':
+            Volume_tmp = 4./3.*np.pi*(R_tmp)**3.
+        else:
+            Volume_tmp = 4./3.*np.pi*(R_tmp/ratio_radii)**3.
+        VSF_tmp = flns/Volume_tmp*deriv
+        # Interpolate
+        VSF = np.array([si.interp1d(R_tmp,VSF_tmp[iz],'cubic')(R) for iz in range(len(z))])
+        return R,VSF
+
 
     #-------------------------------------------------------------------------------
     # FREE STREAMING

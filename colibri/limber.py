@@ -358,6 +358,8 @@ class limber_3x2pt():
         assert np.all(np.diff(z)<self.dz_windows), "For convergence reasons, the distribution function arrays must be sampled with frequency of at least dz<=%.3f" %(self.dz_windows)
         assert nz.ndim == 2, "'nz' must be 2-dimensional" 
         assert (nz.shape)[1] == z.shape[0], "Length of each 'nz[i]' must be the same of 'z'"
+        assert z.min() <= self.z_min, "Minimum input redshift must be < %.3f, the minimum redshift of integration" %(self.z_min)
+        assert z.max() >= self.z_max, "Maximum input redshift must be > %.3f, the maximum redshift of integration" %(self.z_max)
 
         # Call a simpler function if Omega_K == 0.
         if self.cosmology.Omega_K == 0.:
