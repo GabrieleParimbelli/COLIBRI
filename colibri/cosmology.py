@@ -1868,10 +1868,10 @@ class cosmo:
         Returns
         -------
 
-        RL: 2D array
+        R: 2D array
             Lagrangian radii corresponding, at each redshift, to the comoving ones in input.
 
-        dndR: 2D array
+        VSF: 2D array
             Containing :math:`\\frac{dn}{d\ln R}` in :math:`h^3 \ \mathrm{Mpc}^{-3}`
         """
         # Checks
