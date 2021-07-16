@@ -23,7 +23,7 @@ set_halofit = 'mead2020'
 #=================
 
 # Cosmology, redshifts and scales
-C  = cc.cosmo(Omega_m = 0.3089, M_nu = 0.3, Omega_b = 0.0486, As = 2.14e-9, ns = 0.9667, h = 0.6774)
+C  = cc.cosmo(Omega_m = 0.3089, Omega_b = 0.0486, As = 2.14e-9, ns = 0.9667, h = 0.6774, M_nu = 0.15)
 zz = np.linspace(0., 5., 6)
 kk = np.logspace(-4., 2., 201)
 
@@ -70,7 +70,6 @@ elif set_halofit == 'takahashi':
     do_nonlinear = NL.Takahashi (z            = zz,
                                  k            = k_l,
                                  pk           = pk_mm,
-                                 BAO_smearing = False,
                                  cosmology    = C)
 elif set_halofit == 'bird':
     set_class = 'TakaBird'
@@ -78,7 +77,6 @@ elif set_halofit == 'bird':
     do_nonlinear = NL.TakaBird  (z = zz,
                                  k = k_l,
                                  pk = pk_mm,
-                                 BAO_smearing = False,
                                  cosmology = C)
 else:
     raise ValueError("Non-linear method not recognized")
@@ -105,16 +103,16 @@ for i in range(len(zz)):
 
 	# Plot spectra
 	ax1.loglog(kk,pk_nl_camb[i]   ,colors[i],ls='-', lw=2.0,label='$z=%.1f$'%zz[i]) # Plot CAMB halofit
-	ax1.loglog(kk,pk_nl_colibri[i],colors[i],marker='o',ms=3)                       # Plot nonlinear module
+	ax1.loglog(kk,pk_nl_colibri[i],colors[i],ls='' , marker='o',ms=3)               # Plot nonlinear module
 
 	# Plot ratios
 	ax2.semilogx(kk,(pk_nl_colibri[i]/pk_nl_camb[i]-1.)*100.,colors[i],ls='-',lw=2.0)
 
 
-ax1.loglog(0,0,'k', ls = '',  lw = 2.0, label = "CAMB halofit %s" %set_halofit)
+ax1.loglog(0,0,'k', ls = '', marker='o',lw = 2.0, label = "CAMB halofit %s" %set_halofit)
 ax1.loglog(0,0,'k', ls = '-', lw = 2.0, label = "`nonlinear' module %s" %set_class)
 ax1.set_ylabel('$P(k) \ [(\mathrm{Mpc}/h)^3]$')
-ax1.set_xlim(kk.min(), kk.max())
+ax1.set_xlim(kk.min(), 10.)
 ax1.set_ylim(5e-2, 1e5)
 ax1.grid(True)
 
@@ -122,7 +120,7 @@ ax2.fill_between(k_camb, -.5, .5, color = 'k', alpha = 0.1)
 ax2.fill_between(k_camb, -1., 1., color = 'k', alpha = 0.05)
 ax2.set_xlabel('$k$ $[h/\mathrm{Mpc}]$')
 ax2.set_ylabel(r'$\left(\frac{P(k)}{P_\mathrm{CAMB}(k)}-1\right)\times 100 \ [\%]$', fontsize = 20)
-ax2.set_xlim(kk.min(), kk.max())
+ax2.set_xlim(kk.min(), 10.)
 ax2.set_ylim(-2.25, 2.25)
 ax2.grid(True)
 

@@ -317,8 +317,7 @@ class cosmo:
 
         :return: float
         """
-        result, _ = sint.quad(lambda x: x**2*np.sqrt(x**2+y**2)*1./(np.exp(x) + 1.), 0., 100.)
-        return result
+        return sint.quad_vec(lambda x: x**2.*np.sqrt(x**2.+y**2.)/(np.exp(x)+1.), 0., 100.)[0]
 
     #-------------------------------------------------------------------------------
     # OMEGA NEUTRINO (as function of z)
@@ -914,7 +913,7 @@ class cosmo:
     #-----------------------------------------------------------------------------------------
     # MASS VARIANCE
     #-----------------------------------------------------------------------------------------
-    def mass_variance(self, logM, k = [], pk = [], window = 'th', **kwargs):
+    def mass_variance(self, logM, k = [], pk = [], var = 'cb', window = 'th', **kwargs):
         """
         Mass variance in spheres as a function of mass.
 
@@ -927,6 +926,15 @@ class cosmo:
         :param pk: Power spectrum in redshifts and scales in units of :math:`(\mathrm{Mpc}/h)^3`.
         :type pk: 2D array, one for each redshift, default = []
 
+        :param var: component with respect to which to compute the variance.
+
+         - 'cb' : cold dark matter + baryons
+         - 'cdm': cold dark matter
+         - 'b'  : baryons
+         - 'nu' : neutrinos
+         - 'tot': total matter
+        :type var: string, default = 'cb'
+
         :param window: Window function used to filter.
 
          - `'th'`,`'th'`,`'tophat'`,`'top-hat'` for top-hat filter
@@ -937,7 +945,7 @@ class cosmo:
 
         :return: An interpolated function that gives :math:`\\sigma^2(\log_{10}(M))`, evaluable between 2 and 18 (therefore between :math:`M = 10^2` and :math:`10^{18} \ M_\odot/h`).
         """
-        return self.mass_variance_multipoles(logM = logM, k = k, pk = pk, window = window, **kwargs)
+        return self.mass_variance_multipoles(logM = logM, k = k, pk = pk, var = var, window = window, **kwargs)
 
     #-----------------------------------------------------------------------------------------
     # SIGMA^2_j
@@ -1031,7 +1039,7 @@ class cosmo:
         if   var == 'cb':   omega = self.Omega_cb
         elif var == 'cdm':  omega = self.Omega_cdm
         elif var == 'b':    omega = self.Omega_b
-        elif var == 'nu':   omega = self.Omega_nu
+        elif var == 'nu':   omega = np.sum(self.Omega_nu)
         elif var == 'tot':  omega = self.Omega_m
         else:               raise NameError("Component unknown, use 'cb', 'cdm', 'b', 'nu', 'tot'")
         rho = self.rho_crit(0.)*omega
@@ -1101,7 +1109,7 @@ class cosmo:
         if   var == 'cb':  omega = self.Omega_cb
         elif var == 'cdm': omega = self.Omega_cdm
         elif var == 'b':   omega = self.Omega_b
-        elif var == 'nu':  omega = self.Omega_nu
+        elif var == 'nu':  omega = np.sum(self.Omega_nu)
         elif var == 'tot': omega = self.Omega_m
         else:              raise NameError("Component unknown, use 'cb', 'cdm', 'b', 'nu', 'tot'")
 
@@ -1155,7 +1163,7 @@ class cosmo:
         if   var == 'cb':  omega = self.Omega_cb
         elif var == 'cdm': omega = self.Omega_cdm
         elif var == 'b':   omega = self.Omega_b
-        elif var == 'nu':  omega = self.Omega_nu
+        elif var == 'nu':  omega = np.sum(self.Omega_nu)
         elif var == 'tot': omega = self.Omega_m
         else:              raise NameError("Component unknown, use 'cb', 'cdm', 'b', 'nu', 'tot'")
 
@@ -1680,7 +1688,7 @@ class cosmo:
         Mtmp     = self.M[1:-1]
         logM_tmp = np.log10(Mtmp)
         # sigma^2
-        sigma2 = self.mass_variance(logM_tmp,k,pk,window,prop_const=prop_const,beta=beta)
+        sigma2 = self.mass_variance(logM_tmp,k,pk,'cb',window,prop_const=prop_const,beta=beta)
         sigma  = sigma2**.5
         # log-derivative
         log_der = []
@@ -1886,7 +1894,7 @@ class cosmo:
         logM_tmp    = np.log10(self.M)
         R_tmp       = self.radius_of_mass(self.M,'cb',window)*ratio_radii
         # Mass variance
-        sigma       = self.mass_variance(logM_tmp,k,pk,window)**0.5
+        sigma       = self.mass_variance(logM_tmp,k,pk,'cb',window)**0.5
         # Universal function
         flns        = np.array([self.f_ln_sigma(sigma[iv], delta_c, delta_v[iv], **kwargs) for iv in range(len(delta_v))])
         # Derivative of sigma
@@ -2437,7 +2445,8 @@ class cosmo:
                       'wa': self.wa,
                       'TCMB': self.T_cmb,
                       'tau': self.tau,
-                      'share_delta_neff':True}
+                      'share_delta_neff':True,
+                      'dark_energy_model':'DarkEnergyPPF'}
         # kwargs
         for key, value in kwargs.items():
             if not key in cambparams: cambparams[key] = value
@@ -2566,7 +2575,8 @@ class cosmo:
                       'wa': self.wa,
                       'TCMB': self.T_cmb,
                       'tau': self.tau,
-                      'share_delta_neff':True}
+                      'share_delta_neff':True,
+                      'dark_energy_model':'DarkEnergyPPF'}
         # kwargs
         for key, value in kwargs.items():
             if not key in cambparams: cambparams[key] = value
@@ -2640,6 +2650,7 @@ class cosmo:
                  z = 0.,
                  k = np.logspace(-4., 2., 1001),
                  nonlinear = False,
+                 halofit = 'halofit',
                  **kwargs):
         """
         This routine uses CLASS to return power spectra for the chosen cosmology. Depending
@@ -2667,8 +2678,9 @@ class cosmo:
         """
 
         # Set halofit for non-linear computation
-        if nonlinear == True:    halofit = 'HALOFIT'
-        else:                    halofit = ''
+        if nonlinear == True:
+                halofit = halofit
+        else: halofit = 'none'
 
         # Setting lengths
         nk = len(np.atleast_1d(k))
@@ -2689,7 +2701,7 @@ class cosmo:
             'T_cmb': self.T_cmb,
             'P_k_max_h/Mpc': kmax,
             'z_max_pk': zmax,
-            'non linear': halofit}
+            'non_linear': halofit}
         # Set initial conditions
         if self.sigma_8 is not None:
             params['sigma8'] = self.sigma_8            
@@ -2741,6 +2753,7 @@ class cosmo:
                   z = 0.,
                   k = np.logspace(-4., 2., 1001),
                   nonlinear = False,
+                  halofit = 'halofit',
                   var_1 = ['tot'],
                   var_2 = ['tot'],
                   **kwargs
@@ -2800,8 +2813,9 @@ class cosmo:
 
 
         # Set halofit for non-linear computation
-        if nonlinear == True:    halofit = 'HALOFIT'
-        else:                    halofit = ''
+        if nonlinear == True:
+                halofit = halofit
+        else: halofit = 'none'
 
         # Setting lengths
         nk = len(np.atleast_1d(k))
@@ -2822,7 +2836,7 @@ class cosmo:
             'T_cmb': self.T_cmb,
             'P_k_max_h/Mpc': kmax,
             'z_max_pk': zmax,
-            'non linear': halofit}
+            'non_linear': halofit}
         # Set initial conditions
         if self.sigma_8 is not None:
             params['sigma8'] = self.sigma_8            

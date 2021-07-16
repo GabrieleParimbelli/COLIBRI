@@ -156,7 +156,7 @@ sin_theta_13_squared    = 2.12e-2	# Sine squared of mixing angle
 G         = 4.299e-9		# Newton's gravitational constant in units of [Mpc/M_sun (km/s)^2]
 eps_0     = 8.85418781762e-12	# Vacuum permittivity in [F/m = C/V m] 
 mu_0      = 1.25663706144e-6	# Magnetic permeability in [H/m = T m^2/A = V s/A] 
-kB        = 8.614e-5		# Boltzmann constant in [eV/K] 
+kB        = 8.6173336262e-5		# Boltzmann constant in [eV/K] 
 c         = 2.99792458e5	# Speed of light in [km/s] 
 hP        = 4.135668e-15	# Planck constant in units of [eV s] 
 sSB       = 5.6704e-8		# Stefan-Boltzmann constant [W/m^2 K^4] 

@@ -53,7 +53,7 @@ class HMcode2016():
                  k,
                  pk,
                  field = 'cb',
-                 BAO_smearing = True,
+                 BAO_smearing = False,
                  cosmology = cc.cosmo()):
 
         # Assertion on k
@@ -61,8 +61,11 @@ class HMcode2016():
         assert k.max()>=10.,   "Maximum wavenumber must be greater than 10 Mpc/h in order to achieve convergence"
         assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
 
+        # Assertions
+        #if cosmology.w0 != -1. or cosmology.wa != 0.: raise AttributeError("This model does not currently support dynamic dark energy")
+
         # Reading all cosmological parameters
-        self.f_nu         = np.sum(cosmology.f_nu)
+        self.f_nu         = np.sum(cosmology.f_nu[np.where(cosmology.M_nu!=0.)])
         self.cosmology    = cosmology
 
         # Raise warning if neutrino mass is not zero:
@@ -157,9 +160,10 @@ class HMcode2016():
         self.rv    = np.zeros((self.nz, self.nm))
         for i in xrange(self.nz):
             # Find the mass at which sigma(M) = delta_c
-            sig_int_2  = si.interp1d(np.log10(self.mass), self.sig2[i]-self.deltac[i]**2., 'cubic')
-            try:               M_1 = 10.**(so.root(sig_int_2, 13.-1.75*(1+self.z[i]))['x'][0])
-            except ValueError: M_1 = 10.**(13.-1.75*(1+self.z[i])) # "interpolated value"
+            sig_int_2  = si.interp1d(np.log10(self.mass), self.sig2[i]-self.deltac[i]**2., 'cubic',fill_value='extrapolate',bounds_error=False)
+            #try:               M_1 = 10.**(so.root(sig_int_2, 13.-1.75*(1+self.z[i]))['x'][0])
+            #except ValueError: M_1 = 10.**(13.-1.75*(1+self.z[i])) # "interpolated value"
+            M_1 = 10.**(so.root(sig_int_2, 13.-1.75*(1+self.z[i]))['x'][0])
             # Spline the sigma^2(M) function and take derivative at M_1
             s2_spl      = si.InterpolatedUnivariateSpline(self.lnmass, np.log(self.sig2[i]), k = 4)
             spl_logder  = s2_spl.derivative()
@@ -170,6 +174,15 @@ class HMcode2016():
             self.conc[i] = self.c_bull(self.zf[i],self.z[i])
             # virial radius
             self.rv[i]   = ((3*self.mass)/(4*np.pi*self.rho_field*self.Deltav[i]))**(1./3.)
+
+        # Concentration difference for w0-wa
+        if (self.cosmology.w0!=-1.) or (self.cosmology.wa!=0.):
+            z_corr_high   = 99.
+            g_lcdm_high,_ = self.growth_factors_lcdm(z_corr_high)
+            g_lcdm_z,_    = self.growth_factors_lcdm(self.z)
+            g_high,_      = self.growth_factors(z_corr_high)
+            g_growth,_    = self.growth_factors(self.z)
+            self.conc    *= np.expand_dims((g_high/g_lcdm_high)**1.5,1)
 
         # quasi-linear softening
         self.alpha = self.alp(self.n_eff)
@@ -273,13 +286,13 @@ class HMcode2016():
     # DELTA_c
     #-----------------------------------------------------------------------------------------
     def delta_c(self, sig8, omm):
-        return (1.59 + 0.0314*np.log(sig8))*(1.+0.0123*np.log10(omm))*(1.+0.262*self.cosmology.f_nu_tot)
+        return (1.59 + 0.0314*np.log(sig8))*(1.+0.0123*np.log10(omm))*(1.+0.262*self.f_nu)
 
     #-----------------------------------------------------------------------------------------
     # DELTA_v
     #-----------------------------------------------------------------------------------------
     def Delta_v(self, omm):
-        return 418.*omm**(-0.352)*(1.+0.916*self.cosmology.f_nu_tot)
+        return 418.*omm**(-0.352)*(1.+0.916*self.f_nu)
 
     #-----------------------------------------------------------------------------------------
     # ALPHA
@@ -392,6 +405,62 @@ class HMcode2016():
         
         return hmf
 
+    #-----------------------------------------------------------------------------------------
+    # SIMPLIFIED HUBBLE PARAMETER AND Omega_m(a) (needed to speed up growth factor calculations)
+    #-----------------------------------------------------------------------------------------
+    def Hubble(self, a):
+        return self.cosmology.H0*(self.cosmology.Omega_m*a**(-3) + (1.-self.cosmology.Omega_m)*a**(-3.*(1.+self.cosmology.w0+self.cosmology.wa*(1.-a))))**0.5
+
+    def Omega_m_a(self, a):
+        return self.cosmology.Omega_m*a**(-3.)*(self.cosmology.H0/self.Hubble(a))**2.
+
+    #-----------------------------------------------------------------------------------------
+    # NON-NORMALIZED GROWTH FACTORS
+    #-----------------------------------------------------------------------------------------
+    def growth_factors(self, z):
+
+        # Functions to integrate
+        def derivatives(y, a):
+            # Function 
+            g,omega,G = y
+            # Derivatives
+            Oma  = self.Omega_m_a(a)
+            derH = sm.derivative(self.Hubble,a,dx=1e-5,n=1,order=3)
+            dydt = [omega,-(3+derH*a/self.Hubble(a))*omega/a+1.5*Oma*g/a**2.,g/a]
+            return dydt
+        # Initial conditions
+        epsilon = 0.01
+        y0      = [epsilon, 1., epsilon]
+        # Steps of integral
+        a = np.sort(np.append([epsilon], 1/(1.+np.array(z))))
+        # Solution
+        g,_,G = sint.odeint(derivatives, y0, a).T
+        # Remove first (z=99)
+        g,G=np.flip(g[1:]),np.flip(G[1:])
+        return g,G
+
+    # for LCDM
+    def growth_factors_lcdm(self, z):
+
+        # Functions to integrate
+        def derivatives(y, a):
+            # Function 
+            g,omega,G = y
+            # Derivatives
+            Oma  = self.Omega_m_a(a)
+            dydt = [omega,-(3-1.5*Oma)*omega/a+1.5*Oma*g/a**2.,g/a]
+            return dydt
+        # Initial conditions
+        epsilon = 0.01
+        y0      = [epsilon, 1., epsilon]
+        # Steps of integral
+        a = np.sort(np.append([epsilon], 1/(1.+np.array(z))))
+        # Solution
+        g,_,G = sint.odeint(derivatives, y0, a).T
+        # Remove first (z=99)
+        g,G=np.flip(g[1:]),np.flip(G[1:])
+        return g,G
+
 
 
 ########################################################################################################################
@@ -445,6 +514,7 @@ class HMcode2020():
         assert k.max()>=10.,   "Maximum wavenumber must be greater than 10 Mpc/h in order to achieve convergence"
         assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
 
+
         # Reading all cosmological parameters
         self.f_nu         = np.sum(cosmology.f_nu[np.where(cosmology.M_nu!=0.)])
         self.cosmology    = cosmology
@@ -486,12 +556,13 @@ class HMcode2020():
     #-----------------------------------------------------------------------------------------
     def compute_nonlinear_pk(self):
         # Compute sigma8 and sigma^2
+        # N.B. Computins sigma^2_cc but smoothing with total matter field returns better agreement than smoothing for the cb field
         sig8_cc = np.array([self.cosmology.compute_sigma_8(k=self.k,pk=self.pk_cc[iz]) for iz in range(self.nz)])
-        sig2_cc = self.cosmology.mass_variance(self.logmass,k=self.k,pk=self.pk_cc)
+        sig2_cc = self.cosmology.mass_variance(self.logmass,k=self.k,pk=self.pk_cc,var='tot')
 
         # Compute growth factors
         g_growth, G_growth = self.growth_factors(self.z)
-        
+
         # Omega_m(z)
         omz = self.cosmology.Omega_m_z(self.z)
 
@@ -515,6 +586,12 @@ class HMcode2020():
 
         # Concentration
         conc = B_halo*(1+zf)/np.expand_dims(1.+self.z, 1)
+        if (self.cosmology.w0!=-1.) or (self.cosmology.wa!=0.):
+            z_corr_10           = 10.
+            g_lcdm_10,_         = self.growth_factors_lcdm(z_corr_10)
+            g_lcdm_z,_          = self.growth_factors_lcdm(self.z)
+            g_10,_              = self.growth_factors(z_corr_10)
+            conc               *= np.expand_dims(g_10/g_lcdm_10*g_lcdm_z/g_growth,1)
 
         # Virial radius
         rv = ((3*np.expand_dims(self.mass,0))/(4*np.pi*self.rho_field*np.expand_dims(Deltav,1)))**(1./3.)
@@ -526,9 +603,10 @@ class HMcode2020():
         n_eff_cc = np.zeros(self.nz)
         for i in xrange(self.nz):
             # Find the mass at which sigma(M) = delta_c
-            sig_int_2  = si.interp1d(self.logmass, sig2_cc[i]-deltac[i]**2.,'cubic', fill_value=0.,bounds_error=False)
-            try:               M_1 = 10.**(so.root(sig_int_2, 13.-1.75*(1+self.z[i]))['x'][0])
-            except ValueError: M_1 = 10.**(13.-1.75*(1+self.z[i])) # "interpolated value"
+            sig_int_2  = si.interp1d(self.logmass, sig2_cc[i]-deltac[i]**2.,'cubic', fill_value='extrapolate',bounds_error=False)
+            #try:               M_1 = 10.**(so.root(sig_int_2, 13.-1.75*(1+self.z[i]))['x'][0])
+            #except ValueError: M_1 = 10.**(13.-1.75*(1+self.z[i])) # "interpolated value"
+            M_1 = 10.**(so.root(sig_int_2, 13.-1.75*(1+self.z[i]))['x'][0])
             # Spline the sigma^2(M) function and take derivative at M_1
             s2_spl      = si.InterpolatedUnivariateSpline(self.lnmass, np.log(sig2_cc[i]), k = 3)
             spl_logder  = s2_spl.derivative()
@@ -566,16 +644,39 @@ class HMcode2020():
     # SIMPLIFIED HUBBLE PARAMETER AND Omega_m(a) (needed to speed up growth factor calculations)
     #-----------------------------------------------------------------------------------------
     def Hubble(self, a):
-        return self.cosmology.H0*(self.cosmology.Omega_m*a**(-3) + 1.-self.cosmology.Omega_m)**0.5
+        return self.cosmology.H0*(self.cosmology.Omega_m*a**(-3) + (1.-self.cosmology.Omega_m)*a**(-3.*(1.+self.cosmology.w0+self.cosmology.wa*(1.-a))))**0.5
 
     def Omega_m_a(self, a):
         return self.cosmology.Omega_m*a**(-3.)*(self.cosmology.H0/self.Hubble(a))**2.
-
 
     #-----------------------------------------------------------------------------------------
     # NON-NORMALIZED GROWTH FACTORS
     #-----------------------------------------------------------------------------------------
     def growth_factors(self, z):
+
+        # Functions to integrate
+        def derivatives(y, a):
+            # Function 
+            g,omega,G = y
+            # Derivatives
+            Oma  = self.Omega_m_a(a)
+            derH = sm.derivative(self.Hubble,a,dx=1e-5,n=1,order=3)
+            #dydt = [omega,-(3-1.5*Oma)*omega/a+1.5*Oma*g/a**2.,g/a]
+            dydt = [omega,-(3+derH*a/self.Hubble(a))*omega/a+1.5*Oma*g/a**2.,g/a]
+            return dydt
+        # Initial conditions
+        epsilon = 0.01
+        y0      = [epsilon, 1., epsilon]
+        # Steps of integral
+        a = np.sort(np.append([epsilon], 1/(1.+np.array(z))))
+        # Solution
+        g,_,G = sint.odeint(derivatives, y0, a).T
+        # Remove first (z=99)
+        g,G=np.flip(g[1:]),np.flip(G[1:])
+        return g,G
+
+    # for LCDM
+    def growth_factors_lcdm(self, z):
 
         # Functions to integrate
         def derivatives(y, a):
@@ -619,7 +720,7 @@ class HMcode2020():
     def delta_c(self, z, f_nu, Omz, g, G):
         a = 1/(1+z)
         alpha_1, alpha_2 = 1,0
-        delta_c0 = 1.686*(1-0.041*f_nu)
+        delta_c0 = (3./20.)*(12.*np.pi)**(2/3.)*(1-0.041*f_nu)
         factor = 1.+(self.f1(g/a,G/a)*np.log10(Omz)**alpha_1+self.f2(g/a,G/a)*np.log10(Omz)**alpha_2)
         return delta_c0*factor
 
@@ -629,7 +730,7 @@ class HMcode2020():
     def Delta_v(self, z, f_nu, Omz, g, G):
         a = 1/(1+z)
         alpha_3, alpha_4 = 1,2
-        Delta_v0 = 177.7*(1+0.763*f_nu)
+        Delta_v0 = 18*np.pi**2.*(1+0.763*f_nu)
         factor = 1.+(self.f3(g/a,G/a)*np.log10(Omz)**alpha_3+self.f4(g/a,G/a)*np.log10(Omz)**alpha_4)
         return Delta_v0*factor
 
@@ -725,9 +826,6 @@ class Takahashi():
     :param pk: Linear power spectra evaluated in ``z`` and ``k`` in units of :math:`(\mathrm{Mpc}/h)^3`.
     :type pk: 2D array of shape ``(len(z), len(k))``
 
-    :param BAO_smearing: Whether to damp the BAO feature due to non-linearities.
-    :type BAO_smearing: boolean, default = True
-
     :param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`colibri.cosmology.cosmo` documentation).
     :type cosmology: ``cosmo`` instance, default = ``cosmology.cosmo()``
 
@@ -740,7 +838,6 @@ class Takahashi():
                  z,
                  k,
                  pk,
-                 BAO_smearing = True,
                  cosmology = cc.cosmo()):
 
         # Assertion on k
@@ -752,6 +849,7 @@ class Takahashi():
         self.w0           = cosmology.w0
         self.wa           = cosmology.wa
         self.cosmology    = cosmology
+        self.f_nu         = np.sum(cosmology.f_nu[np.where(cosmology.M_nu!=0.)])
 
         # Raise warning if neutrino mass is not zero:
         if np.any(self.cosmology.M_nu!=0.):
@@ -765,13 +863,8 @@ class Takahashi():
         self.pk   = pk
 
         # Introduce smearing if required
-        if BAO_smearing:
-            self.pk_nw = [self.cosmology.remove_bao(self.k, self.pk[i],self.cosmology.k_eq()) for i in range(self.nz)]
-            sv2        = [1./(6.*np.pi**2.)*np.trapz(self.k*self.pk[i], x = np.log(self.k)) for i in range(self.nz)]
-            self.pk_dw = [(self.pk[i]-self.pk_nw[i])*np.exp(-self.k**2.*sv2[i]) + self.pk_nw[i] for i in range(self.nz)]
-        else:
-            self.pk_nw = self.pk
-            self.pk_dw = self.pk
+        self.pk_nw = self.pk
+        self.pk_dw = self.pk
     
 
         if np.shape(pk) != (self.nz,self.nk):
@@ -797,7 +890,7 @@ class Takahashi():
 
         # Mass variance, non-linear scales, effective indices
         self.sigma2  = self.mass_variance(k=self.k,pk=self.pk)
-        self.k_nl    = self.nonlinear_scale()
+        self.k_nl    = self.nonlinear_scale(precision = 1e-5)
         self.n_eff   = self.effective_index()
         self.C_eff   = self.effective_curvature()
         # Omega matter as function of redshifts
@@ -815,7 +908,7 @@ class Takahashi():
         self.gamman = 0.1971-0.0843*self.n_eff+0.8460*self.C_eff
         self.alphan = abs(6.0835+1.3373*self.n_eff-0.1959*self.n_eff**2-5.5274*self.C_eff)
         self.betan  = 2.0379-0.7354*self.n_eff + 0.3157*self.n_eff**2+1.2490*self.n_eff**3+ \
-            0.3980*self.n_eff**4-0.1682*self.C_eff
+            0.3980*self.n_eff**4-0.1682*self.C_eff + self.f_nu*(1.081 + 0.395*self.n_eff**2.)
         self.mun    = 0.0
         self.nun    = 10**(5.2105+3.6902*self.n_eff)
 
@@ -835,18 +928,19 @@ class Takahashi():
     #-----------------------------------------------------------------------------------------
     # k_SIGMA
     #-----------------------------------------------------------------------------------------
-    def nonlinear_scale(self):
+    def nonlinear_scale(self, precision = 1e-5):
         nz = self.nz
         # Mass variance
         sigma2_array = self.sigma2
-        s2_interp    = si.interp1d(self.rr,sigma2_array,'cubic',bounds_error=False,fill_value='extapolate')
+        s2_interp    = si.interp1d(self.rr,sigma2_array,'cubic',bounds_error=False,fill_value='extrapolate')
 
         # Find k_sigma
         k_sigma = np.zeros(nz)
         for iz in range(nz):
+            count = 0
             # Set min and max values possible
-            Rmin,Rmax = 0.01, 10.0  #Mpc/h
-            found = False;  precision = 1e-5
+            Rmin,Rmax = 0.01, 100.0  #Mpc/h
+            found = False
             while not(found):
                 R = 0.5*(Rmin + Rmax)
                 sigma2 = s2_interp(R)[iz]
@@ -911,10 +1005,11 @@ class Takahashi():
         # Linear term
         Delta_lin_2 = self.pk_dw*k**3./(2.*np.pi**2.)
         # Quasi-linear term
-        Delta_Q_2 = Delta_lin_2*(1.+Delta_lin_2)**betan/(1.+alphan*Delta_lin_2)*np.exp(-(y/4.+y**2./8.))
+        Delta_lin_2_tilde = Delta_lin_2*(1.+47.48*self.f_nu*k**2./(1+1.5*k**2.))
+        Delta_Q_2 = Delta_lin_2*(1.+Delta_lin_2_tilde)**betan/(1.+alphan*Delta_lin_2_tilde)*np.exp(-(y/4.+y**2./8.))
         # Halo term
         Delta_H_2_prime = an*y**(3*f1)/(1.+bn*y**f2+(cn*f3*y)**(3-gamman))
-        Delta_H_2 = Delta_H_2_prime/(1.+mun/y+nun/y**2.)
+        Delta_H_2 = Delta_H_2_prime/(1.+mun/y+nun/y**2.)*(1+self.f_nu*0.977)
         # Return power spectra
         self.pk_nl = 2.*np.pi**2.*(Delta_Q_2+Delta_H_2)/k**3.
 
@@ -940,9 +1035,6 @@ class TakaBird():
     :param pk: Linear power spectra evaluated in ``z`` and ``k`` in units of :math:`(\mathrm{Mpc}/h)^3`.
     :type pk: 2D array of shape ``(len(z), len(k))``
 
-    :param BAO_smearing: Whether to damp the BAO feature due to non-linearities.
-    :type BAO_smearing: boolean, default = True
-
     :param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`colibri.cosmology.cosmo` documentation).
     :type cosmology: ``cosmo`` instance, default = ``cosmology.cosmo()``
 
@@ -955,7 +1047,6 @@ class TakaBird():
                  z,
                  k,
                  pk,
-                 BAO_smearing = True,
                  cosmology = cc.cosmo()):
 
         # Assertion on k
@@ -975,13 +1066,8 @@ class TakaBird():
         self.pk   = pk
 
         # Introduce smearing if required
-        if BAO_smearing:
-            self.pk_nw = [self.cosmology.remove_bao(self.k, self.pk[i],self.cosmology.k_eq()) for i in range(self.nz)]
-            sv2        = [1./(6.*np.pi**2.)*np.trapz(self.k*self.pk[i], x = np.log(self.k)) for i in range(self.nz)]
-            self.pk_dw = [(self.pk[i]-self.pk_nw[i])*np.exp(-self.k**2.*sv2[i]) + self.pk_nw[i] for i in range(self.nz)]
-        else:
-            self.pk_nw = self.pk
-            self.pk_dw = self.pk
+        self.pk_nw = self.pk
+        self.pk_dw = self.pk
     
 
         if np.shape(pk) != (self.nz,self.nk):
@@ -1014,7 +1100,7 @@ class TakaBird():
         self.Omz     = self.cosmology.Omega_m_z(self.z)
         self.Olz     = self.cosmology.Omega_lambda_z(self.z)
         # Fitting factors
-        self.an     = 10**(1.4861+1.83693*self.n_eff+1.67618*self.n_eff**2+0.7940*self.n_eff**3.+            0.1670756*self.n_eff**4-0.620695*self.C_eff)
+        self.an     = 10**(1.4861+1.83693*self.n_eff+1.67618*self.n_eff**2+0.7940*self.n_eff**3.+0.1670756*self.n_eff**4-0.620695*self.C_eff)
         self.bn     = 10**(0.9463+0.9466*self.n_eff+0.3084*self.n_eff**2-0.940*self.C_eff)
         self.cn     = 10**(-0.2807+0.6669*self.n_eff+0.3214*self.n_eff**2-0.0793*self.C_eff)
         self.gamman = 0.3159-0.0765*self.n_eff -0.8350*self.C_eff+0.86485+0.2989*self.n_eff+0.1631*self.C_eff
@@ -1044,18 +1130,18 @@ class TakaBird():
     #-----------------------------------------------------------------------------------------
     # k_SIGMA
     #-----------------------------------------------------------------------------------------
-    def nonlinear_scale(self):
+    def nonlinear_scale(self, precision = 1e-5):
         nz = self.nz
         # Mass variance
         sigma2_array = self.sigma2
-        s2_interp    = si.interp1d(self.rr,sigma2_array,'cubic',bounds_error=False,fill_value='extapolate')
+        s2_interp    = si.interp1d(self.rr,sigma2_array,'cubic',bounds_error=False,fill_value='extrapolate')
 
         # Find k_sigma
         k_sigma = np.zeros(nz)
         for iz in range(nz):
             # Set min and max values possible
-            Rmin,Rmax = 0.01, 10.0  #Mpc/h
-            found = False;  precision = 1e-5
+            Rmin,Rmax = 0.01, 100.0  #Mpc/h
+            found = False
             while not(found):
                 R = 0.5*(Rmin + Rmax)
                 sigma2 = s2_interp(R)[iz]
@@ -1252,7 +1338,7 @@ class nonlinear_pk():
         if   self.halofit == 'HMcode2016':
             HO = HMcode2016(z = self.z, k = self.k_tmp, pk = pk_cbcb, field = 'cb', BAO_smearing = BAO_smearing, cosmology = self.cosmology)
         elif self.halofit == 'Takahashi':
-            HO = Takahashi(z = self.z, k = self.k_tmp, pk = pk_cbcb, BAO_smearing = BAO_smearing, cosmology = self.cosmology)
+            HO = Takahashi(z = self.z, k = self.k_tmp, pk = pk_cbcb, cosmology = self.cosmology)
         elif self.halofit == 'HMcode2020':
             raise ValueError("HMcode2020 model is built to include neutrinos already, so it is useless to use it in the cold dark matter prescription. Use Takahashi or HMcode2016 to do a similar operation.")
         elif self.halofit == 'TakaBird':
