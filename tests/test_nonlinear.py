@@ -9,7 +9,7 @@ colors = ['b','r','g','m','gray','c']
 
 #########################
 # Choose among
-# 'mead'        (not good for neutrinos)
+# 'mead'        (good for neutrinos)
 # 'mead2020'    (good for neutrinos)
 # 'takahashi'   (not good for neutrinos)
 # 'bird'        (good for neutrinos)
@@ -23,9 +23,10 @@ set_halofit = 'mead2020'
 #=================
 
 # Cosmology, redshifts and scales
-C  = cc.cosmo(Omega_m = 0.3089, Omega_b = 0.0486, As = 2.14e-9, ns = 0.9667, h = 0.6774, M_nu = 0.15)
+C  = cc.cosmo(Omega_m = 0.3089, Omega_b = 0.0486, As = 2.14e-9, ns = 0.9667, h = 0.6774, M_nu = 0.3)
 zz = np.linspace(0., 5., 6)
 kk = np.logspace(-4., 2., 201)
+zz = np.atleast_1d(zz)
 
 #=================
 # 1) Compute the non-linear power spectrum with CAMB
@@ -52,18 +53,16 @@ if set_halofit == 'mead':
     do_nonlinear = NL.HMcode2016(z            = zz,
                                  k            = k_l,
                                  pk           = pk_mm,
-                                 field        = 'cb',
-                                 BAO_smearing = False,
                                  cosmology    = C)
 elif set_halofit == 'mead2020':
     set_class = 'HMcode2020'
     pk_cc = pk_l['cb-cb']
     pk_mm = pk_l['tot-tot']
-    do_nonlinear = NL.HMcode2020(z         = zz,
-                                 k         = k_l,
-                                 pk_cc     = pk_cc,
-                                 pk_mm     = pk_mm,
-                                 cosmology = C)
+    do_nonlinear = NL.HMcode2020(z            = zz,
+                                 k            = k_l,
+                                 pk_cc        = pk_cc,
+                                 pk_mm        = pk_mm,
+                                 cosmology    = C)
 elif set_halofit == 'takahashi':
     set_class = 'Takahashi'
     pk_mm = pk_l['tot-tot']
@@ -74,21 +73,15 @@ elif set_halofit == 'takahashi':
 elif set_halofit == 'bird':
     set_class = 'TakaBird'
     pk_mm = pk_l['tot-tot']
-    do_nonlinear = NL.TakaBird  (z = zz,
-                                 k = k_l,
-                                 pk = pk_mm,
-                                 cosmology = C)
+    do_nonlinear = NL.TakaBird  (z            = zz,
+                                 k            = k_l,
+                                 pk           = pk_mm,
+                                 cosmology    = C)
 else:
     raise ValueError("Non-linear method not recognized")
 # Retrieve the non-linear power spectrum
 pk_nl_colibri = do_nonlinear.pk_nl
 print(">> Non-linear power spectrum computed with '%s' class in 'nonlinear' module" %(set_class))
-
-# 2bis) One can also use the `nonlinear_pk' module
-#HF = NL.nonlinear_pk(k = kk, z = zz, code = 'camb', BAO_smearing = False, kwargs_code = {}, cosmology = C)
-#pk_nl_full = HF.pk_nl
-#print(">> Non-linear power spectrum computed with 'nonlinear_pk' module")
-
 
 #=================
 # Subplot & plot
@@ -102,8 +95,8 @@ plt.subplots_adjust(wspace=0, hspace=0)
 for i in range(len(zz)):
 
 	# Plot spectra
-	ax1.loglog(kk,pk_nl_camb[i]   ,colors[i],ls='-', lw=2.0,label='$z=%.1f$'%zz[i]) # Plot CAMB halofit
-	ax1.loglog(kk,pk_nl_colibri[i],colors[i],ls='' , marker='o',ms=3)               # Plot nonlinear module
+	ax1.loglog(kk,pk_nl_camb[i]   ,colors[i],ls='' , marker='o',ms=3)               # Plot nonlinear module
+	ax1.loglog(kk,pk_nl_colibri[i],colors[i],ls='-', lw=2.0,label='$z=%.1f$'%zz[i]) # Plot CAMB halofit
 
 	# Plot ratios
 	ax2.semilogx(kk,(pk_nl_colibri[i]/pk_nl_camb[i]-1.)*100.,colors[i],ls='-',lw=2.0)

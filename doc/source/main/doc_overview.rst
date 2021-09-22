@@ -23,7 +23,6 @@ For the latter, both Boltzmann solvers **CAMB** and **Class** can be used, provi
 
 Included here are several different ways to compute the non-linear matter power spectrum from a linear one.
 These methods include ``HMcode2016`` by Mead `et al.` (see `arXiv:1505.07833 <https://arxiv.org/abs/1505.07833>`_ ),  ``HMcode2020`` by Mead `et al.` (see `arXiv:2009.01858 <https://arxiv.org/abs/2009.01858>`_ ) ``Takahashi`` and  ``TakaBird`` following the prescription by Takahashi et al. for the former (see `arXiv:1208.2701 <https://arxiv.org/abs/1208.2701>`_ ) and the correction for the presence of massive neutrinos by Bird et al. for the latter (see `arXiv:1109.4416 <https://arxiv.org/abs/1109.4416>`_ ).
-Finally, the class ``nonlinear_Pk`` uses the so-called `cold dark matter prescription` (see e.g. `arXiv:1311.0866 <https://arxiv.org/abs/1311.0866>`_, `arXiv:1311.1212 <https://arxiv.org/abs/1311.1212>`_, `arXiv:1311.1514 <https://arxiv.org/abs/1311.1514>`_ ) to compute the total matter power spectrum, where the Halofit operator is applied only to the cold dark matter+baryons linear component, while the (weighted) neutrino and the cross part are added linearly afterwards.
 
 `limber` module
 ----------------------------

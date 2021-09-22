@@ -97,7 +97,7 @@ def extrapolate_log(x, y, xmin, xmax):
 	    Extended/extrapolated ordinate.
 	"""
 	# Step in log-space
-	assert np.allclose(np.diff(np.log(x)), np.diff(np.log(x))[0], rtol = 1e-3), "'x' array not log-spaced"
+	assert np.allclose(np.diff(np.log(x)), np.diff(np.log(x))[0], rtol = 1e-2), "'x' array not log-spaced"
 	dx   = x[1]/x[0]
 	dlnx = np.log(dx)
 

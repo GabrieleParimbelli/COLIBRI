@@ -1,8 +1,10 @@
 import numpy as np
 import scipy.interpolate as si
 import scipy.fftpack as sfft
+import scipy.integrate as sint
 import scipy.optimize
 import sys
+import colibri.constants as const
 from six.moves import xrange
 try:   import fftlog
 except ImportError: pass
@@ -788,5 +790,125 @@ def iHankel(k, f, N = 4096, order = 0.5):
     Fr /= rr
 
     return rr, Fr
+
+#-----------------------------------------------------------------------------------------
+# CORRELATION FUNCTION
+#-----------------------------------------------------------------------------------------
+def correlation_function(k, pk, N = 4096):
+    """
+    This routine computes the 2-point correlation function of a field given its power spectrum.
+
+
+    Parameters
+    ----------
+
+    `k`: array
+        Abscissae of function, log-spaced.
+
+    `pk`: array
+        Power spectrum
+
+    `N`: int, default = 4096
+        Number of output points
+
+    Returns
+    ----------
+
+    r: array
+        Radii.
+
+    xi: array
+        Correlation function.
+    """
+    return iFFT_iso_3D(k, pk, N)
+
+#-----------------------------------------------------------------------------------------
+# PROJECTED CORRELATION FUNCTION
+#-----------------------------------------------------------------------------------------
+def projected_correlation_function(k, pk, N = 4096):
+    """
+    This routine computes the projected 2-point correlation function of a field given its power spectrum.
+
+
+    Parameters
+    ----------
+
+    `k`: array
+        Abscissae of function, log-spaced.
+
+    `pk`: array
+        Power spectrum
+
+    `N`: int, default = 4096
+        Number of output points
+
+    Returns
+    ----------
+
+    rp: array
+        Radii.
+
+    wp: array
+        Projected correlation function.
+    """
+    rp,wp = iHankel(k, pk, N = 4096, order = 0.)
+    wp /= 2.*np.pi
+    return rp,wp
+
+
+def angular_correlation_function(theta, k, pk, z, chi_z, N_z, H_z, N = 4096):
+    """
+    This routine computes the angular 2-point correlation function of a field given its power spectrum.
+
+
+    Parameters
+    ----------
+    `theta`: array
+        Angles in arcminutes.
+
+
+    `k`: array
+        Abscissae of function, log-spaced.
+
+    `pk`: array
+        Power spectrum
+
+    `z`: array
+        Redshifts at which to integrate.
+
+    `chi_z`: array
+        Comoving distances at redshifts of integration.
+
+    `N_z`: array
+        Source density at redshifts of integration.
+
+    `H_z`: array
+        Hubble parameters (in km/s/(Mpc/h)) at redshifts of integration.
+
+    `N`: int, default = 4096
+        Number of output points
+
+    Returns
+    ----------
+
+    theta: array
+        Angles.
+
+    wt: array
+        Angular correlation function.
+    """
+    # Angles in radians
+    theta_rad  = theta/60.*np.pi/180.
+    # Expand dims of quantities
+    theta_2d   = np.expand_dims(theta_rad,0)
+    chi_2d,N_2d,H_2d = np.expand_dims(chi_z,1),np.expand_dims(N_z,1),np.expand_dims(H_z,1)
+    # Projected 2PCF
+    rt,wt      = iHankel(k,pk,N)
+    # Interpolation
+    wt_int     = si.interp1d(rt,wt)
+    # angular correlation function
+    wt         = sint.simps(H_2d/const.c/(2.*np.pi)*N_2d**2.*wt_int(theta_2d*chi_2d),x=z,axis=0)
+    return theta, wt
+
 
 

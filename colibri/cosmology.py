@@ -333,13 +333,10 @@ class cosmo:
         :return: array of shape ``(self.N_nu, len(z))`` containing :math:`\Omega_\\nu(z)`.
         
         """
-        mnu  = np.atleast_1d(self.M_nu)
-        zz   = np.atleast_1d(np.array(z))
-        onuz = np.zeros((len(mnu),len(zz)))
-        for i in xrange(len(mnu)):
-            y = mnu[i]/((1.+zz)*const.kB*self.T_nu)
-            F = np.array(list(map(self.FermiDirac_integral,y)))
-            onuz[i] = 15./const.PI**4.*self.Omega_gamma*F*self.Gamma_nu**4.*(1.+zz)**4.*self.H0**2./self.H(zz)**2.
+        MM,ZZ = np.meshgrid(np.atleast_1d(self.M_nu),np.atleast_1d(z),indexing='ij')
+        Y     = MM/((1.+ZZ)*const.kB*self.T_nu)
+        F     = self.FermiDirac_integral(Y)
+        onuz  = 15./const.PI**4.*self.Omega_gamma*F*self.Gamma_nu**4.*(1.+ZZ)**4.*self.H0**2./np.atleast_2d(self.H(z)**2.)
         return onuz
 
     #-------------------------------------------------------------------------------
@@ -388,8 +385,8 @@ class cosmo:
 
         :return: array with :math:`\Omega_{\Lambda}(z)`.
         """
-        w_DE = self.w0+self.wa*z/(1.+z)
-        return self.Omega_lambda*(1.+z)**(3.*(1.+w_DE))*(self.H0/self.H(z))**2.
+        wde = self.w_DE(z)
+        return self.Omega_lambda*(1.+z)**(3.*(1.+wde))*(self.H0/self.H(z))**2.
 
 
     #-------------------------------------------------------------------------------
@@ -423,11 +420,11 @@ class cosmo:
 
 
     #-------------------------------------------------------------------------------
-    # OMEGA GAMMA (as function of z)
+    # DARK ENERGY PARAMETER OF STATE (as function of z)
     #-------------------------------------------------------------------------------
     def w_DE(self, z):
         """
-        Dark energy parameter of state ad function of redshift.
+        Dark energy parameter of state as function of redshift.
 
         :param z: Redshifts.
         :type z: array
@@ -435,6 +432,20 @@ class cosmo:
         :return: array with :math:`w_{de}(z)`.
         """
         return self.w0+self.wa*z/(1.+z)
+
+    #-------------------------------------------------------------------------------
+    # DARK ENERGY EVOLUTION  (as function of z)
+    #-------------------------------------------------------------------------------
+    def X_DE(self, z):
+        """
+        Dark energy density evolution as function of redshift.
+
+        :param z: Redshifts.
+        :type z: array
+
+        :return: array with :math:`w_{de}(z)`.
+        """
+        return (1.+z)**(3.*(1.+self.w0+self.wa))*np.exp(3.*self.wa*(z/(1.+z)))
 
     #-------------------------------------------------------------------------------
     # HUBBLE PARAMETER
@@ -448,20 +459,18 @@ class cosmo:
 
         :return: array with :math:`H(z)` in units of km/s/Mpc.
         """
-        # Dark energy parameter of state
-        wde = self.w0+self.wa*(z/(1.+z))
+        # Dark energy evolution
+        Xde = self.X_DE(z)
         # Neutrino contribution
         y = np.outer(self.M_nu/(const.kB*self.T_nu), 1./(1.+z))
-        F = np.zeros_like(y)
-        for i in xrange(len(np.atleast_1d(y))):
-            F[i] = np.array(list(map(self.FermiDirac_integral, np.atleast_1d(y[i]))))
+        F = self.FermiDirac_integral(np.array(y))
         neutrino_contribution = 15./const.PI**4.*self.Gamma_nu**4.*self.Omega_gamma*F*(1.+z)**4.
         # H(z)
         return self.H0*(self.Omega_cb*(1.+z)**3. +
-                    self.Omega_gamma*(1.+z)**4. + 
-                    self.Omega_lambda*(1.+z)**(3.*(1.+wde)) +
-                    self.Omega_K*(1.+z)**2. +
-                    np.sum(neutrino_contribution, axis = 0))**0.5
+                        self.Omega_gamma*(1.+z)**4. + 
+                        self.Omega_lambda*Xde +
+                        self.Omega_K*(1.+z)**2. +
+                        np.sum(neutrino_contribution, axis = 0))**0.5
 
 
     def H_massive(self, z):
@@ -469,8 +478,8 @@ class cosmo:
         Hubble function in km/s/Mpc. It assumes that all neutrinos are pure matter and therefore
         :math:`w_\\nu = 0`.
         For the minimum neutrino masses allowed by particle physics, assuming normal hierarchy
-        and the correct differences of square masses, the error committed is about 0.01% at :math:`z=0`,
-        0.5% at :math:`z = 100`, 5% at :math:`z = 1000` and 30% at :math:`z = \infty`. 
+        and the correct differences of square masses, the error committed is about
+        0.5% at :math:`z = 100` and 5% at :math:`z = 1000`. 
 
         :param z: Redshifts.
         :type z: array
@@ -478,11 +487,10 @@ class cosmo:
         :return: array with :math:`H(z)` in units of km/s/Mpc.
 
         """
-        return self.H0*(self.Omega_cb*(1.+z)**3. +
-               np.sum(self.Omega_nu)*(1.+z)**3. +
-               self.Omega_lambda*(1.+z)**(3.*(1.+self.w0+self.wa*(z/(1.+z)))) +
-               self.Omega_gamma*(1.+z)**4. +
-               self.Omega_K*(1.+z)**2.)**0.5
+        return self.H0*(self.Omega_m*(1.+z)**3. +
+                        self.Omega_lambda*self.X_DE(z) +
+                        self.Omega_gamma*(1.+z)**4. +
+                        self.Omega_K*(1.+z)**2.)**0.5
 
 
     #-------------------------------------------------------------------------------
@@ -610,23 +618,26 @@ class cosmo:
     #-------------------------------------------------------------------------------
     # COMOVING DISTANCE
     #-------------------------------------------------------------------------------
-    def comoving_distance(self, z, massive_nu_approx = False):
+    def comoving_distance(self, z, massive_nu_approx = True):
         """
         Comoving distance to a given redshift in :math:`\mathrm{Mpc}/h`.
 
         :param z: Redshifts.
         :type z: array
 
-        :param massive_nu_approx: Whether to use ``self.H_massive()`` or ``self.H()`` to compute Hubble expansion, i.e. whether to consider massive neutrinos as matter or do the expensive computation.
-        :type massive_nu_approx: boolean, default = False
+        :param massive_nu_approx: Whether to use ``self.H_massive()`` or ``self.H()`` to compute Hubble expansion, i.e. whether to consider massive neutrinos as matter (great speed-up).
+        :type massive_nu_approx: boolean, default = True
 
         :return: array.
         """
         z = np.atleast_1d(z)
         if massive_nu_approx:
-            result = np.array([sint.quad(lambda x: const.c*1./(self.H_massive(x)/self.h), 0., z[i], epsabs = 1e-8)[0] for i in range(len(np.atleast_1d(z)))])
+            def integral(x):
+                return sint.quad(lambda x: const.c*1./(self.H_massive(x)/self.h), 0., x, epsabs = 1e-8)[0]
         else:
-            result = np.array([sint.quad(lambda x: const.c*1./(self.H(x)/self.h), 0., z[i], epsabs = 1e-8)[0] for i in range(len(np.atleast_1d(z)))])
+            def integral(x):
+                return sint.quad(lambda x: const.c*1./(self.H(x)/self.h), 0., x, epsabs = 1e-8)[0]
+        result = np.array(list(map(integral, z)))
 
         return result
 
@@ -634,7 +645,7 @@ class cosmo:
     #-------------------------------------------------------------------------------
     # GEOMETRIC FACTOR
     #-------------------------------------------------------------------------------
-    def f_K(self, z, massive_nu_approx = False):
+    def f_K(self, z, massive_nu_approx = True):
         """
         Geometric factor to a given redshift in :math:`\mathrm{Mpc}/h`. If :math:`\chi(z)` is the comoving distance and :math:`k` is the curvature, then
 
@@ -652,8 +663,8 @@ class cosmo:
         :param z: Redshifts.
         :type z: array
 
-        :param massive_nu_approx: Whether to use ``self.H_massive()`` or ``self.H()`` to compute Hubble expansion, i.e. whether to consider massive neutrinos as matter or do the expensive computation.
-        :type massive_nu_approx: boolean, default = False
+        :param massive_nu_approx: Whether to use ``self.H_massive()`` or ``self.H()`` to compute Hubble expansion, i.e. whether to consider massive neutrinos as matter (great speed-up).
+        :type massive_nu_approx: boolean, default = True
 
         :return: array.
         """
@@ -661,17 +672,18 @@ class cosmo:
         # go away with comoving_distance(z), giving a final result in units of Mpc/h
         K = self.K
         # Change function according to sign of K
+        chi_z = np.array(self.comoving_distance(z, massive_nu_approx))
         if K == 0.:
-            return self.comoving_distance(z, massive_nu_approx) #Mpc/h
+            return chi_z #Mpc/h
         elif K > 0.:
-            return 1./K**0.5*np.sin(K**0.5*self.comoving_distance(z, massive_nu_approx)) #Mpc/h
+            return 1./K**0.5*np.sin(K**0.5*chi_z) #Mpc/h
         else:
-            return 1./np.abs(K)**0.5*np.sinh(np.abs(K)**0.5*self.comoving_distance(z, massive_nu_approx)) #Mpc/h
+            return 1./np.abs(K)**0.5*np.sinh(np.abs(K)**0.5*chi_z) #Mpc/h
 
     #-------------------------------------------------------------------------------
     # DIFFERENTIAL GEOMETRIC FACTOR (FOR WINDOW FUNCTION)
     #-------------------------------------------------------------------------------
-    def delta_f_K(self, z_1, z_2, massive_nu_approx = False):
+    def delta_f_K(self, z_1, z_2, massive_nu_approx = True):
         """
         Difference in geometric factor (distance) between two redshifts in :math:`\mathrm{Mpc}/h`.
 
@@ -682,8 +694,8 @@ class cosmo:
         :type z_2: float
 
 
-        :param massive_nu_approx: Whether to use ``self.H_massive()`` or ``self.H()`` to compute Hubble expansion, i.e. whether to consider massive neutrinos as matter or do the expensive computation.
-        :type massive_nu_approx: boolean, default = False
+        :param massive_nu_approx: Whether to use ``self.H_massive()`` or ``self.H()`` to compute Hubble expansion, i.e. whether to consider massive neutrinos as matter (great speed-up).
+        :type massive_nu_approx: boolean, default = True
 
         :return: array.
         """
@@ -691,7 +703,7 @@ class cosmo:
         # go away with comoving_distance(z), giving a final result in units of Mpc/h
         K = self.K
         # Change function according to sign of K
-        delta_chi = self.comoving_distance(z_1, massive_nu_approx) - self.comoving_distance(z_2, massive_nu_approx) #Mpc/h
+        delta_chi = np.array(self.comoving_distance(z_1, massive_nu_approx) - self.comoving_distance(z_2, massive_nu_approx)) #Mpc/h
         if K == 0.:
             return delta_chi
         elif K > 0.:
@@ -702,15 +714,15 @@ class cosmo:
     #-------------------------------------------------------------------------------
     # LUMINOSITY DISTANCE
     #-------------------------------------------------------------------------------
-    def luminosity_distance(self, z, massive_nu_approx = False):
+    def luminosity_distance(self, z, massive_nu_approx = True):
         """
         Luminosity distance to a given redshift in :math:`\mathrm{Mpc}/h`.
 
         :param z: Redshifts.
         :type z: array
 
-        :param massive_nu_approx: Whether to use ``self.H_massive()`` or ``self.H()`` to compute Hubble expansion, i.e. whether to consider massive neutrinos as matter or do the expensive computation.
-        :type massive_nu_approx: boolean, default = False
+        :param massive_nu_approx: Whether to use ``self.H_massive()`` or ``self.H()`` to compute Hubble expansion, i.e. whether to consider massive neutrinos as matter (great speed-up).
+        :type massive_nu_approx: boolean, default = True
 
         :return: array.
         """
@@ -720,15 +732,15 @@ class cosmo:
     #-------------------------------------------------------------------------------
     # ANGULAR DIAMETER DISTANCE
     #-------------------------------------------------------------------------------
-    def angular_diameter_distance(self, z, massive_nu_approx = False):
+    def angular_diameter_distance(self, z, massive_nu_approx = True):
         """
         Angular diameter distance to a given redshift in :math:`\mathrm{Mpc}/h`.
 
         :param z: Redshifts.
         :type z: array
 
-        :param massive_nu_approx: Whether to use ``self.H_massive()`` or ``self.H()`` to compute Hubble expansion, i.e. whether to consider massive neutrinos as matter or do the expensive computation.
-        :type massive_nu_approx: boolean, default = False
+        :param massive_nu_approx: Whether to use ``self.H_massive()`` or ``self.H()`` to compute Hubble expansion, i.e. whether to consider massive neutrinos as matter (great speed-up).
+        :type massive_nu_approx: boolean, default = True
 
         :return: array.
         """
@@ -738,15 +750,15 @@ class cosmo:
     #-------------------------------------------------------------------------------
     # ISOTROPIC VOLUME DISTANCE
     #-------------------------------------------------------------------------------
-    def isotropic_volume_distance(self, z, massive_nu_approx = False):
+    def isotropic_volume_distance(self, z, massive_nu_approx = True):
         """
         Isotropic volume distance to a given redshift in :math:`\mathrm{Mpc}/h`.
 
         :param z: Redshifts.
         :type z: array
 
-        :param massive_nu_approx: Whether to use ``self.H_massive()`` or ``self.H()`` to compute Hubble expansion, i.e. whether to consider massive neutrinos as matter or do the expensive computation.
-        :type massive_nu_approx: boolean, default = False
+        :param massive_nu_approx: Whether to use ``self.H_massive()`` or ``self.H()`` to compute Hubble expansion, i.e. whether to consider massive neutrinos as matter (great speed-up).
+        :type massive_nu_approx: boolean, default = True
 
         :return: array.
         """
@@ -756,15 +768,15 @@ class cosmo:
     #-------------------------------------------------------------------------------
     # RECESSION VELOCITY
     #-------------------------------------------------------------------------------
-    def v_rec(self, z, massive_nu_approx = False):
+    def v_rec(self, z, massive_nu_approx = True):
         """
         Recession velocity of galaxies at a given redshift in km/s.
 
         :param z: Redshifts.
         :type z: array
 
-        :param massive_nu_approx: Whether to use ``self.H_massive()`` or ``self.H()`` to compute Hubble expansion, i.e. whether to consider massive neutrinos as matter or do the expensive computation.
-        :type massive_nu_approx: boolean, default = False
+        :param massive_nu_approx: Whether to use ``self.H_massive()`` or ``self.H()`` to compute Hubble expansion, i.e. whether to consider massive neutrinos as matter (great speed-up).
+        :type massive_nu_approx: boolean, default = True
 
         :return: array.
         """
@@ -774,7 +786,7 @@ class cosmo:
     #-------------------------------------------------------------------------------
     # L TO K
     #-------------------------------------------------------------------------------
-    def l_to_k(self, l, z, massive_nu_approx = False):
+    def l_to_k(self, l, z, massive_nu_approx = True):
         """
         Conversion factor from multipoles to scales given the redshift
 
@@ -784,12 +796,12 @@ class cosmo:
         :param z: Redshifts.
         :type z: array
 
-        :param massive_nu_approx: Whether to use ``self.H_massive()`` or ``self.H()`` to compute Hubble expansion, i.e. whether to consider massive neutrinos as matter or do the expensive computation.
-        :type massive_nu_approx: boolean, default = False
+        :param massive_nu_approx: Whether to use ``self.H_massive()`` or ``self.H()`` to compute Hubble expansion, i.e. whether to consider massive neutrinos as matter (great speed-up).
+        :type massive_nu_approx: boolean, default = True
 
         :return: array.
         """
-        inv_dist = 1./self.f_K(z, massive_nu_approx = False)
+        inv_dist = 1./self.f_K(z, massive_nu_approx = True)
         scale = np.outer(l,inv_dist)
         return scale
 
@@ -841,15 +853,43 @@ class cosmo:
 
         :return: array.
         """
+        fac = 5./3.*5.*ss.zeta(5.)/ss.zeta(3.)
         vel = np.zeros(self.N_nu)
-        for i in xrange(self.N_nu):
-            if self.M_nu[i] == 0. :
-                vel[i] = const.c
-            else:
-                fac    = 5./3.*5.*ss.zeta(5.)/ss.zeta(3.)
-                vel[i] = fac**.5*(const.kB*self.T_nu/self.M_nu[i])*(1.+z)*const.c
+        vel[np.where(self.M_nu != 0.)] = fac**.5*(const.kB*self.T_nu/self.M_nu[np.where(self.M_nu != 0.)])*(1.+z)*const.c
+        vel[np.where(self.M_nu == 0.)] = const.c
         return vel
 
+    #-------------------------------------------------------------------------------
+    # DM THERMAL VELOCITY
+    #-------------------------------------------------------------------------------
+    def thermal_velocity(self, z, M_X, Omega_X, g_X = 1.5, stat = 'FD'):
+        """
+        Thermal velocity in km/s of a given dark matter particle.
+        Approximation valid only at :math:`z \ll z_\mathrm{nr}`
+
+        :param z: Redshifts.
+        :type z: array
+
+        :param M_X: dark matter mass in keV.
+        :type M_X: float
+
+        :param Omega_X: dark matter density parameter.
+        :type Omega_X: float
+
+        :param g_X: Spin multiplicity of the species.
+        :type g_X: float, default = 1.5
+
+        :param stat: Whether the particle is a fermion (i.e. following a Fermi-Dirac statistics) or a boson (Bose-Einstein statistics). Accepted values are ``FD`` for the former and ``BE`` for the latter.
+        :type stat: string, default = 'FD'
+
+        :return: array.
+        """
+        if   stat in ['FD','Fermi-Dirac','F','Fermi','fermions']: factor = 7/6.
+        elif stat in ['BE','Bose-Einstein','B','Bose','bosons'] : factor = 1.
+        else: raise ValueError("Statistics not known")
+        #return factor*0.012*(1.+z)*(Omega_X/0.3)**(1./3.)*(self.h/0.65)**(2/3.)*M_X**(-4./3.)*(g_X/1.5)**(1./3.)
+        ratio_denominator = 93.14/(np.pi**4.*const.kB*self.T_cmb /(15*self.Gamma_nu**3.*self.omega_gamma*1.5*ss.zeta(3)))
+        return factor*0.03258*(1.+z)*(Omega_X/0.3)**(1./3.)*(self.h/0.7)**(2/3.)*M_X**(-4./3.)*(g_X/1.5)**(1./3.)*ratio_denominator**(-1/3)
 
     #-------------------------------------------------------------------------------
     # DRAG EPOCH
@@ -875,7 +915,7 @@ class cosmo:
     #-------------------------------------------------------------------------------
     def r_s(self):
         """
-        Sound horizon at drag epoch.
+        Sound horizon at drag epoch in units of Mpc/h.
 
         :return: float.
         """
@@ -1032,8 +1072,6 @@ class cosmo:
         kappa   = np.expand_dims(np.atleast_2d(k_ext),axis=1)
         P_kappa = np.expand_dims(P_kappa, axis = 1)
 
-        # Scales and power
-        dlnk    = np.log(k_ext[1]/k_ext[0])
 
         # Smoothing radii
         if   var == 'cb':   omega = self.Omega_cb
@@ -1069,7 +1107,7 @@ class cosmo:
             sm = 1.
 
         # Integration in log-bins (with numpy)
-        sigma2 = sint.simps(kappa**(3.+2.*j)*P_kappa/(2.*const.PI**2.)*W**2.*sm**2.,dx=dlnk,axis=-1)
+        sigma2 = sint.simps(kappa**(3.+2.*j)*P_kappa/(2.*const.PI**2.)*W**2.*sm**2.,x=np.log(k_ext),axis=-1)
         return sigma2
 
 
@@ -1954,7 +1992,34 @@ class cosmo:
     #-------------------------------------------------------------------------------
     def D_1(self, z):
         """
-        Matter growth factor for a LCDM cosmology (i.e. scale-independent) at a
+        Scale-independent total matter growth factor for a LCDM cosmology at a
+        given redshift, normalized to 1 today.
+
+        :param z: Redshifts.
+        :type z: array
+
+        :return: array
+        """
+        z  = np.atleast_1d(z)
+        nz = len(z)
+        if self.w0 == -1. and self.wa==0.:
+            aa = 1./(1.+z)
+            d1 = aa*ss.hyp2f1(1/3., 1., 11/6., -aa**3/self.Omega_m*(1.-self.Omega_m))/ss.hyp2f1(1/3., 1., 11/6., -(1.-self.Omega_m)/self.Omega_m)
+        else:
+            d1 = np.zeros(nz)
+            for i in xrange(nz):
+                LCDM, _  = sint.quad(lambda x: (1+x)*(self.H0/self.H_massive(x))**3., z[i], np.inf)
+                d1[i] = LCDM*self.H_massive(z[i])/self.H0
+            LCDM0, _ = sint.quad(lambda x: (1+x)*(self.H0/self.H_massive(x))**3., 0., np.inf)
+            d1 = d1/LCDM0
+        return d1
+
+    #-------------------------------------------------------------------------------
+    # GROWTH FACTOR LCDM: 
+    #-------------------------------------------------------------------------------
+    def scale_independent_growth_factor(self, z):
+        """
+        Scale-independent total matter growth factor for a LCDM cosmology at a
         given redshift, normalized to 1 today.
 
         :param z: Redshifts.
@@ -2066,7 +2131,7 @@ class cosmo:
     #-----------------------------------------------------------------------------------------
     # MASS OF A PARTICLE IN N-BODY SIMULATIONS
     #-----------------------------------------------------------------------------------------
-    def M_p(self, L, N, kind = 'cb'):
+    def particle_mass_in_simulation(self, L, N, kind = 'cb'):
         """
         Mass of a single particle (in :math:`M_\odot/h`) in a simulation box, given the length L of the box
         itself (in :math:`\mathrm{Mpc}/h`) and the number of particles N per side.
@@ -3119,7 +3184,7 @@ class cosmo:
     #-----------------------------------------------------------------------------------------
     # SIGMA 8
     #-----------------------------------------------------------------------------------------
-    def compute_sigma_8(self, k = [], pk = [], var = 'tot'):
+    def compute_sigma_8(self, k = [], pk = []):
         """
         This routine computes :math:`sigma_8`.
 
@@ -3128,19 +3193,6 @@ class cosmo:
 
         :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.
         :type pk: array, default = []
-
-        :param var: component with respect to which to compute the variance.
-
-            - 'tot'   : total matter 
-            - 'cdm'   : cold dark matter
-            - 'b'     : baryons
-            - 'nu'    : neutrinos
-            - 'cb'    : cold dark matter + baryons
-            - 'rad'   : radiation
-            - 'v_cdm' : cdm velocity
-            - 'v_b'   : baryon velocity
-            - 'Phi'   : Weyl potential
-        :type var: string, default = 'tot'
 
         :return: float
         """
