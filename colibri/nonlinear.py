@@ -1061,6 +1061,300 @@ class halomodel():
             hmf[iz] = self.rho_field/M**2.*log_der*mass_fun[iz]
         return hmf
 
+########################################################################################################################
+# classic_halomodel: applies halo model to a given power spectrum
+########################################################################################################################
+
+class classic_halomodel():
+    """
+    The class ``classic_halomodel`` transforms a linear input power spectrum to its non-linear counterpart using the halo model as described in e.g. `arXiv:0206508 <https://arxiv.org/pdf/astro-ph/0206508.pdf>`_  .
+
+    By calling this class, the total matter non-linear power spectrum is returned. It accepts the following arguments,
+    with the default values specified:
+
+    :param z: Redshift.
+    :type z: array
+
+    :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
+    :type k: array
+
+    :param pk: Linear total matter power spectra evaluated in ``z`` and ``k`` in units of :math:`(\mathrm{Mpc}/h)^3`.
+    :type pk: 2D array of shape ``(len(z), len(k))``
+
+    :param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`colibri.cosmology.cosmo` documentation).
+    :type cosmology: ``cosmo`` instance, default = ``cosmology.cosmo()``
+
+    :param pivot_concentration: concentration parameter at typical mass.
+    :type pivot_concentration: float, default = 9.
+
+    :param slope_concentration: slope of the mass-concentration relation (minus sign already included, set to positive here).
+    :type slope_concentration: float, default = 0.13
+
+    :param a_ShethTormen: Sheth-Tormen parameter.
+    :type a_ShethTormen: float, default = 0.707
+
+    :param p_ShethTormen: Sheth-Tormen parameter.
+    :type p_ShethTormen: float, default = 0.3
+        
+    :return: Nothing, but the quantity ``self.pk_nl`` is generated, a 2D array of shape ``(len(z), len(k))`` containing the non-linear matter power spectra in units of :math:`(\mathrm{Mpc}/h)^3`.
+
+    """
+
+    def __init__(self,
+            z,
+            k,
+            pk,
+            cosmology = cc.cosmo(),
+            pivot_concentration = 9.,
+            slope_concentration = 0.13,
+            a_ShethTormen = 0.707,
+            p_ShethTormen = 0.3):
+
+        # Assertion on k
+        assert len(k)>200,     "k must have a length greater than 200 points"
+        assert k.max()>=10.,   "Maximum wavenumber must be greater than 10 Mpc/h in order to achieve convergence"
+        assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
+
+        # Reading all cosmological parameters
+        self.cosmology = cosmology
+        self.w0           = cosmology.w0
+        self.wa           = cosmology.wa
+        self.f_nu         = np.sum(cosmology.f_nu[np.where(cosmology.M_nu!=0.)])
+
+        # Halo model parameters
+        self.pivot_concentration = pivot_concentration
+        self.slope_concentration = slope_concentration
+        self.a_ShethTormen       = a_ShethTormen
+        self.p_ShethTormen       = p_ShethTormen
+
+        # Overdensity spherical collapse
+        self.delta_sc = 3./20.*(12.*np.pi)**(2./3.)
+        
+        # Redshift and scales at which all must be computed
+        self.z  = np.atleast_1d(z)
+        self.k  = np.atleast_1d(k)
+        self.nz = len(self.z)
+        self.nk = len(self.k)
+        self.pk   = pk
+
+        # Raise warning if neutrino mass is not zero:
+        if np.any(self.cosmology.M_nu!=0.):
+            warnings.warn("Neutrino mass is different from zero. The Takahashi halofit works best with zero neutrino mass, maybe better to use TakaBird?")
+
+        # Growth factor
+        self.growth_factor = self.cosmology.D_1(self.z)
+
+        # Initialize mass
+        self.nm   = 512
+        self.mass = np.logspace(2., 18., self.nm)
+
+        # Peak height
+        self.peak_height = self.nu()
+
+        # virial_radii
+        self.rv = self.R_v(self.mass)
+
+        # GO!
+        self.compute_nonlinear_pk(kwargs_mass_function = {'a' : self.a_ShethTormen,
+                                                          'p' : self.p_ShethTormen},
+                                  kwargs_concentration = {'c0': self.pivot_concentration,
+                                                          'b' : self.slope_concentration})
+
+
+    #-----------------------------------------------------------------------------------------
+    # OVERDENSITY AT COLLAPSE
+    #-----------------------------------------------------------------------------------------
+    def Delta_v(self, z):
+        omz = self.cosmology.Omega_m_z(self.z)
+        return 18.*np.pi**2.*(1.+0.399*(1./omz-1.))
+
+    #-----------------------------------------------------------------------------------------
+    # SMOOTHING RADIUS
+    #-----------------------------------------------------------------------------------------
+    def smoothing_radius(self, M):
+        rho = self.cosmology.rho(0.)
+        return (3*M/(4*np.pi*rho))**(1./3.)
+
+    #-----------------------------------------------------------------------------------------
+    # SIGMA^2
+    #-----------------------------------------------------------------------------------------
+    def sigma2(self):
+        kappa   = self.k
+        P_kappa = self.pk*(self.cosmology.D_cbnu(z=0., k=kappa)[0]/self.cosmology.D_cbnu(z=self.z, k=kappa)[0])**2.
+        dlnk    = np.log(kappa[1]/kappa[0])        
+
+        # Smoothing radii
+        R   = self.smoothing_radius(self.mass)
+        
+        # Integration in log-bins (with numpy)
+        integrand = np.zeros((self.nz, len(R),len(kappa)))
+        integral  = np.zeros((self.nz, len(R)))
+        for iz in range(self.nz):
+            for ir in range(len(R)):
+                integrand[iz, ir] = kappa**3.*P_kappa[iz]/(2.*np.pi**2.)*UF.TopHat_window(kappa*R[ir])**2.
+                integral[iz, ir]  = np.trapz(integrand[iz,ir], dx = dlnk)
+
+        return integral
+
+
+    #-----------------------------------------------------------------------------------------
+    # NU-MASS RELATION
+    #-----------------------------------------------------------------------------------------
+    def nu(self):
+        return np.transpose(self.delta_sc/np.transpose((self.sigma2())**.5))
+
+    #-----------------------------------------------------------------------------------------
+    # SHETH-TORMEN MASS FUNCTION
+    #-----------------------------------------------------------------------------------------
+    def mass_fun_ST(self, nu, a = 0.707, p = 0.3):
+        n = nu**2.
+        A = 1./(1. + 2.**(-p)*ss.gamma(0.5-p)/np.sqrt(np.pi))
+        ST = A * np.sqrt(2.*a*n/np.pi) * (1.+1./(a*n)**p) * np.exp(-a*n/2.)
+        return ST
+
+    #-----------------------------------------------------------------------------------------
+    # SHETH-TORMEN BIAS
+    #-----------------------------------------------------------------------------------------
+    def halo_bias_ST(self, nu, a = 0.707, p = 0.3):
+        d_sc  = self.delta_sc
+        return 1. + (a*nu**2.-1.)/d_sc + 2.*p/d_sc/(1.+(a*nu**2.)**p)
+
+    #-----------------------------------------------------------------------------------------
+    # HALO MASS FUNCTION
+    #-----------------------------------------------------------------------------------------
+    def load_halo_mass_function(self, **kwargs):
+        # Masses and nu's
+        m  = self.mass
+        nu = self.peak_height
+
+        # dln(nu)/dln(m) (adding last component as equal to second-to-last)
+        dln_nu = np.log(nu[:,1:]/nu[:,:-1])
+        dln_m  = np.log(m[1]/m[0])
+        ln_der = dln_nu/dln_m
+        ln_der = np.append(ln_der[:,:], np.transpose([ln_der[:,-1]]), axis = 1)
+
+        # ST mass function
+        mass_fun = self.mass_fun_ST(nu, **kwargs)
+
+        # Matter density today
+        rho = self.cosmology.rho(0.)
+        
+        # Halo mass function
+        hmf = rho/m**2.*ln_der*mass_fun
+
+        return hmf
+
+
+    #-----------------------------------------------------------------------------------------
+    # M STAR
+    #-----------------------------------------------------------------------------------------
+    def M_star(self):
+        # Compute it at any redshift
+        nu = self.peak_height[0]*self.growth_factor[0]
+        func = si.interp1d(nu, self.mass)
+        value = func(1.)
+        return value
+
+
+    #-----------------------------------------------------------------------------------------
+    # FOURIER TRANSFORM OF NFW PROFILE
+    #-----------------------------------------------------------------------------------------
+    def u_NFW(self, c, x):
+        (Si_1,Ci_1) = ss.sici(x)
+        (Si_2,Ci_2) = ss.sici((1.+c)*x)
+        den         = np.log(1.+c)-c*1./(1.+c)
+        num1        = np.sin(x)*(Si_2-Si_1)
+        num2        = np.sin(c*x)
+        num3        = np.cos(x)*(Ci_2-Ci_1)
+        return 1./den*(num1+num3-num2*1./((1.+c)*x))
+
+
+    #-----------------------------------------------------------------------------------------
+    # CONCENTRATION PARAMETER
+    #-----------------------------------------------------------------------------------------
+    def conc(self, M, c0 = 9., b = 0.13):
+        scale_mass = self.M_star()
+        conc = np.zeros((self.nz, len(np.atleast_1d(M))))
+        for i in range(self.nz):
+            conc[i] = c0/(1.+self.z[i])*(M/scale_mass)**(-b)
+        return conc
+
+
+
+    #-----------------------------------------------------------------------------------------
+    # VIRIAL RADIUS
+    #-----------------------------------------------------------------------------------------
+    def R_v(self, M):
+        rho = self.cosmology.rho(0.)
+        dv  = self.Delta_v(self.z)
+        rv  = np.zeros((self.nz, len(np.atleast_1d(M))))
+        for i in range(self.nz):
+            rv[i] = ((3.*M)/(4.*np.pi*rho*dv[i]))**(1./3.)
+        return rv
+
+
+    #-----------------------------------------------------------------------------------------
+    # SCALE RADIUS
+    #-----------------------------------------------------------------------------------------
+    def R_s(self, M, kwargs_concentration = {}):
+        cc = self.conc(M, **kwargs_concentration)
+        rs = np.zeros_like(cc)
+        rv = self.R_v(M)
+        for i in range(self.nz):
+            rs[i] = rv[i]/cc[i]
+        return rs
+
+    #-----------------------------------------------------------------------------------------
+    # NORMALIZATION 2 HALO
+    #-----------------------------------------------------------------------------------------
+    def norm_2h(self, bias, **kwargs):
+        M    = self.mass
+        dlnM = np.log(M[1]/M[0])
+        nu   = self.peak_height
+        dndM = self.load_halo_mass_function(**kwargs)
+        rho  = self.cosmology.rho(0.)
+        
+        value = np.trapz(M**2./rho*dndM*bias, dx = dlnM)
+        return 1./value
+
+
+    #-----------------------------------------------------------------------------------------
+    # HALO POWER SPECTRUM
+    #-----------------------------------------------------------------------------------------
+    def compute_nonlinear_pk(self, kwargs_mass_function = {}, kwargs_concentration = {}):
+        nu      = self.peak_height
+        bias    = self.halo_bias_ST(nu, **kwargs_mass_function)
+        M       = self.mass
+        dlnM    = np.log(M[1]/M[0])
+        dndM    = self.load_halo_mass_function(**kwargs_mass_function)
+        k       = self.k
+        r_s     = self.R_s(M)
+        rho     = self.cosmology.rho(0.)
+        c       = self.conc(M, **kwargs_concentration)
+        nfw     = np.zeros((self.nz, self.nk, self.nm))
+        for iz in xrange(self.nz):
+            for i in xrange(self.nk):
+                nfw[iz, i] = self.u_NFW(c[iz], k[i]*r_s[iz])
+
+        # Normalization for 2-halo term
+        normalization = self.norm_2h(bias, **kwargs_mass_function)
+
+        # One-halo term damping at very large scales
+        k_damp = 0.01*(1.+self.z)
+
+        P_1h = np.zeros_like(self.pk)
+        P_2h = np.zeros_like(self.pk)
+
+        for iz in xrange(self.nz):
+            for ik in xrange(len(self.k)):
+                integrand_1h = ((M/rho)**2*dndM[iz]*nfw[iz,ik]**2)*M
+                integrand_2h = (M/rho*dndM[iz]*nfw[iz,ik]*bias[iz])*M
+                P_1h[iz,ik]  = np.trapz(integrand_1h, dx = dlnM)*(1.-np.exp(-(self.k[ik]/k_damp[iz])**2.))
+                P_2h[iz,ik]  = np.trapz(integrand_2h, dx = dlnM)**2.*normalization[iz]**2.*self.pk[iz,ik]
+
+        self.pk_nl = P_1h + P_2h
+
+
 
 ########################################################################################################################
 # Takahashi
