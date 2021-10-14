@@ -750,7 +750,7 @@ class RSD(gc.galaxy):
 				PK_BASE[iz]  = power_interp(KK[iz])
 
 			# normalization and scale of cutoff
-			normalization = self.norm_2h()
+			normalization = self.norm_2h(bias, **kwargs_mass_function)
 			k_star        = 0.01*(1.+self.z)
 
 			# Filling power spectrum array
