@@ -10,7 +10,12 @@ In time, there have been different versions, from the first one of `arXiv:020766
 
 We provide a file in ``tests`` named ``test_nonlinear.py`` that computes the non-linear matter power spectra starting from a linear one.
 The same thing is done in the ``test_nonlinear.ipynb`` in the ``notebooks`` directory.
-The file features the classes implemented in the ``nonlinear.py`` file, i.e. four different methods to compute the non-linear power spectrum that should return exaclty what Boltzmann solvers do: the class :func:`colibri.nonlinear.HMcode2016` uses Mead's HMcode version of 2015 (`arxiv:1505.07833 <https://arxiv.org/abs/1505.07833>`_); the class :func:`colibri.nonlinear.HMcode2020` uses Mead's HMcode version of 2020 (`arxiv:2009.01858 <https://arxiv.org/abs/2009.01858>`_); the class :func:`colibri.nonlinear.Takahashi` employs the version by Takahashi (`arxiv:1208.2701 <https://arxiv.org/abs/1208.2701>`_ ); the class :func:`colibri.nonlinear.TakaBird` is the same of the latter but it includes the corrections for the presence of massive neutrinos by Bird et al. (`arXiv:1109.4416 <https://arxiv.org/abs/1109.4416>`_ ); finally, the class :func:`colibri.nonlinear.nonlinear_pk` computes the total matter power spectrum assuming the so-called cold dark matter prescription, in which the Halofit operator is applied to the cold part only and the neutrino parts are added later at the linear level (with the correct weighting).
+The file features the classes implemented in the ``nonlinear.py`` file, i.e. different methods to compute the non-linear power spectrum that should return exaclty what Boltzmann solvers do:
+* the class :func:`colibri.nonlinear.HMcode2016` uses Mead's HMcode version of 2015 (`arxiv:1505.07833 <https://arxiv.org/abs/1505.07833>`_);
+* the class :func:`colibri.nonlinear.HMcode2020` uses Mead's HMcode version of 2020 (`arxiv:2009.01858 <https://arxiv.org/abs/2009.01858>`_);
+* the class :func:`colibri.nonlinear.Takahashi` employs the version by Takahashi (`arxiv:1208.2701 <https://arxiv.org/abs/1208.2701>`_ );
+* the class :func:`colibri.nonlinear.TakaBird` is the same of the latter but it includes the corrections for the presence of massive neutrinos by Bird et al. (`arXiv:1109.4416 <https://arxiv.org/abs/1109.4416>`_ );
+* the class :func:`colibri.nonlinear.halomodel` computes the total matter power spectrum assuming the halo model by Mead et al., 2015 (`arxiv:1505.07833 <https://arxiv.org/abs/1505.07833>`_ ).
 
 We first define a ``cosmo`` instance, without massive neutrinos to have a direct comparison with the Halofit implemented in CAMB:
 
