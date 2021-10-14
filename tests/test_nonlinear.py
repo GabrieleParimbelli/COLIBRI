@@ -15,7 +15,7 @@ colors = ['b','r','g','m','gray','c']
 # 'bird'        (good for neutrinos)
 # 'halomodel'   (good for neutrinos)
 # 'classichm'   (not good for neutrinos)
-set_halofit = 'classichm'
+set_halofit = 'mead2020'
 #########################
 
 #=================
@@ -25,7 +25,7 @@ set_halofit = 'classichm'
 #=================
 
 # Cosmology, redshifts and scales
-C  = cc.cosmo(Omega_m = 0.3089, Omega_b = 0.0486, As = 2.14e-9, ns = 0.9667, h = 0.6774)#, M_nu = 0.3)
+C  = cc.cosmo(Omega_m = 0.3089, Omega_b = 0.0486, As = 2.14e-9, ns = 0.9667, h = 0.6774, M_nu = 0.3)
 zz = np.linspace(0., 5., 6)
 kk = np.logspace(-4., 2., 201)
 zz = np.atleast_1d(zz)
