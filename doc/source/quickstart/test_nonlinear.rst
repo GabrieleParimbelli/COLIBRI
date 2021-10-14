@@ -16,6 +16,7 @@ The file features the classes implemented in the ``nonlinear.py`` file, i.e. dif
 * the class :func:`colibri.nonlinear.Takahashi` employs the version by Takahashi (`arxiv:1208.2701 <https://arxiv.org/abs/1208.2701>`_ );
 * the class :func:`colibri.nonlinear.TakaBird` is the same of the latter but it includes the corrections for the presence of massive neutrinos by Bird et al. (`arXiv:1109.4416 <https://arxiv.org/abs/1109.4416>`_ );
 * the class :func:`colibri.nonlinear.halomodel` computes the total matter power spectrum assuming the halo model by Mead et al., 2015 (`arxiv:1505.07833 <https://arxiv.org/abs/1505.07833>`_ ).
+* the class :func:`colibri.nonlinear.classic_halomodel` computes the total matter power spectrum assuming the classic halo model (e.g. `arxiv:0206508 <https://arxiv.org/abs/astro-ph/0206508>`_ ).
 
 We first define a ``cosmo`` instance, without massive neutrinos to have a direct comparison with the Halofit implemented in CAMB:
 
