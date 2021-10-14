@@ -14,7 +14,8 @@ colors = ['b','r','g','m','gray','c']
 # 'takahashi'   (not good for neutrinos)
 # 'bird'        (good for neutrinos)
 # 'halomodel'   (good for neutrinos)
-set_halofit = 'mead2020'
+# 'classichm'   (not good for neutrinos)
+set_halofit = 'classichm'
 #########################
 
 #=================
@@ -24,7 +25,7 @@ set_halofit = 'mead2020'
 #=================
 
 # Cosmology, redshifts and scales
-C  = cc.cosmo(Omega_m = 0.3089, Omega_b = 0.0486, As = 2.14e-9, ns = 0.9667, h = 0.6774, M_nu = 0.3)
+C  = cc.cosmo(Omega_m = 0.3089, Omega_b = 0.0486, As = 2.14e-9, ns = 0.9667, h = 0.6774)#, M_nu = 0.3)
 zz = np.linspace(0., 5., 6)
 kk = np.logspace(-4., 2., 201)
 zz = np.atleast_1d(zz)
@@ -32,7 +33,17 @@ zz = np.atleast_1d(zz)
 #=================
 # 1) Compute the non-linear power spectrum with CAMB
 #=================
-k_camb, pk_nl_camb = C.camb_Pk(k = kk, z = zz, nonlinear = True, halofit = set_halofit)
+if set_halofit != 'classichm':
+    k_camb, pk_nl_camb = C.camb_Pk(k = kk, z = zz, nonlinear = True, halofit = set_halofit)
+else:
+    import colibri.halo as hc
+    H = hc.halo(z = zz,
+                k = kk,
+                code = 'camb',
+                cosmology = C)
+    H.halo_Pk()
+    k_camb      = kk
+    pk_nl_camb  = H.Pk['matter']['total halo']
 print(">> Non-linear power spectrum computed with CAMB halofit '%s'" %set_halofit)
 
 #=================
@@ -85,6 +96,13 @@ elif set_halofit == 'halomodel':
                                  k            = k_l,
                                  pk           = pk_mm,
                                  cosmology    = C)
+elif set_halofit == 'classichm':
+    set_class = 'Halo Model'
+    pk_mm = pk_l['tot-tot']
+    do_nonlinear = NL.classic_halomodel(z            = zz,
+                                        k            = k_l,
+                                        pk           = pk_mm,
+                                        cosmology    = C)
 else:
     raise ValueError("Non-linear method not recognized")
 # Retrieve the non-linear power spectrum
