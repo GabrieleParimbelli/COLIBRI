@@ -229,7 +229,7 @@ class RSD(gc.galaxy):
 			# Galaxy bias
 			BIAS = np.transpose(np.tile(bias, (self.nk, self.nmu)).reshape((self.nmu, self.nk, self.nz)), (2,1,0))
 			# Non-linear galaxy power spectrum
-			do_nonlinear = NL.HMcode2016(z = self.z, k = self.k, pk = self.Pk['matter']['linear'], field = 'cb', BAO_smearing = self.BAO_smearing, cosmology = self.cosmology)
+			do_nonlinear = NL.HMcode2016(z = self.z, k = self.k, pk = self.Pk['matter']['linear'], cosmology = self.cosmology)
 			pk_hf  = do_nonlinear.pk_nl
 			PK_BASE = np.transpose(np.tile(pk_hf,self.nmu).reshape((self.nz, self.nmu, self.nk)), (0,2,1))
 			# Redshift-space galaxy power spectrum
@@ -437,7 +437,7 @@ class RSD(gc.galaxy):
 			# Galaxy bias
 			BIAS = np.transpose(np.tile(bias, (self.nk, nmu)).reshape((nmu, self.nk, self.nz)), (2,1,0))
 			# Non-linear galaxy power spectrum
-			do_nonlinear = NL.HMcode2016(z = self.z, k = self.k, pk = self.Pk['matter']['linear'], field = 'cb', BAO_smearing = False, cosmology = self.cosmology)
+			do_nonlinear = NL.HMcode2016(z = self.z, k = self.k, pk = self.Pk['matter']['linear'], cosmology = self.cosmology)
 			pk_hf  = do_nonlinear.pk_nl
 			PK_BASE = np.transpose(np.tile(pk_hf,nmu).reshape((self.nz, nmu, self.nk)), (0,2,1))
 			# Redshift-space galaxy power spectrum
@@ -666,7 +666,7 @@ class RSD(gc.galaxy):
 			# Galaxy bias
 			BIAS = np.transpose(np.tile(bias, (self.nk_par, self.nk_perp)).reshape((self.nk_perp, self.nk_par, self.nz)), (2,1,0))
 			# Non-linear galaxy power spectrum
-			do_nonlinear = NL.HMcode2016(z = self.z, k = self.k, pk = self.Pk['matter']['linear'], field = 'cb', BAO_smearing = False, cosmology = self.cosmology)
+			do_nonlinear = NL.HMcode2016(z = self.z, k = self.k, pk = self.Pk['matter']['linear'], cosmology = self.cosmology)
 			pk_hf        = do_nonlinear.pk_nl
 			PK_BASE      = np.zeros_like(ZZ)
 			for iz in xrange(self.nz):

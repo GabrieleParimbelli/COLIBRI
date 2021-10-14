@@ -13,6 +13,7 @@ colors = ['b','r','g','m','gray','c']
 # 'mead2020'    (good for neutrinos)
 # 'takahashi'   (not good for neutrinos)
 # 'bird'        (good for neutrinos)
+# 'halomodel'   (good for neutrinos)
 set_halofit = 'mead2020'
 #########################
 
@@ -74,6 +75,13 @@ elif set_halofit == 'bird':
     set_class = 'TakaBird'
     pk_mm = pk_l['tot-tot']
     do_nonlinear = NL.TakaBird  (z            = zz,
+                                 k            = k_l,
+                                 pk           = pk_mm,
+                                 cosmology    = C)
+elif set_halofit == 'halomodel':
+    set_class = 'Halo Model'
+    pk_mm = pk_l['tot-tot']
+    do_nonlinear = NL.halomodel (z            = zz,
                                  k            = k_l,
                                  pk           = pk_mm,
                                  cosmology    = C)

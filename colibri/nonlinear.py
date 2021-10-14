@@ -22,7 +22,7 @@ class HMcode2016():
 
 
     :param z: Redshift.
-    :type z: float, default = 0.0
+    :type z: array
 
     :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
     :type k: array
@@ -97,7 +97,7 @@ class HMcode2016():
         
         # Compute sigma_d at R = 100 and R = 0  (only for cb)
         self.sigd100 = self.sigma_d(R = 100.)
-        self.sigd    = self.sigma_d(R = 1e-3)
+        self.sigd    = self.sigma_d(R = 1e-4)
         
         # Omega_m(z)
         self.omz    = self.cosmology.Omega_m_z(self.z)
@@ -437,7 +437,7 @@ class HMcode2020():
     with the default values specified:
 
     :param z: Redshift.
-    :type z: float, default = 0.0
+    :type z: array
 
     :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
     :type k: array
@@ -759,6 +759,307 @@ class HMcode2020():
         return hmf
 
 
+########################################################################################################################
+# halomodel: applies halo model to a given power spectrum
+########################################################################################################################
+class halomodel():
+    """
+    The class ``halomodel`` transforms a linear input power spectrum to its non-linear counterpart using
+    the halo model implemented in CAMB.
+    For the 'classic' halo model see the class :func:`colibri.halo.halo` and e.g. `arXiv:0206508 <https://arxiv.org/pdf/astro-ph/0206508.pdf>`_ for a theoretical insight.
+
+    By calling this class, the total matter non-linear power spectrum is returned. It accepts the following arguments,
+    with the default values specified:
+
+    :param z: Redshift.
+    :type z: array
+
+    :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
+    :type k: array
+
+    :param pk: Linear total matter power spectra evaluated in ``z`` and ``k`` in units of :math:`(\mathrm{Mpc}/h)^3`.
+    :type pk: 2D array of shape ``(len(z), len(k))``
+
+    :param cosmology: Fixes the cosmological parameters. If not declared, the default values are chosen (see :func:`colibri.cosmology.cosmo` documentation).
+    :type cosmology: ``cosmo`` instance, default = ``cosmology.cosmo()``
+
+
+    When the instance is called, the array ``self.mass = np.logspace(0., 18., 512)``, i.e. an array of masses spanning from :math:`1 M_\odot/h` to :math:`10^{18} M_\odot/h` is created, where all the mass functions are computed.
+
+    :param a_ShethTormen: Sheth-Tormen parameter.
+    :type a_ShethTormen: float, default = 0.707
+
+    :param p_ShethTormen: Sheth-Tormen parameter.
+    :type p_ShethTormen: float, default = 0.3
+        
+    :return: Nothing, but the quantity ``self.pk_nl`` is generated, a 2D array of shape ``(len(z), len(k))`` containing the non-linear matter power spectra in units of :math:`(\mathrm{Mpc}/h)^3`.
+
+    """
+
+    def __init__(self,
+                 z,
+                 k,
+                 pk,
+                 cosmology     = cc.cosmo(),
+                 a_ShethTormen = 0.707,
+                 p_ShethTormen = 0.3):
+
+        # Assertion on k
+        assert len(k)>200,     "k must have a length greater than 200 points"
+        assert k.max()>=10.,   "Maximum wavenumber must be greater than 10 Mpc/h in order to achieve convergence"
+        assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
+
+        # Reading all cosmological parameters
+        self.f_nu         = np.sum(cosmology.f_nu[np.where(cosmology.M_nu!=0.)])
+        self.cosmology    = cosmology
+
+        # Redshift and scales at which all must be computed
+        self.nz    = len(np.atleast_1d(z))
+        self.nk    = len(np.atleast_1d(k))
+        self.z     = np.atleast_1d(z)
+        self.k     = np.atleast_1d(k)
+        self.pk    = pk
+        if np.shape(pk) != (self.nz,self.nk):
+            raise IndexError("pk must be of shape (len(z), len(k))")
+
+        # cdm+b density
+        self.rho_field  = self.cosmology.rho_crit(0.)*self.cosmology.Omega_m
+
+        # Fixed parameters
+        self.delta_sc  = 3./20.*(12.*np.pi)**(2./3.)
+        self.a         = a_ShethTormen
+        self.p         = p_ShethTormen
+        self.A_bar     = 4.
+
+        # Initialize mass
+        self.mass    = np.logspace(0., 18., 512)
+        self.lnmass  = np.log(self.mass)
+        self.logmass = np.log10(self.mass)
+        self.dlnm    = np.log(self.mass[1]/self.mass[0])
+        self.nm      = len(self.mass)
+        self.rr      = self.cosmology.radius_of_mass(self.mass,var='cb',window='th')
+        self.compute_nonlinear_pk()
+
+
+    #-----------------------------------------------------------------------------------------
+    # nonlinear_pk
+    #-----------------------------------------------------------------------------------------
+    def compute_nonlinear_pk(self):
+
+        if self.f_nu != 0.:
+            pk_cc     = self.pk*(self.cosmology.growth_cb(self.k,self.z)/self.cosmology.growth_cbnu(self.k,self.z))**2.
+        else:
+            pk_cc = self.pk
+
+        # Compute sigma8 and sigma^2
+        self.sig2 = self.cosmology.mass_variance(self.logmass,k=self.k,pk=pk_cc,var='tot')
+
+        # Omega_m(z)
+        self.omz = self.cosmology.Omega_m_z(self.z)
+
+        # Compute growth factors
+        g_growth, G_growth = self.growth_factors(self.z)
+
+        # Linear overdensity at collapse
+        dc = self.delta_c(self.z,self.f_nu, self.omz, g_growth, G_growth)
+        # Virial density
+        Dv = self.Delta_v(self.z, self.f_nu, self.omz, g_growth, G_growth)
+
+        # peak height
+        peak_height = np.expand_dims(dc,1)/self.sig2**0.5
+
+        # Virial radii
+        rv = ((3*np.expand_dims(self.mass,0))/(4*np.pi*self.rho_field*np.expand_dims(Dv,1)))**(1./3.)
+
+        # Concentration
+        self.zf  = self.z_form()
+        conc     = np.array([self.c_bull(self.zf[i],self.z[i]) for i in range(self.nz)])
+
+        # Scale radii
+        R_s = rv/conc
+    
+        # NFW profile, already normalized for bloating and corrected for neutrino fraction
+        u_NFW = np.zeros((self.nz, self.nm, self.nk))
+        for ik in range(self.nk):
+            u_NFW[:,:,ik] = self.FFT_NFW_profile(conc, self.k[ik]*R_s)
+
+        # Halo mass function
+        hmf = self.dndM(self.z,self.mass,peak_height,self.a,self.p)
+
+        # power spectrum
+        M_over_rho  = np.expand_dims(self.mass/self.rho_field,0)
+        M           = np.expand_dims(self.mass,0)
+        self.pk_1h  = np.transpose([sint.simps(M_over_rho**2.*hmf*u_NFW[:,:,ik]**2.*M,x=self.lnmass,axis = 1)
+                                     for ik in range(self.nk)])
+        self.pk_2h  = self.pk
+        self.pk_nl  = self.pk_1h + self.pk_2h
+
+
+    #-----------------------------------------------------------------------------------------
+    # SIMPLIFIED HUBBLE PARAMETER AND Omega_m(a) (needed to speed up growth factor calculations)
+    #-----------------------------------------------------------------------------------------
+    def Hubble(self, a):
+        return (self.cosmology.Omega_m*a**(-3.) +
+               (1.-self.cosmology.Omega_m)*self.X_de(a))**0.5
+
+    def AH(self, a):
+        wde = self.cosmology.w0+(1.-a)*self.cosmology.wa
+        return -0.5*(self.cosmology.Omega_m*a**-3+(1.-self.cosmology.Omega_m)*(1.+3.*wde)*self.X_de(a))
+
+    def Omega_m_a(self, a):
+        return self.cosmology.Omega_m*a**(-3.)/self.Hubble(a)**2.
+
+    def X_de(self, a):
+        return a**(-3.*(1.+self.cosmology.w0+self.cosmology.wa))*np.exp(-3.*self.cosmology.wa*(1.-a))
+
+    #-----------------------------------------------------------------------------------------
+    # NON-NORMALIZED GROWTH FACTORS
+    #-----------------------------------------------------------------------------------------
+    def growth_factors(self, z):
+
+        z = np.atleast_1d(z)
+        # Functions to integrate
+        def derivatives(y, a):
+            # Function 
+            g,omega,G=y
+            # Derivatives
+            Oma   = self.Omega_m_a(a)
+            Om    = self.cosmology.Omega_m
+            Ol    = self.cosmology.Omega_lambda
+            w0,wa = self.cosmology.w0, self.cosmology.wa
+            w_de  = w0+wa*(1.-a)
+            acce  = self.AH(a)
+            dydt  = [omega,-(2+acce/self.Hubble(a)**2.)*omega/a+1.5*Oma*g/a**2.,g/a]
+            return dydt
+        # Initial conditions
+        epsilon = 0.01
+        y0      = [epsilon, 1., epsilon]
+        # Steps of integral
+        a = np.sort(np.append([epsilon], 1/(1.+np.array(z))))
+        # Solution
+        g,_,G = sint.odeint(derivatives, y0, a).T
+        # Remove first (z=99)
+        g,G=np.flip(g[1:]),np.flip(G[1:])
+        return g,G
+
+    # for LCDM
+    def growth_factors_lcdm(self, z):
+        z = np.atleast_1d(z)
+        Om = self.cosmology.Omega_m
+        Oma = lambda a: Om*a**(-3.)/(Om*a**(-3)+1-Om)
+        result = np.exp(np.array([sint.quad(lambda a: Oma(a)**0.55/a, 1., 1./(1.+zz))[0] for zz in z]))
+        return result
+
+    #-----------------------------------------------------------------------------------------
+    # VIRIAL DENSITY AT COLLAPSE
+    #-----------------------------------------------------------------------------------------
+    def Delta_v(self, z):
+        return 418.*self.omz**-0.352
+
+    #-----------------------------------------------------------------------------------------
+    # REDSHIFT OF FORMATION OF HALOS
+    #-----------------------------------------------------------------------------------------
+    def z_form(self):
+        frac  = 0.01
+        fm    = frac*self.mass
+        z_tmp = np.linspace(0., 30., 1001)
+        res   = np.zeros((self.nz, self.nm))
+        rhs   = np.zeros((self.nz, self.nm))
+        
+        Dzf = self.cosmology.D_1(z_tmp)
+        zf_D = si.interp1d(Dzf, z_tmp, 'cubic')
+
+        for iz in xrange(self.nz):
+            m_ext, sig_ext = UF.extrapolate_log(self.mass, self.sig2[iz]**0.5, 1.e-1*frac*self.mass[0], 1.e1*self.mass[-1])
+            sig_int        = si.interp1d(m_ext, sig_ext, 'cubic')
+            s_fmz          = sig_int(fm)
+            rhs[iz]        = self.cosmology.D_1(self.z[iz])*self.delta_sc/s_fmz
+            for im in xrange(self.nm):
+                try:
+                    res[iz, im] = zf_D(rhs[iz,im])
+                    if zf_D(rhs[iz,im]) < self.z[iz]:
+                        res[iz, im] = self.z[iz]
+                except ValueError:    res[iz, im] = self.z[iz]
+
+        return res
+        
+    #-----------------------------------------------------------------------------------------
+    # CONCENTRATION PARAMETER
+    #-----------------------------------------------------------------------------------------
+    def c_bull(self, zf, z):
+        return self.A_bar*(1.+zf)/(1.+z)
+
+    #-----------------------------------------------------------------------------------------
+    # FUNCTIONS FOR delta_c AND Delta_V
+    #-----------------------------------------------------------------------------------------
+    def f1(self,x,y):
+        p10,p11,p12,p13=-0.0069,-0.0208,0.0312,0.0021
+        return p10+p11*(1-x)+p12*(1-x)**2.+p13*(1-y)
+    def f2(self,x,y):
+        p20,p21,p22,p23=0.0001,-0.0647,-0.0417,0.0646
+        return p20+p21*(1-x)+p22*(1-x)**2.+p23*(1-y)
+    def f3(self,x,y):
+        p30,p31,p32,p33=-0.79,-10.17,2.51,6.51
+        return p30+p31*(1-x)+p32*(1-x)**2.+p33*(1-y)
+    def f4(self,x,y):
+        p40,p41,p42,p43=-1.89,0.38,18.8,-15.87
+        return p40+p41*(1-x)+p42*(1-x)**2.+p43*(1-y)
+
+    #-----------------------------------------------------------------------------------------
+    # CRITICAL DENSITY FOR COLLAPSE - LINEAR
+    #-----------------------------------------------------------------------------------------
+    def delta_c(self, z, f_nu, Omz, g, G):
+        a = 1/(1+z)
+        alpha_1, alpha_2 = 1,0
+        delta_c0 = (3./20.)*(12.*np.pi)**(2/3.)*(1-0.041*f_nu)
+        factor = 1.+(self.f1(g/a,G/a)*np.log10(Omz)**alpha_1+self.f2(g/a,G/a)*np.log10(Omz)**alpha_2)
+        return delta_c0*factor
+
+    #-----------------------------------------------------------------------------------------
+    # CRITICAL DENSITY FOR COLLAPSE - NON-LINEAR
+    #-----------------------------------------------------------------------------------------
+    def Delta_v(self, z, f_nu, Omz, g, G):
+        a = 1/(1+z)
+        alpha_3, alpha_4 = 1,2
+        Delta_v0 = 18*np.pi**2.*(1+0.763*f_nu)
+        factor = 1.+(self.f3(g/a,G/a)*np.log10(Omz)**alpha_3+self.f4(g/a,G/a)*np.log10(Omz)**alpha_4)
+        return Delta_v0*factor
+
+    #-----------------------------------------------------------------------------------------
+    # FOURIER TRANSFORM OF NFW PROFILE
+    #-----------------------------------------------------------------------------------------
+    def FFT_NFW_profile(self, c, x):
+        (Si_1,Ci_1) = ss.sici(x)
+        (Si_2,Ci_2) = ss.sici((1.+c)*x)
+        den  = np.log(1.+c)-c*1./(1.+c)
+        num1 = np.sin(x)*(Si_2-Si_1)
+        num2 = np.sin(c*x)
+        num3 = np.cos(x)*(Ci_2-Ci_1)
+        return 1./den*(num1+num3-num2*1./((1.+c)*x))
+
+    #-----------------------------------------------------------------------------------------
+    # SHETH-TORMEN MASS FUNCTION
+    #-----------------------------------------------------------------------------------------
+    def ST_mass_fun(self,nu,a,p):
+        n = nu**2.
+        A = 1./(1. + 2.**(-p)*ss.gamma(0.5-p)/np.sqrt(np.pi))
+        ST = A * np.sqrt(2.*a*n/np.pi) * (1.+1./(a*n)**p)*np.exp(-a*n/2.)
+        return ST
+
+    #-----------------------------------------------------------------------------------------
+    # HALO MASS FUNCTION
+    #-----------------------------------------------------------------------------------------
+    def dndM(self, z, M, peak_height,a,p):
+        nz, nm = len(np.atleast_1d(z)), len(np.atleast_1d(M))
+        dlnm   = np.diff(np.log(M))[0]
+        hmf    = np.zeros((nz, nm))
+        mass_fun = self.ST_mass_fun(peak_height,a,p)
+        for iz in xrange(nz):    
+            # derivative
+            log_der = np.gradient(peak_height[iz], dlnm, edge_order = 2)/peak_height[iz]
+            # Halo mass function
+            hmf[iz] = self.rho_field/M**2.*log_der*mass_fun[iz]
+        return hmf
 
 
 ########################################################################################################################
@@ -773,7 +1074,7 @@ class Takahashi():
 
 
     :param z: Redshift.
-    :type z: float, default = 0.0
+    :type z: array
 
     :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
     :type k: array
@@ -977,7 +1278,7 @@ class TakaBird():
 
 
     :param z: Redshift.
-    :type z: float, default = 0.0
+    :type z: array
 
     :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
     :type k: array
