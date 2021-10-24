@@ -103,7 +103,7 @@ print("> Power spectra loaded")
 if number_of_bins == 3:
     bin_edges = [0.00, 0.72, 1.11, 5.00]                # Bin edges
 elif number_of_bins == 4:
-    bin_edges = [0.00, 0.62, 0.90, 1.23, 5.00]            # Bin edges
+    bin_edges = [0.00, 0.62, 0.90, 1.23, 5.00]          # Bin edges
 elif number_of_bins == 5:
     bin_edges = [0.00, 0.56, 0.79, 1.02, 1.32, 5.00]    # Bin edges
 else:
