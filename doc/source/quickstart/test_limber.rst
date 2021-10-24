@@ -15,7 +15,7 @@ where :math:`A` and :math:`B` can either be weak lensing or galaxy clustering. I
 Initialization
 ---------------
 
-To start, initialize a :func:`colibri.cosmology.cosmo` instance and assign it to a :func:`colibri.limber.limber_3x2pt` instance.
+To start, initialize a :func:`colibri.cosmology.cosmo` instance and assign it to a :func:`colibri.limber.limber` instance.
 
 .. code-block:: python
 
@@ -123,6 +123,11 @@ Angular correlation functions
 
 Equivalently, the angular correlation functions can be computed with
 
+
+.. warning::
+
+ Unfortunately the correlation functions can be computed for single angular power spectrum at a time, because different windows require different orders for the Hankel transform.
+
 .. code-block:: python
 
  ll    = np.geomspace(2., 1e4, 128)
@@ -141,6 +146,3 @@ Equivalently, the angular correlation functions can be computed with
             order = 0
             xi[key] = S.limber_angular_correlation_functions(theta, ll, Cl[key], order)
 
-.. warning::
-
- Unfortunately the correlation functions can be computed for single angular power spectrum at a time, because different windows require different orders for the Hankel transform.

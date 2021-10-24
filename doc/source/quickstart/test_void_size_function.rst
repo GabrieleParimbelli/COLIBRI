@@ -1,10 +1,10 @@
 .. _void_size_function_test:
 
-Void size function
-======================================
+Void size function: Excursion Set of Troughs
+=============================================
 
 Here we show how to compute the void size functions and some related quantities using the class :func:`colibri.cosmology.cosmo`.
-The text below refers to the file named ``test_void_size_function.py`` provided in the ``tests`` directory or similarly to ``test_void_size_function.ipynb`` provided in the ``notebooks`` folder.
+The text below refers to the file named ``test_void_size_function_EST.py`` provided in the ``tests`` directory or similarly to ``test_void_size_function_EST.ipynb`` provided in the ``notebooks`` folder.
 
 
 Initialization
@@ -77,14 +77,66 @@ The summary of all the previous lines is given by:
  # Void size function
  # a,p are Sheth-Tormen parameters
  # delta_v is the linear underdensity for "collapse" of voids
- RL,VSF = C.void_size_function(R=R_Eul,z=zz,k=k,pk=pk,delta_v=-1.76,a=1.,p=0.)
+ RL,VSF = C.void_size_function_EST(R=R_Eul,z=zz,k=k,pk=pk,delta_v=-1.76,a=1.,p=0.)
 
 The function :func:`colibri.cosmology.cosmo.void_size_function` returns two 2D arrays.
 The first contains the Lagrangian radii at which the void size function is evaluated (first dimension is redshift).
 The second is the actual void size function evaluated at the given redshift and Lagrangian radius.
 
 
+.. image:: ../_static/void_function_EST.png
+   :width: 700
+
+Void size function: more sofisticated models
+=============================================
+
+The excursion set model is not the only way to compute the void size function.
+The following code refers to the file ``test_void_size_function.py`` provided in the ``tests`` directory.
+
+We first set the radii at which to compute the void size function and the non-linear underdensity threshold.
+
+.. code-block:: python
+
+ RR   = np.geomspace(0.1,50.,101)  # Radii of voids
+ DNL  = -0.8                       # Underdensity for voids
+ IMAX = 200                        # Max index of sum (must be >= 200)
+
+We then initialize a cosmology with its linear power spectrum at ``z=0``.
+
+.. code-block:: python
+
+ C    = cc.cosmo(Omega_m=0.26,Omega_b=0.044,ns=0.96,As=2.168e-9,h=0.715)
+ zz   = 0.
+ kk   = np.logspace(-4.,2,1001)
+ _,pk = C.camb_Pk(z=zz,k=kk)
+
+We compute the void size function for different models (linear, Sheth-Van der Weygaert and volume conserving):
+
+.. code-block:: python
+
+ RL_L,VSF_L  = C.void_size_function(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
+                                    model = 'linear',max_index=IMAX)
+ RL_S,VSF_S  = C.void_size_function(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
+                                    model = 'SvdW'  ,max_index=IMAX)
+ RL_V,VSF_V  = C.void_size_function(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
+                                    model = 'Vdn'   ,max_index=IMAX)
+ RL_L,VSF_Ll = C.void_size_function(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
+                                    model = 'linear',max_index=IMAX,delta_c=1.06)
+ RL_S,VSF_Sl = C.void_size_function(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
+                                    model = 'SvdW'  ,max_index=IMAX,delta_c=1.06)
+ RL_V,VSF_Vl = C.void_size_function(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
+                                    model = 'Vdn'   ,max_index=IMAX,delta_c=1.06)
+
+
 .. image:: ../_static/void_function.png
    :width: 700
+
+
+
+
+
+
+
+
 
 

@@ -1777,7 +1777,7 @@ class cosmo:
         G[indices] = gamma_p[indices]*nu[indices]*((nu[indices]**3.-3*nu[indices])*gamma_p[indices]**3.)
         return G
 
-    def void_size_function(self, R, z, k, pk, delta_v = None, a = 1., p = 0.):
+    def void_size_function_EST(self, R, z, k, pk, delta_v = None, a = 1., p = 0.):
         """
         This routine returns the void size function, i.e. the number of voids per
         unit volume per unit (Lagrangian) radius, according ot the Excursion Set of Troughs theory.
@@ -1881,7 +1881,7 @@ class cosmo:
         D1 = self.D_1(z)
         return ((1.+Delta_NL)**(-1/self.delta_sc)-1.)*self.delta_sc/D1
 
-    def void_size_function_new(self, R, z, k, pk, model, Delta_NL, delta_c = None, **kwargs):
+    def void_size_function(self, R, z, k, pk, model, Delta_NL, delta_c = None, **kwargs):
         """
         This routine returns the void size function, i.e. the number of voids per
         unit volume per unit radius, following three different recipes which can all be

@@ -15,7 +15,7 @@ IMAX = 200                        # Max index of sum (must be >= 200)
 #===========
 # Cosmology
 #===========
-C=cc.cosmo(Omega_m=0.26,Omega_b=0.044,ns=0.96,As=2.1680391285125536e-9,h=0.715)
+C=cc.cosmo(Omega_m=0.26,Omega_b=0.044,ns=0.96,As=2.168e-9,h=0.715)
 
 #===========
 # Redshifts and scales
@@ -32,18 +32,18 @@ _,pk=C.camb_Pk(z=zz,k=kk)
 #===========
 # VSFs
 #===========
-RL_L,VSF_L  = C.void_size_function_new(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
-                                       model = 'linear',max_index=IMAX)
-RL_S,VSF_S  = C.void_size_function_new(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
-                                       model = 'SvdW'  ,max_index=IMAX)
-RL_V,VSF_V  = C.void_size_function_new(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
-                                       model = 'Vdn'   ,max_index=IMAX)
-RL_L,VSF_Ll = C.void_size_function_new(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
-                                       model = 'linear',max_index=IMAX,delta_c=1.06)
-RL_S,VSF_Sl = C.void_size_function_new(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
-                                       model = 'SvdW'  ,max_index=IMAX,delta_c=1.06)
-RL_V,VSF_Vl = C.void_size_function_new(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
-                                       model = 'Vdn'   ,max_index=IMAX,delta_c=1.06)
+RL_L,VSF_L  = C.void_size_function(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
+                                   model = 'linear',max_index=IMAX)
+RL_S,VSF_S  = C.void_size_function(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
+                                   model = 'SvdW'  ,max_index=IMAX)
+RL_V,VSF_V  = C.void_size_function(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
+                                   model = 'Vdn'   ,max_index=IMAX)
+RL_L,VSF_Ll = C.void_size_function(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
+                                   model = 'linear',max_index=IMAX,delta_c=1.06)
+RL_S,VSF_Sl = C.void_size_function(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
+                                   model = 'SvdW'  ,max_index=IMAX,delta_c=1.06)
+RL_V,VSF_Vl = C.void_size_function(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
+                                   model = 'Vdn'   ,max_index=IMAX,delta_c=1.06)
 
 #===========
 # Plot

@@ -74,7 +74,7 @@ M_of_nu1 = 10.**np.array([si.interp1d(nu[iz], logM, 'cubic')(1.) for iz in range
 # Void size function
 #==============
 # a,p are Sheth-Tormen parameters, delta_v is the linear underdensity for "collapse" of voids
-RL,VSF = C.void_size_function(R=R_Eul,z=zz,k=k,pk=pk,delta_v=-1.76,a=1.,p=0.)
+RL,VSF = C.void_size_function_EST(R=R_Eul,z=zz,k=k,pk=pk,delta_v=-1.76,a=1.,p=0.)
 
 #==============
 # Plot
