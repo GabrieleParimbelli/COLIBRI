@@ -31,8 +31,7 @@ class limber():
 
     .. warning::
 
-     All the power spectra are computed in the Limber approximation and the window function are assumed to be dependent only on redshift and not on scales (see e.g. :func:`colibri.limber.limber.load_lensing_window_function`).
-    Typically the scale dependence of the window functions can be factorized out (e.g. ISW effect, different orders of cosmological perturbation theory...) and in this code it can be added to the power spectrum (see :func:`colibri.limber.limber.load_power_spectra`).
+     All the power spectra are computed in the Limber approximation and the window function are assumed to be dependent only on redshift and not on scales (see e.g. :func:`colibri.limber.limber.load_lensing_window_functions`). Typically the scale dependence of the window functions can be factorized out (e.g. ISW effect, different orders of cosmological perturbation theory...) and in this code it can be added to the power spectrum (see :func:`colibri.limber.limber.load_power_spectra`).
 
     """
 

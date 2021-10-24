@@ -14,19 +14,22 @@ LW = 3
 #########################
 # Test of limber spectra class
 #########################
-nbins         = 5      # Number of bins to use 2->10
-fourier       = True
+nbins         = 3      # Number of bins to use 2->10
+fourier       = True   # Compute power spectra (True) or correlation functions (False)
 
 #-----------------
 # 1) Define a cosmology instance (with default values)
 #-----------------
-C = cc.cosmo(Omega_m = 0.315, Omega_b = 0.049, h = 0.674, ns = 0.965, As = 2.018735662e-9)#,M_nu=0.06)
+C = cc.cosmo()
 print("> Cosmology loaded")
 #-----------------
 
 #-----------------
 # 2) Define an angular_spectra instance.
 #-----------------
+# This takes as arguments:
+#   - a cosmology instance:
+#   - a 2-uple or a list of length 2, whose values are the lower and upper limit of integration in redshift
 S = LL.limber(cosmology = C, z_limits = [0.01, 5.])
 print("> Limber instance loaded")
 #-----------------
@@ -34,6 +37,9 @@ print("> Limber instance loaded")
 #-----------------
 # 3) Load power spectra
 #-----------------
+# The routine 'load_power_spectra' interpolates the power spectra at the scales and redshifts asked.
+# It takes as inputs scales, redshifts and a table of power spectra. The shape of the latter must be 
+# (number of scales, number of redshifts)
 kk = np.geomspace(1e-4, 1e2, 301)
 zz = np.linspace(0., 5., 51)
 _, pkz = C.camb_Pk(z = zz, k = kk, nonlinear = True, halofit = 'mead2020')
@@ -44,7 +50,9 @@ print("> Power spectra loaded")
 #-----------------
 # 4) Bins
 #-----------------
-
+# Select number of redshift bins
+# In this case we chose to assume that each redshift bin has the same number of galaxies
+# (according to the galaxy distribution we want to use)
 if   nbins == 2 : bin_edges = [0.01,0.90,5.00]
 elif nbins == 3 : bin_edges = [0.01,0.71,1.11,5.00]
 elif nbins == 4 : bin_edges = [0.01,0.62,0.90,1.23,5.00]
@@ -56,7 +64,8 @@ elif nbins == 9 : bin_edges = [0.01,0.44,0.59,0.71,0.84,0.96,1.11,1.28,1.54,5.00
 elif nbins == 10: bin_edges = [0.01,0.42,0.56,0.68,0.79,0.90,1.02,1.15,1.32,1.57,5.00]
 else: raise ValueError("Choose among 2->10 bins (or implement your own set of galaxy distributions).")
 
-# Find bins with another method (should return the same result as above)
+# The lines below find the bin edges with another method
+# (they should return the same result as above)
 """
 import scipy.integrate as sint
 import scipy.optimize as so
@@ -75,16 +84,21 @@ for i in range(nbins-1):
 #-----------------
 # 5) Galaxy distributions (can be different for different observables!)
 #-----------------
+# Compute galaxy distribution in each redshift bin (they can be different for different probes!)
+# 'z_gal' is an array of redshift (sample it with dz<0.0625, otherwise you get an error)
+# 'nz_gal' is a 2-D array of shape (number of bins, number of redshifts)
 z_gal     = np.linspace(S.z_min, S.z_max, 201)
 nz_gal    = [S.euclid_distribution_with_photo_error(z=z_gal,zmin=bin_edges[i],zmax=bin_edges[i+1]) for i in range(nbins)]
 
 #-----------------
 # 6) Load window functions
 #-----------------
-# Lensing (shear + intrinsic alignment)
+# Compute the window functions for the Limber power spectra
+# Cosmic shear
 S.load_shear_window_functions  (z       = z_gal,
                                 nz      = nz_gal,
                                 name    = 'shear')
+# Intrinsic alignment alone
 S.load_IA_window_functions     (z       = z_gal,
                                 nz      = nz_gal,
                                 A_IA    = 1.72,
@@ -92,6 +106,9 @@ S.load_IA_window_functions     (z       = z_gal,
                                 beta_IA = 2.17,
                                 lum_IA  = lambda z: (1+z)**-0.5,
                                 name    = 'IA')
+# Lensing (shear + intrinsic alignment)
+# (Notice that the sum of the previous two should give the same result of the following,
+# so the three of them are all computed here for didactic purposes.)
 S.load_lensing_window_functions(z       = z_gal,
                                 nz      = nz_gal,
                                 A_IA    = 1.72,
@@ -106,8 +123,8 @@ S.load_galaxy_clustering_window_functions(z = z_gal, nz = nz_gal, bias = bias, n
 
 # Other window functions are implemented and custom window functions can also be used!
 # e.g. the HI brightness temperature, the CMB lensing and the galaxy number counts
-#S.load_HI_window_functions         (z=z_gal,nz=nz_gal,name='HI')
-#S.load_CMB_lensing_window_functions(z=z_gal,nz=nz_gal,name='CMB')
+#S.load_HI_window_functions         (z=z_gal,nz=nz_gal,bias=1,Omega_HI=0.000625,name='HI')
+#S.load_CMB_lensing_window_functions(z=z_gal,nz=nz_gal,z_LSS=1089,name='CMB')
 #S.load_custom_window_functions     (z=z_gal,window=nz_gal,name='counts')
 print("> Window functions loaded")
 #-----------------
@@ -115,6 +132,9 @@ print("> Window functions loaded")
 #-----------------
 # 7) Angular spectra or correlation functions
 #-----------------
+# Compute the Limber power spectra for all the windows loaded above
+# (if none has been loaded or if the 'windows' argument is an empty list,
+# nothing will be returned)
 if fourier:
     ll    = np.geomspace(2., 1e4, 51)
     Cl    = S.limber_angular_power_spectra(l = ll, windows = None)
@@ -128,6 +148,9 @@ if fourier:
     Cl_GL = Cl['galaxy-lensing']
     Cl_GG = Cl['galaxy-galaxy']
     print("> Spectra loaded")
+# Compute the Limber correlation functions for pairs of windows
+# (unfortunately different windows require different orders for Hankel transform,
+# so a for loop with fine-tuned 'order' parameter must be performed)
 else:
     ll    = np.geomspace(2., 1e4, 128)
     Cl    = S.limber_angular_power_spectra(l = ll)
