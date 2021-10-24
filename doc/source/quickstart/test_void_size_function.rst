@@ -128,7 +128,7 @@ We compute the void size function for different models (linear, Sheth-Van der We
                                     model = 'Vdn'   ,max_index=IMAX,delta_c=1.06)
 
 
-.. image:: ../_static/void_function.png
+.. image:: ../_static/void_function_VdN.png
    :width: 700
 
 
