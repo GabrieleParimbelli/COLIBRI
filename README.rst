@@ -79,13 +79,13 @@ For the latter, both Boltzmann solvers **CAMB** and **Class** can be used, provi
 ------------------------
 
 Included here are several different ways to compute the non-linear matter power spectrum from a linear one.
-These methods include ``HMcode2016`` by Mead `et al.` (see `arXiv:1505.07833 <https://arxiv.org/abs/1505.07833>`_ ),  ``HMcode2020`` by Mead `et al.` (see `arXiv:2009.01858 <https://arxiv.org/abs/2009.01858>`_ ) ``Takahashi`` and  ``TakaBird`` following the prescription by Takahashi et al. for the former (see `arXiv:1208.2701 <https://arxiv.org/abs/1208.2701>`_ ) and the correction for the presence of massive neutrinos by Bird et al. for the latter (see `arXiv:1109.4416 <https://arxiv.org/abs/1109.4416>`_ ).
+These methods include ``HMcode2016`` by Mead `et al.` (see `arXiv:1505.07833 <https://arxiv.org/abs/1505.07833>`_ ),  ``HMcode2020`` by Mead `et al.` (see `arXiv:2009.01858 <https://arxiv.org/abs/2009.01858>`_ ) ``Takahashi`` and  ``Bird`` following the prescription by Takahashi et al. for the former (see `arXiv:1208.2701 <https://arxiv.org/abs/1208.2701>`_ ) and the correction for the presence of massive neutrinos by Bird et al. for the latter (see `arXiv:1109.4416 <https://arxiv.org/abs/1109.4416>`_ ).
 
 
 `limber` module
 ----------------------------
 
-The ``limber_3x2pt`` class inside this file is finalized to compute angular power spectra and correlation functions in the flat sky and Limber's approximations. In this file are provided the routines to compute example functions for galaxy distributions (although different ones can be defined by the user outside the class) and window functions. The possibility to add the intrinsic alignment effect is included.
+The ``limber`` class inside this file is finalized to compute angular power spectra and correlation functions in the flat sky and Limber's approximations. In this file are provided the routines to compute example functions for galaxy distributions (although different ones can be defined by the user outside the class) and window functions.
 
 `halo`, `galaxy`, `RSD`
 ------------------------

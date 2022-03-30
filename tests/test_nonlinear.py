@@ -11,7 +11,7 @@ colors = ['b','r','g','m','gray','c']
 # Choose among
 # 'mead'        (good for neutrinos)
 # 'mead2020'    (good for neutrinos)
-# 'takahashi'   (not good for neutrinos)
+# 'takahashi'   (good for neutrinos)
 # 'bird'        (good for neutrinos)
 # 'halomodel'   (good for neutrinos)
 # 'classichm'   (not good for neutrinos)
@@ -23,9 +23,8 @@ set_halofit = 'mead2020'
 # 1) the Halofit operator defined in CAMB
 # 2) the Halofit operator defined in the `nonlinear.py` module
 #=================
-
 # Cosmology, redshifts and scales
-C  = cc.cosmo(Omega_m = 0.3089, Omega_b = 0.0486, As = 2.14e-9, ns = 0.9667, h = 0.6774, M_nu = 0.3)
+C  = cc.cosmo(Omega_m=0.3089,Omega_b=0.0486,As=2.14e-9,ns=0.9667,h=0.6774)#,M_nu=0.3,w0=-1.1, wa=-0.3)
 zz = np.linspace(0., 5., 6)
 kk = np.logspace(-4., 2., 201)
 zz = np.atleast_1d(zz)
@@ -83,9 +82,9 @@ elif set_halofit == 'takahashi':
                                  pk           = pk_mm,
                                  cosmology    = C)
 elif set_halofit == 'bird':
-    set_class = 'TakaBird'
+    set_class = 'Bird'
     pk_mm = pk_l['tot-tot']
-    do_nonlinear = NL.TakaBird  (z            = zz,
+    do_nonlinear = NL.Bird      (z            = zz,
                                  k            = k_l,
                                  pk           = pk_mm,
                                  cosmology    = C)

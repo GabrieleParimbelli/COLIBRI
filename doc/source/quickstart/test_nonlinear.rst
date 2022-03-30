@@ -14,7 +14,7 @@ The file features the classes implemented in the ``nonlinear.py`` file, i.e. dif
 * the class :func:`colibri.nonlinear.HMcode2016` uses Mead's HMcode version of 2015 (`arxiv:1505.07833 <https://arxiv.org/abs/1505.07833>`_);
 * the class :func:`colibri.nonlinear.HMcode2020` uses Mead's HMcode version of 2020 (`arxiv:2009.01858 <https://arxiv.org/abs/2009.01858>`_);
 * the class :func:`colibri.nonlinear.Takahashi` employs the version by Takahashi (`arxiv:1208.2701 <https://arxiv.org/abs/1208.2701>`_ );
-* the class :func:`colibri.nonlinear.TakaBird` is the same of the latter but it includes the corrections for the presence of massive neutrinos by Bird et al. (`arXiv:1109.4416 <https://arxiv.org/abs/1109.4416>`_ );
+* the class :func:`colibri.nonlinear.Bird` is the same of the latter but it includes the corrections for the presence of massive neutrinos by Bird et al. (`arXiv:1109.4416 <https://arxiv.org/abs/1109.4416>`_ );
 * the class :func:`colibri.nonlinear.halomodel` computes the total matter power spectrum assuming the halo model by Mead et al., 2015 (`arxiv:1505.07833 <https://arxiv.org/abs/1505.07833>`_ ).
 * the class :func:`colibri.nonlinear.classic_halomodel` computes the total matter power spectrum assuming the classic halo model (e.g. `arxiv:0206508 <https://arxiv.org/abs/astro-ph/0206508>`_ ).
 
@@ -35,7 +35,7 @@ We first define a ``cosmo`` instance, without massive neutrinos to have a direct
  zz = np.linspace(0., 5., 6)
  kk = np.logspace(-4., 2., 201)
 
-Let us set then a method with which to compute the spectra. We will use the Mead method (it works the same for Takahashi and TakaBird).
+Let us set then a method with which to compute the spectra. We will use the Mead method (it works the same for Takahashi and Bird).
 We compute at this point the non-linear power spectrum with CAMB
 
 .. code-block:: python

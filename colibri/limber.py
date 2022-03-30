@@ -681,7 +681,7 @@ class limber():
         # Initialize window
         self.window_function[name] = []
         # Compute window
-        Dz = self.cosmology.D_1(self.z_integration)
+        Dz = self.cosmology.growth_factor_scale_independent(self.z_integration)
         Tz = self.brightness_temperature_HI(self.z_integration,Omega_HI)
         for galaxy_bin in xrange(n_bins):
             tmp_interp = si.interp1d(z,nz[galaxy_bin],'cubic', bounds_error = False, fill_value = 0.)
@@ -793,7 +793,7 @@ class limber():
         C1     = 0.0134
         front  = -A_IA*C1*self.cosmology.Omega_m
         # Growth factors
-        growth = self.cosmology.D_1(z = z)
+        growth = self.cosmology.growth_factor_scale_independent(z = z)
         # Relative luminosity is either a function or a float
         if   callable(lum_IA):          rel_lum = lum_IA(z)
         elif isinstance(lum_IA, float): rel_lum = lum_IA

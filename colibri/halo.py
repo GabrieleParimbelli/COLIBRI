@@ -71,7 +71,7 @@ class halo:
         self.nk = len(self.k)
 
         # Growth factor
-        self.growth_factor = self.cosmology.D_1(self.z)
+        self.growth_factor = self.cosmology.growth_factor_scale_independent(self.z)
 
         # Power spectrum dictionary initialization
         self.Pk = {}
@@ -174,7 +174,7 @@ class halo:
         """        
         # Scales and power
         kappa   = self.k_ext
-        P_kappa = self.pk_ext*(self.cosmology.D_cbnu(z=0., k=kappa)[0]/self.cosmology.D_cbnu(z=self.z, k=kappa)[0])**2.
+        P_kappa = self.pk_ext*(self.cosmology.growth_factor_CDM_baryons_neutrinos(z=0., k=kappa)[0]/self.cosmology.growth_factor_CDM_baryons_neutrinos(z=self.z, k=kappa)[0])**2.
         dlnk    = np.log(kappa[1]/kappa[0])        
 
         # Smoothing radii

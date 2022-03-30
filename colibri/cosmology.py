@@ -5,6 +5,7 @@ import scipy.integrate as sint
 import scipy.interpolate as si
 import scipy.misc as sm
 import colibri.useful_functions as UF
+from scipy.ndimage import gaussian_filter1d
 import sys
 import warnings
 from six.moves import xrange
@@ -385,8 +386,7 @@ class cosmo:
 
         :return: array with :math:`\Omega_{\Lambda}(z)`.
         """
-        wde = self.w_DE(z)
-        return self.Omega_lambda*(1.+z)**(3.*(1.+wde))*(self.H0/self.H(z))**2.
+        return self.Omega_lambda*self.X_DE(z)*(self.H0/self.H(z))**2.
 
 
     #-------------------------------------------------------------------------------
@@ -445,7 +445,7 @@ class cosmo:
 
         :return: array with :math:`w_{de}(z)`.
         """
-        return (1.+z)**(3.*(1.+self.w0+self.wa))*np.exp(3.*self.wa*(z/(1.+z)))
+        return (1.+z)**(3.*(1.+self.w0+self.wa))*np.exp(-3.*self.wa*(z/(1.+z)))
 
     #-------------------------------------------------------------------------------
     # HUBBLE PARAMETER
@@ -894,26 +894,68 @@ class cosmo:
     #-------------------------------------------------------------------------------
     # DRAG EPOCH
     #-------------------------------------------------------------------------------
-    def z_d(self):
+    def z_drag_EH(self):
         """
         Drag epoch redshift according to Eisenstein & Hu approximation
 
         :return: float.
         """
         # Approximation for drag epoch redshift
-        om_m = self.Omega_m-np.sum(self.Omega_nu)
-        om_b = self.Omega_b
-        h    = self.h
-        b1   = 0.313*(om_m*h*h)**(-0.419)*(1+0.607*(om_m*h*h)**0.674)
-        b2   = 0.238*(om_m*h*h)**0.223
-        z_d  = 1291.*(1+b1*(om_b*h*h)**b2)*(om_m*h*h)**0.251/(1.+0.659*(om_m*h*h)**0.828)
+        om_m = self.omega_m-np.sum(self.omega_nu)
+        om_b = self.omega_b
+        b1   = 0.313*(om_m)**(-0.419)*(1+0.607*(om_m)**0.674)
+        b2   = 0.238*(om_m)**0.223
+        z_d  = 1291.*(1+b1*(om_b)**b2)*(om_m)**0.251/(1.+0.659*(om_m)**0.828)
         return z_d
+
+    def z_drag(self):
+        """
+        Drag epoch redshift according to arXiv:2106.00428 approximation
+
+        :return: float.
+        """
+        om_m = self.omega_cb
+        om_b = self.omega_b
+        num  = 1+428.169*om_b**0.256459*om_m**0.616388+925.56*om_m**0.751615
+        den  = om_m**0.714129
+        return num/den
+
+    #-------------------------------------------------------------------------------
+    # RECOMBINATION EPOCH
+    #-------------------------------------------------------------------------------
+    def z_rec_EH(self):
+        """
+        Drag epoch redshift according to Eisenstein & Hu approximation
+
+        :return: float.
+        """
+        # Approximation for drag epoch redshift
+        om_m = self.omega_m-np.sum(self.omega_nu)
+        om_b = self.omega_b
+        g1   = 0.0783*om_b**-0.238/(1.+39.5*om_b**0.763)
+        g2   = 0.560/(1+21.1*om_b**1.81)
+        z_r  = 1048*(1+0.00124*om_b**-0.738)*(1+g1*om_m**g2)
+        return z_r
+
+    def z_rec(self):
+        """
+        Decoupling redshift according to arXiv:2106.00428 approximation
+
+        :return: float.
+        """
+        # Approximation for drag epoch redshift
+        om_m = self.omega_cb
+        om_b = self.omega_b
+        num  = 391.672*om_m**-0.372296+937.422*om_b**-0.97966
+        den  = om_m**-0.0192951*om_b**-0.93681
+        ter  = om_m**-0.731632
+        return num/den+ter
 
 
     #-------------------------------------------------------------------------------
     # SOUND HORIZON AT DRAG EPOCH (BAO SCALE)
     #-------------------------------------------------------------------------------
-    def r_s(self):
+    def sound_horizon_Class(self):
         """
         Sound horizon at drag epoch in units of Mpc/h.
 
@@ -946,9 +988,47 @@ class cosmo:
 
             return rs
 
-    def r_s_drag(self):
-        rs, _ = sint.quad(lambda x: self.c_s(x)/self.H(x), self.z_d(), np.inf)
-        return rs*self.h
+    def sound_horizon_EH(self):
+        """
+        Sound horizon at drag epoch according to Eisenstein & Hu approximation
+
+        :return: float.
+        """
+        om_m = self.omega_cb
+        om_b = self.omega_b
+        om_n = np.sum(self.omega_nu)
+        h    = self.h       
+        if np.sum(self.M_nu) == 0.:
+            rs = 44.5*np.log(9.83/om_m)/np.sqrt(1+10*om_b**0.75)*h
+        else:
+            rs = 55.154*np.exp(-72.3*(om_n+0.0006)**2.)/(om_m**0.25351*om_b**0.12807)*h
+        return rs
+
+    def sound_horizon(self):
+        """
+        Sound horizon at drag epoch according to arXiv:2106.00428 approximation
+
+        :return: float.
+        """
+        om_m = self.omega_cb
+        om_b = self.omega_b
+        om_n = np.sum(self.omega_nu)
+        h    = self.h        
+        if np.sum(self.M_nu) == 0.:
+            a1, a2, a3 = 0.00257366, 0.05032, 0.013
+            a4, a5, a6 = 0.7720642, 0.24346362, 0.00641072
+            a7, a8, a9 = 0.5350899, 32.7525, 0.315473
+            term_1     = a1*om_b**a2+a3*om_b**a4*om_m**a5+a6*om_m**a7
+            term_2     = a8/om_m**a9
+            rs         = (1./term_1-term_2)*h
+        else:
+            a1, a2, a3 = 0.0034917, -19.972694, 0.000336186
+            a4, a5, a6 = 0.0000305, 0.22752, 0.00003142567
+            a7, a8, a9 = 0.5453798, 374.14994, 4.022356899
+            num        = a1*np.exp(a2*(a3+om_n)**2.)
+            den        = a4*om_b**a5+a6*om_m**a7+a8*(om_b*om_m)**a9
+            rs         = num/den*h
+        return rs
 
     #-----------------------------------------------------------------------------------------
     # MASS VARIANCE
@@ -1320,7 +1400,7 @@ class cosmo:
         z = np.array(z)
         if delta_v == None: delta_v = self.delta_v
         if delta_c == None: delta_c = self.delta_sc
-        return (1.-self.D_1(z)*delta_v/delta_c)**(delta_c/3.0)
+        return (1.-self.growth_factor_scale_independent(z)*delta_v/delta_c)**(delta_c/3.0)
 
     #-----------------------------------------------------------------------------------------
     # PEAK-BACKGROUND SPLIT
@@ -1878,7 +1958,7 @@ class cosmo:
     def linear_underdensity_collapse_voids(self,Delta_NL,z):
         assert Delta_NL < 0., "Non-linear underdensity for collapsed voids must be lower than 0"
         assert Delta_NL > -1., "Non-linear underdensity for collapsed voids must be larger than -1"
-        D1 = self.D_1(z)
+        D1 = self.growth_factor_scale_independent(z)
         return ((1.+Delta_NL)**(-1/self.delta_sc)-1.)*self.delta_sc/D1
 
     def void_size_function(self, R, z, k, pk, model, Delta_NL, delta_c = None, **kwargs):
@@ -1990,7 +2070,7 @@ class cosmo:
     #-------------------------------------------------------------------------------
     # GROWTH FACTOR LCDM: 
     #-------------------------------------------------------------------------------
-    def D_1(self, z):
+    def growth_factor_scale_independent(self, z):
         """
         Scale-independent total matter growth factor for a LCDM cosmology at a
         given redshift, normalized to 1 today.
@@ -2002,7 +2082,7 @@ class cosmo:
         """
         z  = np.atleast_1d(z)
         nz = len(z)
-        if self.w0 == -1. and self.wa==0.:
+        if np.sum(self.M_nu) == 0. and self.w0 == -1. and self.wa==0.:
             aa = 1./(1.+z)
             d1 = aa*ss.hyp2f1(1/3., 1., 11/6., -aa**3/self.Omega_m*(1.-self.Omega_m))/ss.hyp2f1(1/3., 1., 11/6., -(1.-self.Omega_m)/self.Omega_m)
         else:
@@ -2014,39 +2094,18 @@ class cosmo:
             d1 = d1/LCDM0
         return d1
 
-    #-------------------------------------------------------------------------------
-    # GROWTH FACTOR LCDM: 
-    #-------------------------------------------------------------------------------
-    def scale_independent_growth_factor(self, z):
-        """
-        Scale-independent total matter growth factor for a LCDM cosmology at a
-        given redshift, normalized to 1 today.
-
-        :param z: Redshifts.
-        :type z: array
-
-        :return: array
-        """
-        nz = len(np.atleast_1d(z))
-        d1 = np.zeros(nz)
-        if nz == 1:
-            z = [z]
-        for i in xrange(nz):
-            LCDM, _  = sint.quad(lambda x: (1+x)*(self.H0/self.H_massive(x))**3., z[i], np.inf)
-            d1[i] = LCDM*self.H_massive(z[i])/self.H0
-        LCDM0, _ = sint.quad(lambda x: (1+x)*(self.H0/self.H_massive(x))**3., 0., np.inf)
-        d1 *= 1./LCDM0
-        return d1
+    def D_1(self, z):
+        return self.growth_factor_scale_independent(z)
 
     #-------------------------------------------------------------------------------
     # GROWTH FACTOR CDM+BARYONS:
     #-------------------------------------------------------------------------------
-    def growth_cb(self, k, z):
+    def growth_cb_unnormalized(self, k, z):
         """
         Non normalized scale-dependent growth factor for cdm+baryons.
-        See :func:`colibri.cosmology.cosmo.D_cb()` for further information
+        See :func:`colibri.cosmology.cosmo.growth_factor_CDM_baryons()` for further information
         """
-        LCDM = self.D_1(z)
+        LCDM = self.growth_factor_scale_independent(z)
 
         # Same of LCDM if no massive neutrinos
         if np.sum(np.atleast_1d(self.M_nu)) == 0.:
@@ -2058,7 +2117,7 @@ class cosmo:
             f_nu = np.sum(np.atleast_1d(self.f_nu))
             
             # Normalize at z initial
-            LCDM = np.transpose([LCDM for i in xrange(len(np.atleast_1d(k)))])/self.D_1(self.z_d())
+            LCDM = np.transpose([LCDM for i in xrange(len(np.atleast_1d(k)))])/self.growth_factor_scale_independent(self.z_drag_EH())
             
             # exponent
             p_cb = 1./4.*(5.-np.sqrt(1.+24.*f_cb))
@@ -2068,7 +2127,7 @@ class cosmo:
 
             return growth_cb
 
-    def D_cb(self, k, z):
+    def growth_factor_CDM_baryons(self, k, z):
         """
         Cold dark matter + baryon scale-dependent growth factor at a given redshift,
         normalized to 1 today.
@@ -2081,17 +2140,17 @@ class cosmo:
 
         :return: 2D array of shape ``(len(z), len(k))``
         """
-        return self.growth_cb(k, z)/self.growth_cb(k, 0.)
+        return self.growth_cb_unnormalized(k, z)/self.growth_cb_unnormalized(k, 0.)
 
     #-------------------------------------------------------------------------------
     # GROWTH FACTOR nuLCDM
     #-------------------------------------------------------------------------------
-    def growth_cbnu(self, k, z):
+    def growth_cbnu_unnormalized(self, k, z):
         """
         Unnormalized scale-dependent growth factor for matter.
-        See :func:`colibri.cosmology.cosmo.D_cb()` for further information
+        See :func:`colibri.cosmology.cosmo.growth_factor_CDM_baryons()` for further information
         """
-        LCDM = self.D_1(z)
+        LCDM = self.growth_factor_scale_independent(z)
         
         # Same of LCDM if no massive neutrinos
         if np.sum(self.M_nu) == 0.:
@@ -2103,7 +2162,7 @@ class cosmo:
             f_nu = np.sum(np.atleast_1d(self.f_nu))
 
             # Normalize at z initial
-            LCDM = np.transpose([LCDM for i in xrange(len(np.atleast_1d(k)))])/self.D_1(self.z_d())
+            LCDM = np.transpose([LCDM for i in xrange(len(np.atleast_1d(k)))])/self.growth_factor_scale_independent(self.z_drag_EH())
 
             # exponent
             p_cb = 1./4.*(5.-np.sqrt(1.+24.*f_cb))
@@ -2113,7 +2172,7 @@ class cosmo:
 
             return growth_cbnu
 
-    def D_cbnu(self, k, z):
+    def growth_factor_CDM_baryons_neutrinos(self, k, z):
         """
         Total matter (i.e. cold dark matter + baryon + neutrino) scale-dependent growth factor
         at a given redshift, normalized to 1 today.
@@ -2126,7 +2185,7 @@ class cosmo:
 
         :return: 2D array of shape ``(len(z), len(k))``
         """
-        return self.growth_cbnu(k, z)/self.growth_cbnu(k, 0.)
+        return self.growth_cbnu_unnormalized(k, z)/self.growth_cbnu_unnormalized(k, 0.)
 
     #-----------------------------------------------------------------------------------------
     # MASS OF A PARTICLE IN N-BODY SIMULATIONS
@@ -3110,7 +3169,82 @@ class cosmo:
         nk = len(np.atleast_1d(k))
         Pk = np.zeros((nz,nk))
         for i in xrange(nz):
-            Pk[i] = power_tmp*(self.D_1(z[i])/self.D_1(0.))**2.
+            Pk[i] = power_tmp*(self.growth_factor_scale_independent(z[i])/self.growth_factor_scale_independent(0.))**2.
+
+        return k, Pk
+
+    #-------------------------------------------------------------------------------
+    # EISENSTEIN-HU_Pk
+    #-------------------------------------------------------------------------------
+    def EisensteinHu_nowiggle_Pk(self,
+        z = 0.,
+        k = np.logspace(-4., 2., 1001),
+        sigma_8 = 0.83):
+        """
+        It returns the no-wiggle linear power spectrum in the Eisenstein & Hu approximation.
+
+        .. warning::
+
+         This function does not allow to use non-flat FRW universes! ``Omega_K`` will be therefore
+         set to 0 and its value devolved to ``Omega_m``.
+
+        .. warning::
+
+         This function does not reproduce massive neutrinos! Therefore ``Omega_nu`` will be set to 0 and its value transferred to ``Omega_m``.
+
+        .. warning::
+
+         This function only uses :math:`w_{de} = -1`.
+
+        .. warning::
+
+         This code uses :math:`\sigma_8` as a normalization. :math:`A_s` will not have any impact.
+
+        :param z: Redshifts.
+        :type z: array, default = 0
+
+        :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
+        :type k: array, default = ``np.logspace(-4., 2., 1001)``
+
+        :param sigma_8: RMS mass fluctuation in spheres of 8 :math:`\mathrm{Mpc}/h` of radius.
+        :type sigma_8: float, default = 0.83
+
+        Returns
+        -------
+
+        k: array
+            Scales in :math:`h/\mathrm{Mpc}`. Basically the same 'k' of the input.
+
+        pk: 2D array of shape ``(len(z), len(k))``
+            Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.
+
+        """
+
+        om_m  = self.omega_cdm+self.omega_b
+        om_b  = self.omega_b
+        ns    = self.ns
+        h     = self.h
+        theta = self.T_cmb/2.7
+        
+        #if self.w0 != -1. or self.wa != 0.:
+        #    warnings.warn("nw_Pk is not able to reproduce non-static dark energy with w0 != -1. The dark enerdy parameters will be set to w0 = -1, wa = 0")
+        if self.Omega_K != 0.:
+            #warnings.warn("EisensteinHu_Pk is not able to reproduce non-flat FRW metric! The Omega_K parameter will be transferred to Omega_lambda such that Omega_lambda -> (Omega_lambda + Omega_K)")
+            om_m -= self.Omega_K
+
+        kEH   = k*h
+        s     = 44.5*np.log(9.83/om_m)/np.sqrt(1+10*(om_b)**0.75)
+        Gamma = om_m/h
+        AG    = 1 - 0.328*np.log(431*om_m)*om_b/om_m + 0.38*np.log(22.3*om_m)*(om_b/om_m)**2
+        Gamma = Gamma*(AG+(1-AG)/(1+(0.43*kEH*s)**4))
+        q     = kEH * theta**2/Gamma/h
+        L0    = np.log(2*np.e + 1.8*q)
+        C0    = 14.2 + 731/(1 + 62.5*q)
+        T0    = L0/(L0 + C0*q**2)
+        PEH   = (kEH*h)**ns*T0**2
+
+        norm  = sigma_8/self.compute_sigma_8(k = k, pk = PEH)
+        Pk    = np.expand_dims(PEH,0)*np.expand_dims(norm**2.*self.growth_factor_scale_independent(z)**2.,1)
 
         return k, Pk
 
@@ -3180,6 +3314,41 @@ class cosmo:
         pk_nobao = ipk(k_in)
 
         return pk_nobao
+
+    #-----------------------------------------------------------------------------------------
+    # REMOVE BAO GAUSSIAN FILTERING
+    #-----------------------------------------------------------------------------------------
+    def remove_bao_gaussian_filtering(self, k, pk, Lambda = 0.25):
+        """
+        This routine removes the BAOs from the input power spectrum and returns
+        the no-wiggle power spectrum in :math:`(\mathrm{Mpc}/h)^3`.
+        Adapted from Andrea Oddo's PBJ libraries
+
+        :param k: Scales in units of :math:`h/\mathrm{Mpc}`.
+        :type k: array
+
+        :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.
+        :type pk: array
+
+        :param Lambda: Smoothing scale in :math:`h/\mathrm{Mpc}`.
+        :type Lambda: float, default = 0.25
+
+        :return: array, power spectrum without BAO.
+        """
+        # Extrapolate
+        kLinear, pLinear = UF.extrapolate_log(k, pk, 1e-6, 1e6)
+        dqlog = np.diff(np.log10(kLinear))[0]
+
+        # EH spectrum with rescaling
+        pEH = self.EisensteinHu_nowiggle_Pk(z=0, k=kLinear)[1][0]
+        pEH /= pEH[0]/pLinear[0]
+
+        # Smooth, interpolate and evaluate
+        smoothPowerSpectrum     = gaussian_filter1d(pLinear/pEH, Lambda/dqlog)*pEH
+        smoothPowerSpectrum_int = si.interp1d(kLinear,smoothPowerSpectrum,'cubic')
+        smoothPowerSpectrum     = smoothPowerSpectrum_int(k)
+
+        return smoothPowerSpectrum
 
     #-----------------------------------------------------------------------------------------
     # SIGMA 8

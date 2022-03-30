@@ -149,23 +149,22 @@ sin_theta_23_squared_IH = 0.592      # Sine squared of mixing angle, inverted hi
 sin_theta_23_squared_NH = 0.597      # Sine squared of mixing angle, normal hierarchy (S = 1.1)
 sin_theta_13_squared    = 2.12e-2    # Sine squared of mixing angle
 
-
 #-------------------------------
 # Constants of physics
 #-------------------------------
-G         = 4.299e-9            # Newton's gravitational constant in units of [Mpc/M_sun (km/s)^2]
+G         = 4.3009e-9           # Newton's gravitational constant in units of [Mpc/M_sun (km/s)^2]
 eps_0     = 8.85418781762e-12   # Vacuum permittivity in [F/m = C/V m] 
 mu_0      = 1.25663706144e-6    # Magnetic permeability in [H/m = T m^2/A = V s/A] 
 kB        = 8.6173336262e-5     # Boltzmann constant in [eV/K] 
 c         = 2.99792458e5        # Speed of light in [km/s] 
-hP        = 4.135668e-15        # Planck constant in units of [eV s] 
-sSB       = 5.6704e-8           # Stefan-Boltzmann constant [W/m^2 K^4] 
+hP        = 4.1356673336325e-15 # Planck constant in units of [eV s] 
 N_A       = 6.022140857e23      # Avogadro constant [mol^-1] 
 PI        = math.pi             # pi = 3.14159265...
 
 #-------------------------------
 # Derived constants
 #-------------------------------
+sSB       = 2*np.pi**5.*(kB*eV)**4/(15*(hP*eV)**3.*(c*km_to_m)**2.) # Stefan-Boltzmann constant [W/m^2 K^4]
 e2        = q**2./(4.*PI*eps_0)       # Electron/proton charge (squared!) in CGS units
 hPb       = hP/(2.*PI)                # Reduced Planck constant in [eV s]  ('h bar')
 hPJ       = hP*eV                     # Planck constant in [J s] 
@@ -195,5 +194,4 @@ Msun      = 1.989e33       # Solar mass [g]
 Rsun      = 6.957e10       # Solar radius [cm] 
 Tsun      = 5772.          # Solar surface temperature [K] 
 Lsun      = 3.848e33       # Solar luminosity [erg/s] 
-
 

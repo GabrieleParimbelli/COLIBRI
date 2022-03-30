@@ -590,7 +590,7 @@ class angular_spectra():
         front  = -A_IA*C1*self.cosmology.Omega_m
         # Growth factors
         Z,K    = np.meshgrid(z,k,indexing='ij')
-        growth = self.cosmology.D_cbnu(k = np.array(k), z = z)
+        growth = self.cosmology.growth_factor_CDM_baryons_neutrinos(k = np.array(k), z = z)
         # Relative luminosity is either a function or a float
         if   callable(lum_IA):          rel_lum = lum_IA(Z)
         elif isinstance(lum_IA, float): rel_lum = lum_IA
