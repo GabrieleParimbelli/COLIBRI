@@ -86,7 +86,7 @@ for iz in range(nz):
 
 # Labels
 for a in [0,1]:
-    ax[1,a].set_xlabel('$M \ [M_\odot]$')
+    ax[1,a].set_xlabel('$M \ [M_\odot/h]$')
 ax[0,0].set_ylabel('$\sigma^2(M)$')
 ax[0,1].set_ylabel('$\\nu(M)=\\frac{\delta_c}{\sigma(M)}$')
 ax[1,0].set_ylabel('$\\nu \ f_\mathrm{ST}(\\nu)$')

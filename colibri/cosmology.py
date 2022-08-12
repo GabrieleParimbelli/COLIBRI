@@ -1771,6 +1771,14 @@ class cosmo:
         :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.
         :type pk: array, default = []
 
+        :param window: Window function used to filter.
+
+         - `'th'`,`'th'`,`'tophat'`,`'top-hat'` for top-hat filter
+         - `'gauss'`, `'Gaussian'`, `'Gauss'`, `'gaussian'`, `'g'`, for Gaussian
+         - `'sharp'`, `'heaviside'`, `'s'` for sharp-k filter
+         - `'smooth'`, `'smoothk'`, `'sm'` for smooth-k filter
+        :type window: string, default = 'th'
+
         :param mass_fun: Kind of halo mass function.
 
          - 'Sheth-Tormen','ST','ShethTormen' for Sheth-Tormen
@@ -2084,7 +2092,9 @@ class cosmo:
         nz = len(z)
         if np.sum(self.M_nu) == 0. and self.w0 == -1. and self.wa==0.:
             aa = 1./(1.+z)
+            ww = self.w0 + (1.-aa)*self.wa
             d1 = aa*ss.hyp2f1(1/3., 1., 11/6., -aa**3/self.Omega_m*(1.-self.Omega_m))/ss.hyp2f1(1/3., 1., 11/6., -(1.-self.Omega_m)/self.Omega_m)
+            #d1 = aa*ss.hyp2f1(-1./(3.*ww), 0.5-1./(2*ww), 1.-5./(6.*ww), aa**(-3*ww)*(1.-1./self.Omega_m))/ss.hyp2f1(-1/(3.*ww), 0.5-1./(2*ww), 1.-5./(6.*ww), -(1.-self.Omega_m)/self.Omega_m)
         else:
             d1 = np.zeros(nz)
             for i in xrange(nz):

@@ -5,8 +5,6 @@ import scipy.fftpack as sfft
 import scipy.optimize
 import sys
 from six.moves import xrange
-try:   import fftlog
-except ImportError: pass
 
 #-----------------------------------------------------------------------------------------
 # EXTRAPOLATE
@@ -146,7 +144,7 @@ def neutrino_masses(M_nu, hierarchy = 'normal'):
     Returns
     ----------
 
-    m1, m2, m3: values of the three neutrino masses (in :math:`eV`).
+    m1, m2, m3: values of the three neutrino masses :math:`\mathrm{eV}`.
     """
     # Difference of square masses
     delta21 = 7.5e-5

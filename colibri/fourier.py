@@ -6,8 +6,13 @@ import scipy.optimize
 import sys
 import colibri.constants as const
 from six.moves import xrange
-try:   import fftlog
-except ImportError: pass
+try:
+    import fftlog
+except ImportError:
+    try:
+        import pyfftlog as fftlog
+    except ImportError:
+        pass
 
 
 #-----------------------------------------------------------------------------------------
@@ -564,7 +569,9 @@ def FFT_iso_3D(r, f , N = 4096):
     ar    = funct(r_t)*(2.*np.pi*r_t)**1.5
 
     # Initialization of transform
-    kr, xsave, ok = fftlog.fhti(N, mu, dlnr, q, kr, kropt)
+    #kr, xsave, ok = fftlog.fhti(N, mu, dlnr, q, kr, kropt)
+    fft_obj = fftlog.fhti(N, mu, dlnr, q, kr, kropt)
+    kr, xsave = fft_obj[0], fft_obj[1]
     logkc = np.log10(kr) - logrc
 
     # Transform
@@ -631,7 +638,9 @@ def iFFT_iso_3D(k, f, N = 4096):
     ak    = funct(k_t)*k_t**1.5
     
     # Initialization of transform
-    kr, xsave, ok = fftlog.fhti(N, mu, dlnk, q, kr, kropt)
+    #kr, xsave, ok = fftlog.fhti(N, mu, dlnk, q, kr, kropt)
+    fft_obj = fftlog.fhti(N, mu, dlnk, q, kr, kropt)
+    kr, xsave = fft_obj[0], fft_obj[1]
     logrc = np.log10(kr) - logkc
 
     # Transform
@@ -704,7 +713,9 @@ def Hankel(r, f , N = 4096, order = 0.5):
     ar    = funct(r_t)*r_t
 
     # Initialization of transform
-    kr, xsave, ok = fftlog.fhti(N, mu, dlnr, q, kr, kropt)
+    #kr, xsave, ok = fftlog.fhti(N, mu, dlnr, q, kr, kropt)
+    fft_obj = fftlog.fhti(N, mu, dlnr, q, kr, kropt)
+    kr, xsave = fft_obj[0], fft_obj[1]
     logkc = np.log10(kr) - logrc
 
     # Transform (dividing by a kk extra factor because of log-spacing)
@@ -780,7 +791,9 @@ def iHankel(k, f, N = 4096, order = 0.5):
     ak    = funct(k_t)*k_t
 
     # Initialization of transform
-    kr, xsave, ok = fftlog.fhti(N, mu, dlnk, q, kr, kropt)
+    #kr, xsave, ok = fftlog.fhti(N, mu, dlnk, q, kr, kropt)
+    fft_obj = fftlog.fhti(N, mu, dlnk, q, kr, kropt)
+    kr, xsave = fft_obj[0], fft_obj[1]
     logrc = np.log10(kr) - logkc
 
     # Transform (dividing by a rr extra factor because of log-spacing)

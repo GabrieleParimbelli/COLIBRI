@@ -3,7 +3,7 @@
 Generate weak lensing spectra
 ===================================
 
-Here is show an example of how to compute shear power spectra using the class :func:`colibri.angular_spectra.angular_spectra` .
+Here is shown an example of how to compute shear power spectra using the class :func:`colibri.angular_spectra.angular_spectra` .
 We want to compute the shear power spectrum, which in a flat Universe is given by:
 
 .. math::

@@ -50,7 +50,7 @@ class HMcode2016():
 
         # Assertion on k
         assert len(k)>200,     "k must have a length greater than 200 points"
-        assert k.max()>=100.,   "Maximum wavenumber must be greater than 100 h/Mpc in order to achieve convergence"
+        assert k.max()>=10.,   "Maximum wavenumber must be greater than 10 h/Mpc in order to achieve convergence"
         assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
 
         # Reading all cosmological parameters
@@ -471,7 +471,7 @@ class HMcode2020():
 
         # Assertion on k
         assert len(k)>200,     "k must have a length greater than 200 points"
-        assert k.max()>=100.,   "Maximum wavenumber must be greater than 50 Mpc/h in order to achieve convergence"
+        assert k.max()>=10.,   "Maximum wavenumber must be greater than 10 Mpc/h in order to achieve convergence"
         assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
 
 
