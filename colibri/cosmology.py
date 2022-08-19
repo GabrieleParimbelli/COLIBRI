@@ -1715,7 +1715,7 @@ class cosmo:
         :type k: array, default = []
 
         :param pk: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.
-        :type pk: array, default = []
+        :type pk: 2D array, default = []
 
         :param mass_fun: Kind of halo mass function.
 

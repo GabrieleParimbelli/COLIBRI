@@ -652,6 +652,137 @@ def iFFT_iso_3D(k, f, N = 4096):
     return rr, Fr
 
 #-----------------------------------------------------------------------------------------
+# 3D Hankel
+#-----------------------------------------------------------------------------------------
+def Hankel_3D_order(r, f , N = 4096, order = 0):
+    """
+    This routine is analogous to the Fourier transform in 3D but it can return any order of the Bessel function
+
+    .. math ::
+
+      f_\ell(k) = \int_0^\infty dr \ 4\pi r^2 \ f(r) \ j_\ell(kr)
+
+    Parameters
+    ----------
+
+    `r`: array
+        Abscissae of function, log-spaced.
+
+    `f`: array
+        ordinates of function.
+
+    `N`: int, default = 4096
+        Number of output points
+
+    `order`: float, default = 0
+        Order of the Bessel spherical polynomial.
+
+    Returns
+    ----------
+
+    kk: array
+        Frequencies.
+
+    Fk: array
+        Transformed array.
+    """
+    mu      = order+0.5  # Order mu of Bessel function
+    q       = 0    # Bias exponent: q = 0 is unbiased
+    kr      = 1    # Sensible approximate choice of k_c r_c
+    kropt   = 1    # Tell fhti to change kr to low-ringing value
+    tdir    = 1    # Forward transform
+    logrc   = (np.max(np.log10(r))+np.min(np.log10(r)))/2.
+    dlogr   = (np.max(np.log10(r))-np.min(np.log10(r)))/N
+    dlnr    = dlogr*np.log(10.)
+    if   N%2 == 0: nc = N/2
+    else         : nc = (N+1)/2
+    r_t = 10.**(logrc + (np.arange(1, N+1) - nc)*dlogr)
+
+    # Initialise function
+    funct = si.interp1d(r, f, kind = "cubic", bounds_error = False, fill_value = 0.)
+    ar    = funct(r_t)*(2.*np.pi*r_t)**1.5
+
+    # Initialization of transform
+    #kr, xsave, ok = fftlog.fhti(N, mu, dlnr, q, kr, kropt)
+    fft_obj = fftlog.fhti(N, mu, dlnr, q, kr, kropt)
+    kr, xsave = fft_obj[0], fft_obj[1]
+    logkc = np.log10(kr) - logrc
+
+    # Transform
+    ak = fftlog.fht(ar.copy(), xsave, tdir)
+    if   N%2 == 0: kk = 10.**(logkc + (np.arange(N) - nc)*dlogr)
+    else         : kk = 10.**(logkc + (np.arange(1,N+1) - nc)*dlogr)
+    Fk = ak/kk**1.5
+
+    return kk, Fk
+
+#-----------------------------------------------------------------------------------------
+# 3D inverse Hankel
+#-----------------------------------------------------------------------------------------
+def iHankel_3D_order(k, f, N = 4096, order = 0):
+    """
+    This routine is similar to the Fourier transform in 3D but it can return any order of the Bessel function
+
+    .. math ::
+
+      f_\ell(r) = \int_0^\infty \\frac{dk \ k^2}{2\pi^2} \ f(k) \ j_\ell(kr)
+
+    Parameters
+    ----------
+
+    `k`: array
+        Abscissae of function, log-spaced.
+
+    `f`: array
+        ordinates of function.
+
+    `N`: int, default = 4096
+        Number of output points
+
+    `order`: float, default = 0
+        Order of the Bessel spherical polynomial.
+
+    Returns
+    ----------
+
+    rr: array
+        Frequencies.
+
+    Fr: array
+        Transformed array.
+    """
+    # FFT specifics
+    mu      = order+0.5   # Order mu of Bessel function
+    q       = 0     # Bias exponent: q = 0 is unbiased
+    kr      = 1     # Sensible approximate choice of k_c r_c
+    kropt   = 1     # Tell fhti to change kr to low-ringing value
+    tdir    = -1    # Backward transform
+    logkc   = (np.max(np.log10(k))+np.min(np.log10(k)))/2.
+    dlogk   = (np.max(np.log10(k))-np.min(np.log10(k)))/N
+    dlnk    = dlogk*np.log(10.)
+    if   N%2 == 0: nc = N/2
+    else         : nc = (N+1)/2
+    k_t   = 10.**(logkc + (np.arange(1, N+1) - nc)*dlogk)
+
+    # Initialise function
+    funct = si.interp1d(k, f, kind = "cubic", bounds_error = False, fill_value = 0.)
+    ak    = funct(k_t)*k_t**1.5
+    
+    # Initialization of transform
+    #kr, xsave, ok = fftlog.fhti(N, mu, dlnk, q, kr, kropt)
+    fft_obj = fftlog.fhti(N, mu, dlnk, q, kr, kropt)
+    kr, xsave = fft_obj[0], fft_obj[1]
+    logrc = np.log10(kr) - logkc
+
+    # Transform
+    ar = fftlog.fht(ak.copy(), xsave, tdir)
+    if   N%2 == 0: rr = 10.**(logrc + (np.arange(N) - nc)*dlogk)
+    else         : rr = 10.**(logrc + (np.arange(1,N+1) - nc)*dlogk)
+    Fr = ar/(2.*np.pi*rr)**1.5
+
+    return rr, Fr
+
+#-----------------------------------------------------------------------------------------
 # HANKEL TRANSFORM
 #-----------------------------------------------------------------------------------------
 def Hankel(r, f , N = 4096, order = 0.5):
