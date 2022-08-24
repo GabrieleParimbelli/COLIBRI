@@ -95,8 +95,7 @@ class cosmo:
     :param f_cb: Cold dark matter plus baryon fraction in units of :math:`\Omega_m`.
     :param Gamma_nu: Neutrino-to-photon temperature ratio.
     :param T_nu: Neutrino temperature today.
-    :param M: Array of masses, used to sample (e.g.) mass functions
-    :type M: array of 512 equally-spaced logarithmic bins from :math:`10^2` to :math:`10^{18} \ M_\odot/h`.
+    :param M: Array of 512 masses, equally-spaced in logarithmic bins from :math:`10^2` to :math:`10^{18} \ M_\odot/h`, used to sample (e.g.) mass functions
     :param delta_sc: Critical overdensity for spherical collapse (linear theory extrapolation), :math:`\delta_{sc} = \\frac{3}{20} \left(12\pi\\right)^{2/3} \\approx 1.686`.
     :param eta_sc: Time of shell-crossing (radians), :math:`\eta_{sc} \\approx 3.488`.
     :param delta_v: Critical underdensity for voids (linear theory extrapolation), :math:`\delta_v = - \\frac{3}{20} \left[6 (\sinh \eta_{sc}-\eta_{sc})\\right]^{2/3} \\approx -2.717`.
@@ -140,12 +139,10 @@ class cosmo:
         self.N_nu         = N_nu
         self.M_nu         = np.pad(np.atleast_1d(M_nu), (0,self.N_nu-len(np.atleast_1d(M_nu))), 'constant')
         self.N_eff        = N_eff
-        self.Gamma_nu     = (4./11.)**(1./3.)*(N_eff/self.N_nu)**0.25
+        self.Gamma_nu     = np.array([(4./11.)**(1./3.)*(self.N_eff/self.N_nu)**0.25 if x != 0 else (4./11.)**(1./3.) for x in self.M_nu])
         self.massive_nu   = np.count_nonzero(self.M_nu)
         self.massless_nu  = self.N_eff - self.massive_nu
         self.As           = As
-        if As is not None:
-            self.log10_As = np.log10(As)
         self.sigma_8      = sigma_8
         self.ns           = ns
         self.w0           = w0
@@ -170,7 +167,7 @@ class cosmo:
         # Other cosmological parameters
         #-------------------------------------
         self.Omega_gamma       = const.alpha_BB*self.T_cmb**4./(const.c*1.e3)**2./const.Msun*1.e3*const.Mpc_to_m**3./const.rhoch2/self.h**2.
-        self.Omega_nu          = 15./const.PI**4.*self.Gamma_nu**4.*self.Omega_gamma*np.array([self.FermiDirac_integral(x/(const.kB*self.T_nu)) for x in self.M_nu])
+        self.Omega_nu          = 15./const.PI**4.*self.Gamma_nu**4.*self.Omega_gamma*np.array([self.FermiDirac_integral(x/(const.kB*self.T_nu[i])) for i,x in enumerate(self.M_nu)])
         self.Omega_cdm         = self.Omega_m - self.Omega_b - np.sum(self.Omega_nu)
         self.Omega_cb          = self.Omega_cdm + Omega_b
         self.Omega_lambda      = 1. - self.Omega_cb - np.sum(self.Omega_nu) - self.Omega_K - self.Omega_gamma
@@ -256,6 +253,22 @@ class cosmo:
         return lookback
 
     #-------------------------------------------------------------------------------
+    # HORIZON
+    #-------------------------------------------------------------------------------
+    def cosmic_horizon(self, z = 0.):
+        """
+        Cosmological horizon as function of redshift in :math:`\mathrm{Mpc}/h`.
+
+        :param z: Redshift.
+        :type z: float, default = 0.0
+
+        :return: float
+        """
+        integrand = lambda x: const.c/(self.H(x)/self.h)
+        hor, _ = sint.quad(integrand, z, np.inf)
+        return hor
+
+    #-------------------------------------------------------------------------------
     # OMEGA COLD DARK MATTER (as function of z)
     #-------------------------------------------------------------------------------
     def Omega_cdm_z(self, z):
@@ -335,9 +348,9 @@ class cosmo:
         
         """
         MM,ZZ = np.meshgrid(np.atleast_1d(self.M_nu),np.atleast_1d(z),indexing='ij')
-        Y     = MM/((1.+ZZ)*const.kB*self.T_nu)
+        Y     = MM/((1.+ZZ)*const.kB*np.expand_dims(self.T_nu,1))
         F     = self.FermiDirac_integral(Y)
-        onuz  = 15./const.PI**4.*self.Omega_gamma*F*self.Gamma_nu**4.*(1.+ZZ)**4.*self.H0**2./np.atleast_2d(self.H(z)**2.)
+        onuz  = 15./const.PI**4.*self.Omega_gamma*F*np.expand_dims(self.Gamma_nu,1)**4.*(1.+ZZ)**4.*self.H0**2./np.atleast_2d(self.H(z)**2.)
         return onuz
 
     #-------------------------------------------------------------------------------
@@ -464,7 +477,7 @@ class cosmo:
         # Neutrino contribution
         y = np.outer(self.M_nu/(const.kB*self.T_nu), 1./(1.+z))
         F = self.FermiDirac_integral(np.array(y))
-        neutrino_contribution = 15./const.PI**4.*self.Gamma_nu**4.*self.Omega_gamma*F*(1.+z)**4.
+        neutrino_contribution = 15./const.PI**4.*np.expand_dims(self.Gamma_nu,1)**4.*self.Omega_gamma*F*(1.+z)**4.
         # H(z)
         return self.H0*(self.Omega_cb*(1.+z)**3. +
                         self.Omega_gamma*(1.+z)**4. + 
@@ -3001,8 +3014,6 @@ class cosmo:
         cosmo.compute()
 
         # Setting lengths
-        nk = len(np.atleast_1d(k))
-        nz = len(np.atleast_1d(z))
         n1 = len(var_1)
         n2 = len(var_2)
         if nz == 1.: z = np.array([z])
@@ -3027,9 +3038,9 @@ class cosmo:
         for c1 in var_1:
             for c2 in var_2:
                 string = c1+'-'+c2
-                pk[string] = np.zeros((len(np.atleast_1d(z)),len(k)))
+                pk[string] = np.zeros((nz,nk))
                 # Loop over redshifts
-                for ind_z in xrange(len(np.atleast_1d(z))):
+                for ind_z in xrange(nz):
                     # Get transfer functions at z
                     TF         = cosmo.get_transfer(z = z[ind_z])
                     k_T        = TF['k (h/Mpc)']

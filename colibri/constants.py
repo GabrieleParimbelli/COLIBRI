@@ -100,17 +100,17 @@ def explanatory():
 #-------------------------------
 # Conversion factors: distance
 #-------------------------------
-km_to_cm  = 1e5               # 1 km in cm
-km_to_m   = 1e3               # 1 km in m
-pc_to_cm  = 3.085677581e18    # 1 pc in cm
-pc_to_m   = 3.085677581e16    # 1 pc in m
-pc_to_km  = 3.085667581e13    # 1 pc in km
-kpc_to_cm = 3.085677581e21    # 1 kpc in cm
-kpc_to_m  = 3.085677581e19    # 1 kpc in m
-kpc_to_km = 3.085667581e16    # 1 kpc in km
-Mpc_to_cm = 3.085677581e24    # 1 Mpc in cm
-Mpc_to_m  = 3.085677581e22    # 1 Mpc in m
-Mpc_to_km = 3.085667581e19    # 1 Mpc in km
+km_to_cm  = 1e5                  # 1 km in cm
+km_to_m   = 1e3                  # 1 km in m
+pc_to_cm  = 3.085677581282e18    # 1 pc in cm
+pc_to_m   = 3.085677581282e16    # 1 pc in m
+pc_to_km  = 3.085667581282e13    # 1 pc in km
+kpc_to_cm = 3.085677581282e21    # 1 kpc in cm
+kpc_to_m  = 3.085677581282e19    # 1 kpc in m
+kpc_to_km = 3.085667581282e16    # 1 kpc in km
+Mpc_to_cm = 3.085677581282e24    # 1 Mpc in cm
+Mpc_to_m  = 3.085677581282e22    # 1 Mpc in m
+Mpc_to_km = 3.085667581282e19    # 1 Mpc in km
 
 #-------------------------------
 # Conversion factors: time
@@ -136,7 +136,7 @@ mp_J      = 0.938*GeV       # Proton mass in J
 me        = 5.11e5          # Eletron mass in eV
 me_g      = 9.10938356e-28  # Eletron mass in g
 me_J      = 511.*keV        # Eletron mass in J
-q         = 1.60217663e-19  # Electron/proton charge in C
+q         = 1.602176487e-19 # Electron/proton charge in C
 
 #-------------------------------
 # Neutrino properties
@@ -152,31 +152,33 @@ sin_theta_13_squared    = 2.12e-2    # Sine squared of mixing angle
 #-------------------------------
 # Constants of physics
 #-------------------------------
-G         = 4.3009e-9           # Newton's gravitational constant in units of [Mpc/M_sun (km/s)^2]
+G         = 4.302180824e-9      # Newton's gravitational constant in units of [Mpc/M_sun (km/s)^2]
 eps_0     = 8.85418781762e-12   # Vacuum permittivity in [F/m = C/V m] 
 mu_0      = 1.25663706144e-6    # Magnetic permeability in [H/m = T m^2/A = V s/A] 
-kB        = 8.6173336262e-5     # Boltzmann constant in [eV/K] 
+kB        = 8.617342791e-5      # Boltzmann constant in [eV/K] 
 c         = 2.99792458e5        # Speed of light in [km/s] 
-hP        = 4.1356673336325e-15 # Planck constant in units of [eV s] 
+hP        = 4.135667334e-15     # Planck constant in units of [eV s] 
 N_A       = 6.022140857e23      # Avogadro constant [mol^-1] 
 PI        = math.pi             # pi = 3.14159265...
 
 #-------------------------------
 # Derived constants
 #-------------------------------
-sSB       = 2*np.pi**5.*(kB*eV)**4/(15*(hP*eV)**3.*(c*km_to_m)**2.) # Stefan-Boltzmann constant [W/m^2 K^4]
-e2        = q**2./(4.*PI*eps_0)       # Electron/proton charge (squared!) in CGS units
-hPb       = hP/(2.*PI)                # Reduced Planck constant in [eV s]  ('h bar')
-hPJ       = hP*eV                     # Planck constant in [J s] 
-hPJb      = hPb*eV                    # Reduced Planck constant in [J s]  ('h bar')
-sSB_eV    = sSB/eV                    # Stefan-Boltzmann constant [eV/s m^2 K^4] 
-alpha_BB  = 4.*sSB/(c*km_to_m)        # Constant for blackbody energy density [J/m^3 K^4] 
-R         = kB*eV*N_A                 # Perfect gas constant [J/mol K] 
-alpha_EM  = e2/(hPJb*c*km_to_m)       # Fine structure constant
-lambda_e  = hP*c*km_to_m/me           # Compton wavelength for electron in [m] 
-r_e       = alpha_EM*lambda_e/(2.*PI) # Electron classical radius in [m] 
-sigma_T   = 8.*PI/3.*r_e**2.          # Thomson scattering cross section in [m^2] 
-rhoch2    = (3.*100.**2.)/(8*PI*G)    # Critical density of the Universe [h^2 Msun/Mpc^3] 
+G_mks      = 6.67428e-11                # Newton's gravitational constant in units of [m^3/kg/s^2]
+sSB        = 2*np.pi**5.*(kB*eV)**4/(15*(hP*eV)**3.*(c*km_to_m)**2.) # Stefan-Boltzmann constant [W/m^2 K^4]
+e2         = q**2./(4.*PI*eps_0)        # Electron/proton charge (squared!) in CGS units
+hPb        = hP/(2.*PI)                 # Reduced Planck constant in [eV s]  ('h bar')
+hPJ        = hP*eV                      # Planck constant in [J s] 
+hPJb       = hPb*eV                     # Reduced Planck constant in [J s]  ('h bar')
+sSB_eV     = sSB/eV                     # Stefan-Boltzmann constant [eV/s m^2 K^4] 
+alpha_BB   = 4.*sSB/(c*km_to_m)         # Constant for blackbody energy density [J/m^3 K^4] 
+R          = kB*eV*N_A                  # Perfect gas constant [J/mol K] 
+alpha_EM   = e2/(hPJb*c*km_to_m)        # Fine structure constant
+lambda_e   = hP*c*km_to_m/me            # Compton wavelength for electron in [m] 
+r_e        = alpha_EM*lambda_e/(2.*PI)  # Electron classical radius in [m] 
+sigma_T    = 8.*PI/3.*r_e**2.           # Thomson scattering cross section in [m^2] 
+rhoch2     = (3.*100.**2.)/(8*PI*G)     # Critical density of the Universe [h^2 Msun/Mpc^3] 
+rhoch2_mks = 1.8783472458e-31           # Critical density of the Universe [h^2 kg/m^3] 
 
 #-------------------------------
 # Planck units
