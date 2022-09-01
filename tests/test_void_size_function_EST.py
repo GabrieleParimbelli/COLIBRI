@@ -79,8 +79,9 @@ RL,VSF = C.void_size_function_EST(R=R_Eul,z=zz,k=k,pk=pk,delta_v=-1.76,a=1.,p=0.
 #==============
 # Plot
 #==============
-plt.figure(figsize = (20,20))
-plt.subplots_adjust(hspace = 0.3, wspace = 0.2, right = 0.95, bottom = 0.09, top = 0.95)
+plt.figure(figsize = (13,10))
+L,B,R,T=0.1,0.09,0.95,0.95
+plt.subplots_adjust(L,B,R,T,0.23,0.23)
 
 ax1 = plt.subplot2grid((3,2), (0,0), colspan = 1, rowspan = 1)
 ax2 = plt.subplot2grid((3,2), (0,1), colspan = 1, rowspan = 1)

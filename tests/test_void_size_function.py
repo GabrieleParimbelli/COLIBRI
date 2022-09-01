@@ -48,7 +48,9 @@ RL_V,VSF_Vl = C.void_size_function(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
 #===========
 # Plot
 #===========
-plt.figure(figsize=(10,10))
+plt.figure(figsize=(10,7))
+L,B,R,T=0.15,0.15,0.95,0.95
+plt.subplots_adjust(L,B,R,T)
 LW = 3.0
 
 # VSF with high delta_c

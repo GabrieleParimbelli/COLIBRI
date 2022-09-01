@@ -45,7 +45,7 @@ tot  = H.Pk['matter']['total halo']
 kcamb, pkcamb = C.camb_Pk(k = H.k, z = H.z, nonlinear = True)
 
 # Plot
-plt.figure(figsize=(25,20))
+plt.figure(figsize=(12,9))
 ax1 = plt.subplot2grid((4,4), (0,0), colspan=4, rowspan=3)
 ax2 = plt.subplot2grid((4,4), (3,0), colspan=4)
 plt.setp(ax1.get_xticklabels(), visible=False)
@@ -75,10 +75,10 @@ ax1.plot(0., 0., 'k--', label = 'HALOFIT')
 
 ax1.set_ylabel('$P_X(k) \ [(\mathrm{Mpc}/h)^3]$')
 ax1.set_xlim(H.k.min(), H.k.max())
-ax1.set_ylim(1e-2, 1e6)
+ax1.set_ylim(3e-2, 1e6)
 ax1.grid(True)
 
-ax1.legend(loc='upper right', ncol = 2, fontsize = 20)
+ax1.legend(loc='lower left', ncol = 2, fontsize = 20, framealpha = 1)
 plt.show()
 
 

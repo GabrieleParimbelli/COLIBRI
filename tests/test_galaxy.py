@@ -84,7 +84,7 @@ galaxy_bias = (pgt/pht)**.5
 
 
 # Plot
-plt.figure(figsize=(30,18))
+plt.figure(figsize=(12,8))
 ax1 = plt.subplot2grid((4,4), (0,0), colspan=4, rowspan=3)
 ax2 = plt.subplot2grid((4,4), (3,0), colspan=4)
 plt.setp(ax1.get_xticklabels(), visible=False)
@@ -106,13 +106,13 @@ for iz in range(len(np.atleast_1d(zz))):
 ax1.plot(0., 0., c = 'k', lw = 3., ls = '--', label = '$P_\mathrm{halo \ model}(k)$')
 ax1.set_ylabel('$P_X(k) \ [(\mathrm{Mpc}/h)^3]$')
 ax1.set_xlim(G.k.min(), G.k.max())
-ax1.set_ylim(1e-2, 1e6)
+ax1.set_ylim(3e-2, 1e6)
 ax1.grid(True)
 
 ax2.set_xlabel('$k$ $[h/\mathrm{Mpc}]$')
 ax2.set_ylabel('$b(k)$')
 ax2.set_xlim(G.k.min(), G.k.max())
-ax2.set_ylim(-0.5, 5.)
+ax2.set_ylim(-0.5, 5.5)
 ax2.grid(True)
 
 # Only for the legend

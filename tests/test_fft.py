@@ -4,7 +4,7 @@ import colibri.fourier as FF
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 plt.rc('text', usetex=True)
-plt.rc('font', family = 'serif', size = 30)
+plt.rc('font', family = 'serif', size = 15)
 
 FS = 40
 
@@ -27,7 +27,7 @@ y = np.exp(-x**2.)
 xf, yf = FF.FFT_1D(x,y)
 
 # plot theory vs computation
-plt.figure(figsize = (30,15))
+plt.figure(figsize = (15,8))
 plt.title('1D Gaussian $\\rightarrow$ 1D Gaussian')
 plt.plot(x,  np.sqrt(np.pi)*np.exp(-x**2./4.), 'r--',         label = 'theory')
 plt.plot(xf, yf,                               'bo',  ms = 5, label = 'computation')
@@ -50,7 +50,7 @@ y = 1./(1.+x**2.)
 xf, yf = FF.FFT_1D(x,y)
 
 # plot theory vs computation
-plt.figure(figsize = (30,15))
+plt.figure(figsize = (15,8))
 plt.title('Lorentzian $\\rightarrow$ Exponential')
 plt.plot(x,  np.pi*np.exp(-np.abs(x)), 'r--',         label = 'theory')
 plt.plot(xf, yf,                       'bo',  ms = 5, label = 'computation')
@@ -75,7 +75,7 @@ y    = np.sin(peak*x)
 xf, yf = FF.FFT_1D(x,y)
 
 # plot theory vs computation
-plt.figure(figsize = (30,15))
+plt.figure(figsize = (15,8))
 plt.title('Sine $\\rightarrow$ Dirac Delta')
 plt.axvline(peak, c='r', ls = '--', label = 'theory')
 plt.plot(xf, yf, 'bo', ms = 5, label = 'computation')
@@ -100,7 +100,7 @@ xf, yf = FF.FFT_1D(x,y)
 x2, y2 = FF.iFFT_1D(xf,np.abs(yf))
 
 # plot theory vs computation
-plt.figure(figsize = (30,15))
+plt.figure(figsize = (15,8))
 plt.title('Lorentzian, back and forth')
 plt.plot(x,  y,  'r--',        label = 'initial')
 plt.plot(x2, y2, 'bo', ms = 5, label = 'final')
@@ -129,7 +129,7 @@ kx, ky, fft_G = FF.FFT_2D(x, y, F_G)
 KX,KY  = np.meshgrid(kx,ky)
 FFT_TH = np.sqrt(np.pi)*np.exp(-KX**2./4.)*np.pi*np.exp(-np.abs(KY))
 
-plt.figure(figsize = (30,15))
+plt.figure(figsize = (15,8))
 plt.title('Gaussian $\\times$ Lorentzian $\\rightarrow$ Gaussian $\\times$ exponential')
 plt.contourf(kx, ky, fft_G.T, cmap = 'Greys_r', extent=(np.amin(kx), np.amax(kx), np.amin(ky), np.amax(ky)))
 #plt.contourf(kx, ky, FFT_TH, cmap = 'Greys_r', extent=(np.amin(kx), np.amax(kx), np.amin(ky), np.amax(ky)))
@@ -156,7 +156,7 @@ F_W = 1./(X**10.+8)**2./(Y**10.+8)**2.
 # Do FFT
 kx, ky, fft_W = FF.iFFT_2D(x, y, F_W)
 
-plt.figure(figsize = (30,15))
+plt.figure(figsize = (15,8))
 plt.title('Square window $\\rightarrow$ Sampling function')
 plt.contourf(kx, ky, fft_W, cmap = 'Greys_r', extent=(np.amin(kx), np.amax(kx), np.amin(ky), np.amax(ky)))
 plt.xlim(-10., 10.)
@@ -196,7 +196,7 @@ ind_x = np.linspace(1,len(x)-1,7).astype(int)[1:-1]
 ind_y = np.linspace(1,len(y)-1,7).astype(int)[1:-1]
 
 
-plt.figure(figsize=(25,25))
+plt.figure(figsize=(12,12))
 index = 0
 for ix in ind_x:
 	for iy in ind_y:
@@ -234,7 +234,7 @@ ind_y = np.linspace(1,len(y)-1,7).astype(int)[1:-1]
 
 
 
-plt.figure(figsize=(25,25))
+plt.figure(figsize=(12,12))
 index = 0
 for ix in ind_x:
 	for iy in ind_y:

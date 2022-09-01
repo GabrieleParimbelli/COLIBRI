@@ -61,9 +61,9 @@ HMF = C.halo_mass_function(logM = logM, k = k, pk = pk, window = 'th', mass_fun 
 #=============
 # Plot
 #=============
-fig, ax = plt.subplots(2,2,figsize=(14,14),sharex=True)
+fig, ax = plt.subplots(2,2,figsize=(12,12),sharex=True)
 L,R,T,B=0.13,0.96,0.96,0.13
-plt.subplots_adjust(left=L,right=R,top=T,bottom=B,wspace=0.2,hspace=0.)
+plt.subplots_adjust(left=L,right=R,top=T,bottom=B,wspace=0.25,hspace=0.)
 
 
 for iz in range(nz):

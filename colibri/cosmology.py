@@ -40,7 +40,7 @@ class cosmo:
     :param M_nu: Neutrino masses expressed in eV. Its size must be <= ``N_nu``. When ``cosmo`` is called, this quantity will be transformed to an array (``self.M_nu``) of length ``N_nu`` containing the non-vanishing neutrino masses assigned here padded with zeros in order to reach ``N_nu``. E.g.: if ``M_nu = [0.2, 0.1]`` and ``N_nu = 3``, then ``self.M_nu`` will become ``[0.2, 0.1, 0.0]``.
     :type M_nu: float or list of floats, default = 0.
 
-    :param N_eff: Effective number of neutrinos. This number should be greater than ``N_nu``.
+    :param N_eff: Effective number of neutrinos. This number should be greater than ``N_nu``. Standard values for 0, 1, 2, 3 massive neutrinos should be 3.046, 3.0328, 3.0196, 3.00641, respectively.
     :type N_eff: float, default = 3.046
 
     :param As: Amplitude of primordial scaled perturbations. At least one between this and `sigma_8` must be different from None. If ``As`` is not None, it will be the parameter used to compute the amplitude of the power spectrum.
@@ -136,12 +136,8 @@ class cosmo:
         self.Omega_m      = Omega_m
         self.Omega_b      = Omega_b
         self.Omega_K      = Omega_K
-        self.N_nu         = N_nu
-        self.M_nu         = np.pad(np.atleast_1d(M_nu), (0,self.N_nu-len(np.atleast_1d(M_nu))), 'constant')
-        self.N_eff        = N_eff
-        self.Gamma_nu     = np.array([(4./11.)**(1./3.)*(self.N_eff/self.N_nu)**0.25 if x != 0 else (4./11.)**(1./3.) for x in self.M_nu])
-        self.massive_nu   = np.count_nonzero(self.M_nu)
-        self.massless_nu  = self.N_eff - self.massive_nu
+        self.h            = h
+        self.H0           = 100.*self.h
         self.As           = As
         self.sigma_8      = sigma_8
         self.ns           = ns
@@ -149,10 +145,14 @@ class cosmo:
         self.wa           = wa
         self.tau          = tau
         self.T_cmb        = T_cmb
+        self.N_nu         = N_nu
+        self.M_nu         = np.pad(np.atleast_1d(M_nu), (0,self.N_nu-len(np.atleast_1d(M_nu))), 'constant')
+        #self.N_eff        = np.sum((self.FermiDirac_integral(self.M_nu/((4./11.)**(1./3.)*const.kB*self.T_cmb))/self.FermiDirac_integral(self.M_nu/(0.71611*const.kB*self.T_cmb)))**4)
+        self.N_eff        = N_eff
+        self.Gamma_nu     = np.array([(4./11.)**(1./3.)*(self.N_eff/self.N_nu)**0.25 if x != 0 else (4./11.)**(1./3.) for x in self.M_nu])
+        self.massive_nu   = np.count_nonzero(self.M_nu)
+        self.massless_nu  = self.N_eff - self.massive_nu
         self.T_nu         = T_cmb*self.Gamma_nu
-        self.theta        = T_cmb/2.7
-        self.h            = h
-        self.H0           = 100.*self.h
         self.K            = -self.Omega_K*(self.H0/self.h/const.c)**2.    # (h/Mpc)^2
 
         #-------------------------------------
@@ -174,12 +174,12 @@ class cosmo:
         self.Omega_massive_nu  = self.Omega_nu[np.where(self.M_nu != 0.)]
         self.Omega_massless_nu = self.Omega_nu[np.where(self.M_nu == 0.)]
 
-        self.omega_m      = Omega_m*h**2.
-        self.omega_b      = Omega_b*h**2.
-        self.omega_K      = Omega_K*h**2.
-        self.omega_cdm    = self.Omega_cdm*h**2.
-        self.omega_cb     = self.Omega_cb*h**2.
-        self.omega_nu     = self.Omega_nu*h**2.
+        self.omega_m      = self.Omega_m    *h**2.
+        self.omega_b      = self.Omega_b    *h**2.
+        self.omega_K      = self.Omega_K    *h**2.
+        self.omega_cdm    = self.Omega_cdm  *h**2.
+        self.omega_cb     = self.Omega_cb   *h**2.
+        self.omega_nu     = self.Omega_nu   *h**2.
         self.omega_gamma  = self.Omega_gamma*h**2.
 
         #-------------------------------------
@@ -950,7 +950,7 @@ class cosmo:
         z_r  = 1048*(1+0.00124*om_b**-0.738)*(1+g1*om_m**g2)
         return z_r
 
-    def z_rec(self):
+    def z_rec_approx(self):
         """
         Decoupling redshift according to arXiv:2106.00428 approximation
 
@@ -985,10 +985,19 @@ class cosmo:
                 'omega_b':   self.Omega_b*self.h**2.,
                 'omega_cdm': self.Omega_cdm*self.h**2.,
                 'Omega_k':   self.Omega_K,
+                'Omega_fld': self.Omega_lambda,
+                'w0_fld':    self.w0,
+                'wa_fld':    self.wa,
                 'N_ur':      self.massless_nu,
                 'N_ncdm':    self.massive_nu}
             if self.massive_nu != 0:
-                params['m_ncdm'] = ', '.join(str(x) for x in self.M_nu[self.M_nu != 0.])
+                params['m_ncdm'] = ''
+                params['T_ncdm'] = ''
+                for im, m in enumerate(self.M_nu[np.where(self.M_nu!=0.)]):
+                    params['m_ncdm'] += '%.3f, ' %(m)
+                    params['T_ncdm'] += '%.4f, ' %(self.Gamma_nu[im])
+                params['m_ncdm'] = params['m_ncdm'][:-2]
+                params['T_ncdm'] = params['T_ncdm'][:-2]
 
             cosmo = Class()
             cosmo.set(params)
@@ -1017,7 +1026,7 @@ class cosmo:
             rs = 55.154*np.exp(-72.3*(om_n+0.0006)**2.)/(om_m**0.25351*om_b**0.12807)*h
         return rs
 
-    def sound_horizon(self):
+    def sound_horizon_approx(self):
         """
         Sound horizon at drag epoch according to arXiv:2106.00428 approximation
 
@@ -1042,6 +1051,11 @@ class cosmo:
             den        = a4*om_b**a5+a6*om_m**a7+a8*(om_b*om_m)**a9
             rs         = num/den*h
         return rs
+
+    def sound_horizon(self):
+        zrec = self.z_rec_approx()
+        integral,_ = sint.quad(lambda x: self.c_s(x)/self.H(x)*self.h, zrec, np.inf)
+        return integral
 
     #-----------------------------------------------------------------------------------------
     # MASS VARIANCE

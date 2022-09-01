@@ -13,20 +13,20 @@ plt.rc('font', family = 'serif', size = 20)
 # We report as example all cosmological parameters
 # but the syntax cc.cosmo() is sufficient to have all
 # parameters set to default value.
-C = cc.cosmo(Omega_m = 0.3089,				# total matter (CDM + baryons + neutrinos) density parameter today
-			 Omega_b = 0.0486,				# baryon density parameter today
-			 Omega_K = 0.,					# Curvature density parameter (Omega_lambda will be set as 1-Omega_K-Omega_m-Omega_b-Omega_gamma
-			 ns      = 0.9667,				# Scalar spectral index of primordial perturbation
-			 As      = 2.14e-9,				# Scalar amplitude of primordial perturbation
-			 sigma_8 = None,				# Power spectrum normalization (set to None as As is defined)
-			 h       = 0.6774,				# Hubble parameter in units of 100 km/s/Mpc
-			 w0      = -1.,					# Dark energy parameter of state today
-			 wa      = 0.,					# Evolution of dark energy parameter of state
-			 tau     = 0.06,				# Optical depth to reionization
-			 T_cmb   = 2.7255,				# CMB temperature today (fixes Omega_gamma)
-			 M_nu    = [0.05, 0.01],		# Neutrino masses in eV: in this case we have 2 massive neutrinos
-			 N_nu    = 3,					# Total number of neutrino species
-			 N_eff   = 3.046)				# Effective number of neutrinos: since 2 are massive, only N_eff - massive_nu will be massless
+C = cc.cosmo(Omega_m = 0.3089,      # total matter (CDM + baryons + neutrinos) density parameter today
+             Omega_b = 0.0486,      # baryon density parameter today
+             Omega_K = 0.,          # Curvature density parameter (Omega_lambda will be set to sum to 1)
+             ns      = 0.9667,      # Scalar spectral index of primordial perturbation
+             As      = 2.14e-9,     # Scalar amplitude of primordial perturbation
+             sigma_8 = None,        # Power spectrum normalization (set to None as As is defined)
+             h       = 0.6774,      # Hubble parameter in units of 100 km/s/Mpc
+             w0      = -1.,         # Dark energy parameter of state today
+             wa      = 0.,          # Evolution of dark energy parameter of state
+             tau     = 0.06,        # Optical depth to reionization
+             T_cmb   = 2.7255,      # CMB temperature today (fixes Omega_gamma)
+             M_nu    = [0.05, 0.01],# Neutrino masses in eV: in this case we have 2 massive neutrinos
+             N_nu    = 3,           # Total number of neutrino species
+             N_eff   = 3.046)       # Effective number of neutrinos
 
 
 print("Omega matter:         %.4f" %(C.Omega_m))
@@ -47,8 +47,8 @@ print("Spectral index:       %.4f" %(C.ns))
 
 
 # Scale factors and redshifts
-aa = np.logspace(-7., 1., 101)	# Scale factor
-zz = C.redshift(aa)				# Corresponding redshifts
+aa = np.logspace(-7., 1., 101)    # Scale factor
+zz = C.redshift(aa)               # Corresponding redshifts
 
 # Omegas as functions of z
 onz0 = C.Omega_nu_z(zz)
@@ -59,11 +59,13 @@ ogz0 = C.Omega_gamma_z(zz)
 okz0 = C.Omega_K_z(zz)
 otz0 = np.sum(onz0, axis=0)+olz0+ocz0+obz0+ogz0+okz0
 
-plt.figure(figsize=(20,20))
+plt.figure(figsize=(12,8))
 plt.subplot(211)
+L,B,R,T = 0.1, 0.12, 0.95, 0.95
+plt.subplots_adjust(L,B,R,T,0.3,0.3)
 LS = ['-','--',':']
 for i in range(len(np.atleast_1d(onz0))):
-	plt.semilogx(aa, onz0[i],'m', ls = LS[i], lw = 2.0, label ='$\\nu_%i$' %(i+1))
+    plt.semilogx(aa, onz0[i],'m', ls = LS[i], lw = 2.0, label ='$\\nu_%i$' %(i+1))
 plt.semilogx(aa, olz0,    'k',   lw = 2.0, label ='$\Lambda$')
 plt.semilogx(aa, ogz0,    'g',   lw = 2.0, label = '$\\gamma$')
 plt.semilogx(aa, ocz0,    'b',   lw = 2.0, label = 'cdm')

@@ -111,7 +111,7 @@ print(">> Non-linear power spectrum computed with '%s' class in 'nonlinear' modu
 #=================
 # Subplot & plot
 #=================
-plt.figure(figsize=(25,25))
+plt.figure(figsize=(12,12))
 ax1 = plt.subplot2grid((4,4), (0,0), colspan=4, rowspan=3)
 ax2 = plt.subplot2grid((4,4), (3,0), colspan=4)
 plt.setp(ax1.get_xticklabels(), visible=False)
@@ -137,11 +137,11 @@ ax1.grid(True)
 ax2.fill_between(k_camb, -.5, .5, color = 'k', alpha = 0.1)
 ax2.fill_between(k_camb, -1., 1., color = 'k', alpha = 0.05)
 ax2.set_xlabel('$k$ $[h/\mathrm{Mpc}]$')
-ax2.set_ylabel(r'$\left(\frac{P(k)}{P_\mathrm{CAMB}(k)}-1\right)\times 100 \ [\%]$', fontsize = 20)
+ax2.set_ylabel(r'$\left(\frac{P(k)}{P_\mathrm{CAMB}(k)}-1\right)\times 100 \ [\%]$', fontsize = 12)
 ax2.set_xlim(kk.min(), 10.)
 ax2.set_ylim(-2.25, 2.25)
 ax2.grid(True)
 
-ax1.legend(loc='lower left', ncol = 3, fontsize = 20)
+ax1.legend(loc='lower left', ncol = 3, fontsize = 12)
 plt.show()
 

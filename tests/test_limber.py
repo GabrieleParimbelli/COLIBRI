@@ -4,7 +4,7 @@ import colibri.cosmology as cc
 import matplotlib.pyplot as plt
 
 plt.rc('text',usetex=True)
-plt.rc('font',size=25,family='serif')
+plt.rc('font',size=20,family='serif')
 
 # Colors
 colors = ['r', 'b','g','goldenrod','m', 'k', 'springgreen', 'darkorange', 'pink', 'darkcyan', 'salmon']
@@ -185,7 +185,7 @@ else:
 # 8) Plot
 #-----------------
 # Plot shear spectra
-hf, axarr = plt.subplots(nbins, nbins, sharex = True, sharey = True, figsize=(15,10))
+hf, axarr = plt.subplots(nbins, nbins, sharex = True, sharey = True, figsize=(12,8))
 L,R,T,B=0.1, 0.95, 0.95, 0.15
 plt.subplots_adjust(left=L,right=R,top=T,bottom=B)
 # Triangle plot
@@ -215,13 +215,13 @@ if fourier:
             axarr[j,i].text(0.15, 0.85, '$%i \\times %i$' %(i+1,j+1),
                                 transform=axarr[j,i].transAxes,
                                 style='italic',
-                                fontsize = 15*(1.-nbins/10.),
+                                fontsize = 12*(1.-nbins/10.),
                                 horizontalalignment='center',
                                 bbox={'facecolor': color, 'alpha':0.5, 'pad':5})
             axarr[j,i].set_xlim(ll.min(), ll.max())
             axarr[j,i].set_ylim(5e-10, 1e0)
             axarr[j,i].set_yticks([1e-8,1e-5,1e-2])
-    plt.legend(bbox_to_anchor=(0.93, 0.98), fontsize = 20, bbox_transform=hf.transFigure)
+    plt.legend(bbox_to_anchor=(0.93, 0.98), fontsize = 12, bbox_transform=hf.transFigure)
     plt.text((L+R)*0.5, B*0.4, "$\ell$", ha='center', transform=hf.transFigure)
     plt.text(L*0.4,(T+B)*0.5, "$\ell(\ell+1) \ C_\ell \ / \ (2\pi)$", ha='center', va = 'center', rotation = 90, transform=hf.transFigure)
 else:
@@ -257,18 +257,18 @@ else:
             axarr[j,i].text(0.15, 0.85, '$%i \\times %i$' %(i+1,j+1),
                                 transform=axarr[j,i].transAxes,
                                 style='italic',
-                                fontsize = 15*(1.-nbins/10.),
+                                fontsize = 12*(1.-nbins/10.),
                                 horizontalalignment='center',
                                 bbox={'facecolor': color, 'alpha':0.5, 'pad':5})
             axarr[j,i].set_xlim(theta.min(), theta.max())
             axarr[j,i].set_ylim(1e-8, 1e-2)
-    plt.legend(bbox_to_anchor=(0.93, 0.98), fontsize = 20, bbox_transform=hf.transFigure)
+    plt.legend(bbox_to_anchor=(0.93, 0.98), fontsize = 12, bbox_transform=hf.transFigure)
     plt.text((L+R)*0.5, B*0.4, "$\\theta \ [\mathrm{arcmin}]$", ha='center', transform=hf.transFigure)
     plt.text(L*0.4,(T+B)*0.5, "$\\xi(\\theta)$", ha='center', va = 'center', rotation = 90, transform=hf.transFigure)
 
 
 # Plot galaxy distributions and window functions
-plt.figure(figsize=(30,20))
+plt.figure(figsize=(12,8))
 plt.subplots_adjust(hspace = 0.)
 zz = np.linspace(0.1, 3.5, 1000)
 for i in range(nbins):
