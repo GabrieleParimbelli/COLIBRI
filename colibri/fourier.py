@@ -654,7 +654,7 @@ def iFFT_iso_3D(k, f, N = 4096):
 #-----------------------------------------------------------------------------------------
 # 3D Hankel
 #-----------------------------------------------------------------------------------------
-def Hankel_3D_order(r, f , N = 4096, order = 0):
+def Hankel_spherical_Bessel(r, f , N = 4096, order = 0):
     """
     This routine is analogous to the Fourier transform in 3D but it can return any order of the Bessel function
 
@@ -719,7 +719,7 @@ def Hankel_3D_order(r, f , N = 4096, order = 0):
 #-----------------------------------------------------------------------------------------
 # 3D inverse Hankel
 #-----------------------------------------------------------------------------------------
-def iHankel_3D_order(k, f, N = 4096, order = 0):
+def iHankel_spherical_Bessel(k, f, N = 4096, order = 0):
     """
     This routine is similar to the Fourier transform in 3D but it can return any order of the Bessel function
 
