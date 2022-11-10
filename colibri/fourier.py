@@ -687,10 +687,10 @@ def Hankel_spherical_Bessel(r, f , N = 4096, order = 0):
         Transformed array.
     """
     mu      = order+0.5  # Order mu of Bessel function
-    q       = 0    # Bias exponent: q = 0 is unbiased
-    kr      = 1    # Sensible approximate choice of k_c r_c
-    kropt   = 1    # Tell fhti to change kr to low-ringing value
-    tdir    = 1    # Forward transform
+    q       = 0          # Bias exponent: q = 0 is unbiased
+    kr      = 1          # Sensible approximate choice of k_c r_c
+    kropt   = 1          # Tell fhti to change kr to low-ringing value
+    tdir    = 1          # Forward transform
     logrc   = (np.max(np.log10(r))+np.min(np.log10(r)))/2.
     dlogr   = (np.max(np.log10(r))-np.min(np.log10(r)))/N
     dlnr    = dlogr*np.log(10.)
@@ -753,10 +753,10 @@ def iHankel_spherical_Bessel(k, f, N = 4096, order = 0):
     """
     # FFT specifics
     mu      = order+0.5   # Order mu of Bessel function
-    q       = 0     # Bias exponent: q = 0 is unbiased
-    kr      = 1     # Sensible approximate choice of k_c r_c
-    kropt   = 1     # Tell fhti to change kr to low-ringing value
-    tdir    = -1    # Backward transform
+    q       = 0           # Bias exponent: q = 0 is unbiased
+    kr      = 1           # Sensible approximate choice of k_c r_c
+    kropt   = 1           # Tell fhti to change kr to low-ringing value
+    tdir    = -1          # Backward transform
     logkc   = (np.max(np.log10(k))+np.min(np.log10(k)))/2.
     dlogk   = (np.max(np.log10(k))-np.min(np.log10(k)))/N
     dlnk    = dlogk*np.log(10.)

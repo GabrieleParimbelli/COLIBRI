@@ -2390,7 +2390,7 @@ class cosmo:
     #-------------------------------------------------------------------------------
     # f(R) enhancement
     #-------------------------------------------------------------------------------
-    def fR_correction(self, k, z, f_R0, nonlinear = True):
+    def fR_correction(self, k, z, f_R0, nonlinear = True):#, sigma_8 = 0.8):
         """
         Enhancement of the matter power spectrum due to f(R) gravity. The formula used is from Winther et al. (2019)
 
@@ -2472,6 +2472,18 @@ class cosmo:
                 enhancement = ratio_mid + (ratio_high - ratio_mid) * (f_R0 - 1e-5)/(5e-5 - 1e-5)
             else: 
                 enhancement = ratio_low + (ratio_mid  - ratio_low) * (f_R0 - 5e-6)/(1e-5 - 5e-6)
+
+            # Change due to Omega_m
+            #dom_om       = (self.Omega_m-0.3)/0.3
+            #aaa          = 0.015
+            #bbb          = 1.4
+            #kstar        = 0.16*(1e-5/f_R0)**0.5
+            #enhancement *= 1-aaa*dom_om*np.tanh((K/kstar)**bbb)
+
+            # Change due to sigma_8
+            #ds8_s8       = (sigma_8-0.8)/0.8
+            #kst          = 1.2
+            #enhancement *= 1+ds8_s8*K/(1+(K/kstar)**2)
 
         # Linear enhancement
         else:
