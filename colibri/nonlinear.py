@@ -755,34 +755,27 @@ class halomodel():
                  cosmology     = cc.cosmo(),
                  a_ShethTormen = 0.707,
                  p_ShethTormen = 0.3):
-
         # Assertion on k
         assert len(k)>200,     "k must have a length greater than 200 points"
         assert k.max()>=100.,   "Maximum wavenumber must be greater than 100 h/Mpc in order to achieve convergence"
         assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
-
         # Reading all cosmological parameters
         self.f_nu         = np.sum(cosmology.f_nu[np.where(cosmology.M_nu!=0.)])
         self.cosmology    = cosmology
-
         # Redshift and scales at which all must be computed
         self.nz    = len(np.atleast_1d(z))
         self.nk    = len(np.atleast_1d(k))
         self.z     = np.atleast_1d(z)
         self.k     = np.atleast_1d(k)
         self.pk    = pk
-        if np.shape(pk) != (self.nz,self.nk):
-            raise IndexError("pk must be of shape (len(z), len(k))")
-
-        # cdm+b density
+        if np.shape(pk) != (self.nz,self.nk): raise IndexError("pk must be of shape (len(z), len(k))")
+        # Matter density
         self.rho_field  = self.cosmology.rho_crit(0.)*self.cosmology.Omega_m
-
         # Fixed parameters
         self.delta_sc  = 3./20.*(12.*np.pi)**(2./3.)
         self.a         = a_ShethTormen
         self.p         = p_ShethTormen
         self.A_bar     = 4.
-
         # Initialize mass
         self.mass    = np.logspace(0., 18., 512)
         self.lnmass  = np.log(self.mass)
@@ -790,8 +783,8 @@ class halomodel():
         self.dlnm    = np.log(self.mass[1]/self.mass[0])
         self.nm      = len(self.mass)
         self.rr      = self.cosmology.radius_of_mass(self.mass,var='cb',window='th')
+        # GO!
         self.compute_nonlinear_pk()
-
 
     #-----------------------------------------------------------------------------------------
     # nonlinear_pk
@@ -802,50 +795,37 @@ class halomodel():
             pk_cc     = self.pk*(self.cosmology.growth_cb(self.k,self.z)/self.cosmology.growth_cbnu(self.k,self.z))**2.
         else:
             pk_cc = self.pk
-
         # Compute sigma8 and sigma^2
         self.sig2 = self.cosmology.mass_variance(self.logmass,k=self.k,pk=pk_cc,var='tot')
-
         # Omega_m(z)
         self.omz = self.cosmology.Omega_m_z(self.z)
-
         # Compute growth factors
         g_growth, G_growth = self.growth_factors(self.z)
-
         # Linear overdensity at collapse
         dc = self.delta_c(self.z,self.f_nu, self.omz, g_growth, G_growth)
         # Virial density
         Dv = self.Delta_v(self.z, self.f_nu, self.omz, g_growth, G_growth)
-
         # peak height
         peak_height = np.expand_dims(dc,1)/self.sig2**0.5
-
         # Virial radii
         rv = ((3*np.expand_dims(self.mass,0))/(4*np.pi*self.rho_field*np.expand_dims(Dv,1)))**(1./3.)
-
         # Concentration
         self.zf  = self.z_form()
         conc     = np.array([self.c_bull(self.zf[i],self.z[i]) for i in range(self.nz)])
-
         # Scale radii
         R_s = rv/conc
-    
         # NFW profile, already normalized for bloating and corrected for neutrino fraction
         u_NFW = np.zeros((self.nz, self.nm, self.nk))
-        for ik in range(self.nk):
-            u_NFW[:,:,ik] = self.FFT_NFW_profile(conc, self.k[ik]*R_s)
-
+        for ik in range(self.nk): u_NFW[:,:,ik] = self.FFT_NFW_profile(conc, self.k[ik]*R_s)
         # Halo mass function
-        hmf = self.dndM(self.z,self.mass,peak_height,self.a,self.p)
-
-        # power spectrum
+        hmf         = self.dndM(self.z,self.mass,peak_height,self.a,self.p)
+        # Power spectrum
         M_over_rho  = np.expand_dims(self.mass/self.rho_field,0)
         M           = np.expand_dims(self.mass,0)
         self.pk_1h  = np.transpose([sint.simps(M_over_rho**2.*hmf*u_NFW[:,:,ik]**2.*M,x=self.lnmass, axis = 1)
                                      for ik in range(self.nk)])
         self.pk_2h  = self.pk
         self.pk_nl  = self.pk_1h + self.pk_2h
-
 
     #-----------------------------------------------------------------------------------------
     # SIMPLIFIED HUBBLE PARAMETER AND Omega_m(a) (needed to speed up growth factor calculations)
@@ -854,15 +834,11 @@ class halomodel():
         return (self.cosmology.Omega_m*a**(-3.) +
                (1-self.cosmology.Omega_m-self.cosmology.Omega_lambda)*a**-2. +
                (self.cosmology.Omega_lambda)*self.X_de(a))**0.5
-
-
     def AH(self, a):
         wde = self.cosmology.w0+(1.-a)*self.cosmology.wa
         return -0.5*(self.cosmology.Omega_m*a**-3+self.cosmology.Omega_lambda*(1.+3.*wde)*self.X_de(a))
-
     def Omega_m_a(self, a):
         return self.cosmology.Omega_m*a**(-3.)/self.Hubble(a)**2.
-
     def X_de(self, a):
         w0,wa=self.cosmology.w0,self.cosmology.wa
         return a**(-3.*(1.+w0+wa))*np.exp(-3.*wa*(1.-a))
@@ -871,7 +847,6 @@ class halomodel():
     # NON-NORMALIZED GROWTH FACTORS
     #-----------------------------------------------------------------------------------------
     def growth_factors(self, z):
-
         z = np.atleast_1d(z)
         # Functions to integrate
         def derivatives(y, a):
@@ -915,10 +890,8 @@ class halomodel():
         z_tmp = np.linspace(0., 30., 1001)
         res   = np.zeros((self.nz, self.nm))
         rhs   = np.zeros((self.nz, self.nm))
-        
         Dzf = self.cosmology.growth_factor_scale_independent(z_tmp)
         zf_D = si.interp1d(Dzf, z_tmp, 'cubic')
-
         for iz in xrange(self.nz):
             m_ext, sig_ext = UF.extrapolate_log(self.mass, self.sig2[iz]**0.5, 1.e-1*frac*self.mass[0], 1.e1*self.mass[-1])
             sig_int        = si.interp1d(m_ext, sig_ext, 'cubic')
@@ -930,7 +903,6 @@ class halomodel():
                     if zf_D(rhs[iz,im]) < self.z[iz]:
                         res[iz, im] = self.z[iz]
                 except ValueError:    res[iz, im] = self.z[iz]
-
         return res
         
     #-----------------------------------------------------------------------------------------
@@ -1064,52 +1036,41 @@ class classic_halomodel():
         assert len(k)>200,     "k must have a length greater than 200 points"
         assert k.max()>=100.,   "Maximum wavenumber must be greater than 100 h/Mpc in order to achieve convergence"
         assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
-
         # Reading all cosmological parameters
         self.cosmology    = cosmology
         self.w0           = cosmology.w0
         self.wa           = cosmology.wa
         self.f_nu         = np.sum(cosmology.f_nu[np.where(cosmology.M_nu!=0.)])
-
         # Raise warning if neutrino mass is not zero:
         if np.any(self.cosmology.M_nu!=0.):
             warnings.warn("Neutrino mass is different from zero. The Takahashi halofit works best with zero neutrino mass, maybe better to use Takahashi or Bird?")
-
         # Halo model parameters
         self.pivot_concentration = pivot_concentration
         self.slope_concentration = slope_concentration
         self.a_ShethTormen       = a_ShethTormen
         self.p_ShethTormen       = p_ShethTormen
-
         # Overdensity spherical collapse
         self.delta_sc = 3./20.*(12.*np.pi)**(2./3.)
-        
         # Redshift and scales at which all must be computed
         self.z  = np.atleast_1d(z)
         self.k  = np.atleast_1d(k)
         self.nz = len(self.z)
         self.nk = len(self.k)
         self.pk   = pk
-
         # Growth factor
         self.growth_factor = self.cosmology.growth_factor_scale_independent(self.z)
-
         # Initialize mass
         self.nm   = 512
         self.mass = np.logspace(2., 18., self.nm)
-
         # Peak height
         self.peak_height = self.nu()
-
         # virial_radii
         self.rv = self.R_v(self.mass)
-
         # GO!
         self.compute_nonlinear_pk(kwargs_mass_function = {'a' : self.a_ShethTormen,
                                                           'p' : self.p_ShethTormen},
                                   kwargs_concentration = {'c0': self.pivot_concentration,
                                                           'b' : self.slope_concentration})
-
 
     #-----------------------------------------------------------------------------------------
     # OVERDENSITY AT COLLAPSE
@@ -1132,20 +1093,14 @@ class classic_halomodel():
         kappa   = self.k
         P_kappa = self.pk*(self.cosmology.growth_factor_CDM_baryons_neutrinos(z=0., k=kappa)[0]/self.cosmology.growth_factor_CDM_baryons_neutrinos(z=self.z, k=kappa)[0])**2.
         dlnk    = np.log(kappa[1]/kappa[0])        
-
-        # Smoothing radii
-        R   = self.smoothing_radius(self.mass)
-        
-        # Integration in log-bins (with numpy)
+        R       = self.smoothing_radius(self.mass)
         integrand = np.zeros((self.nz, len(R),len(kappa)))
         integral  = np.zeros((self.nz, len(R)))
         for iz in range(self.nz):
             for ir in range(len(R)):
                 integrand[iz, ir] = kappa**3.*P_kappa[iz]/(2.*np.pi**2.)*UF.TopHat_window(kappa*R[ir])**2.
                 integral[iz, ir]  = np.trapz(integrand[iz,ir], dx = dlnk)
-
         return integral
-
 
     #-----------------------------------------------------------------------------------------
     # NU-MASS RELATION
@@ -1176,24 +1131,18 @@ class classic_halomodel():
         # Masses and nu's
         m  = self.mass
         nu = self.peak_height
-
         # dln(nu)/dln(m) (adding last component as equal to second-to-last)
         dln_nu = np.log(nu[:,1:]/nu[:,:-1])
         dln_m  = np.log(m[1]/m[0])
         ln_der = dln_nu/dln_m
         ln_der = np.append(ln_der[:,:], np.transpose([ln_der[:,-1]]), axis = 1)
-
         # ST mass function
         mass_fun = self.mass_fun_ST(nu, **kwargs)
-
         # Matter density today
         rho = self.cosmology.rho(0.)
-        
         # Halo mass function
         hmf = rho/m**2.*ln_der*mass_fun
-
         return hmf
-
 
     #-----------------------------------------------------------------------------------------
     # M STAR
@@ -1204,7 +1153,6 @@ class classic_halomodel():
         func = si.interp1d(nu, self.mass)
         value = func(1.)
         return value
-
 
     #-----------------------------------------------------------------------------------------
     # FOURIER TRANSFORM OF NFW PROFILE
@@ -1229,8 +1177,6 @@ class classic_halomodel():
             conc[i] = c0/(1.+self.z[i])*(M/scale_mass)**(-b)
         return conc
 
-
-
     #-----------------------------------------------------------------------------------------
     # VIRIAL RADIUS
     #-----------------------------------------------------------------------------------------
@@ -1242,7 +1188,6 @@ class classic_halomodel():
             rv[i] = ((3.*M)/(4.*np.pi*rho*dv[i]))**(1./3.)
         return rv
 
-
     #-----------------------------------------------------------------------------------------
     # SCALE RADIUS
     #-----------------------------------------------------------------------------------------
@@ -1250,8 +1195,7 @@ class classic_halomodel():
         cc = self.conc(M, **kwargs_concentration)
         rs = np.zeros_like(cc)
         rv = self.R_v(M)
-        for i in range(self.nz):
-            rs[i] = rv[i]/cc[i]
+        for i in range(self.nz): rs[i] = rv[i]/cc[i]
         return rs
 
     #-----------------------------------------------------------------------------------------
@@ -1263,10 +1207,8 @@ class classic_halomodel():
         nu   = self.peak_height
         dndM = self.load_halo_mass_function(**kwargs)
         rho  = self.cosmology.rho(0.)
-        
         value = np.trapz(M**2./rho*dndM*bias, dx = dlnM)
         return 1./value
-
 
     #-----------------------------------------------------------------------------------------
     # HALO POWER SPECTRUM
@@ -1285,26 +1227,20 @@ class classic_halomodel():
         for iz in xrange(self.nz):
             for i in xrange(self.nk):
                 nfw[iz, i] = self.u_NFW(c[iz], k[i]*r_s[iz])
-
         # Normalization for 2-halo term
         normalization = self.norm_2h(bias, **kwargs_mass_function)
-
         # One-halo term damping at very large scales
         k_damp = 0.01*(1.+self.z)
-
+        # Power spectrum
         P_1h = np.zeros_like(self.pk)
         P_2h = np.zeros_like(self.pk)
-
         for iz in xrange(self.nz):
             for ik in xrange(len(self.k)):
                 integrand_1h = ((M/rho)**2*dndM[iz]*nfw[iz,ik]**2)*M
                 integrand_2h = (M/rho*dndM[iz]*nfw[iz,ik]*bias[iz])*M
                 P_1h[iz,ik]  = np.trapz(integrand_1h, dx = dlnM)*(1.-np.exp(-(self.k[ik]/k_damp[iz])**2.))
                 P_2h[iz,ik]  = np.trapz(integrand_2h, dx = dlnM)**2.*normalization[iz]**2.*self.pk[iz,ik]
-
         self.pk_nl = P_1h + P_2h
-
-
 
 ########################################################################################################################
 # Takahashi
@@ -1344,26 +1280,20 @@ class Takahashi():
         assert len(k)>200,     "k must have a length greater than 200 points"
         assert k.max()>=100.,   "Maximum wavenumber must be greater than 100 h/Mpc in order to achieve convergence"
         assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
-
         # Reading all cosmological parameters
         self.w0           = cosmology.w0
         self.wa           = cosmology.wa
         self.cosmology    = cosmology
         self.f_nu         = np.sum(cosmology.f_nu[np.where(cosmology.M_nu!=0.)])
-
         # Redshift and scales at which all must be computed
         self.nz   = len(np.atleast_1d(z))
         self.nk   = len(np.atleast_1d(k))
         self.z    = np.atleast_1d(z)
         self.k    = np.atleast_1d(k)
         self.pk   = pk
-
-        if np.shape(pk) != (self.nz,self.nk):
-            raise IndexError("pk must be of shape (len(z), len(k))")
-
-        # cdm+b density
+        if np.shape(pk) != (self.nz,self.nk): raise IndexError("pk must be of shape (len(z), len(k))")
+        # Matter density
         self.rho_field  = self.cosmology.rho_crit(0.)*self.cosmology.Omega_m
-
         # Initialize mass
         self.mass    = np.logspace(0., 18., 512)
         self.lnmass  = np.log10(self.mass)
@@ -1372,7 +1302,6 @@ class Takahashi():
         self.nm      = np.size(self.mass)
         self.rr      = self.cosmology.radius_of_mass(self.mass, window = 'g')
         self.lnr     = np.log(self.rr)
-
         # Mass variance, non-linear scales, effective indices
         self.sigma2  = self.mass_variance(k=self.k,pk=self.pk)
         self.k_nl    = self.nonlinear_scale(precision = 1e-5)
@@ -1396,8 +1325,7 @@ class Takahashi():
             0.3980*self.n_eff**4-0.1682*self.C_eff + self.f_nu*(1.081 + 0.395*self.n_eff**2.)
         self.mun    = 0.0
         self.nun    = 10**(5.2105+3.6902*self.n_eff)
-
-        # Compute!
+        # GO!
         self.compute_nonlinear_pk()
 
     #-----------------------------------------------------------------------------------------
@@ -1418,7 +1346,6 @@ class Takahashi():
         # Mass variance
         sigma2_array = self.sigma2
         s2_interp    = si.interp1d(self.rr,sigma2_array,'cubic',bounds_error=False,fill_value='extrapolate')
-
         # Find k_sigma
         k_sigma = np.zeros(nz)
         for iz in range(nz):
@@ -1472,7 +1399,6 @@ class Takahashi():
     #-----------------------------------------------------------------------------------------
     def compute_nonlinear_pk(self):
         self.pk_nl  = np.zeros_like(self.pk)
-
         an     = np.expand_dims(self.an,    0).T
         bn     = np.expand_dims(self.bn,    0).T
         cn     = np.expand_dims(self.cn,    0).T
@@ -1497,8 +1423,6 @@ class Takahashi():
         Delta_H_2 = Delta_H_2_prime/(1.+mun/y+nun/y**2.)*(1+self.f_nu*0.977)
         # Return power spectra
         self.pk_nl = 2.*np.pi**2.*(Delta_Q_2+Delta_H_2)/k**3.
-
-
 
 ########################################################################################################################
 # Bird
@@ -1538,28 +1462,21 @@ class Bird():
         assert len(k)>200,     "k must have a length greater than 200 points"
         assert k.max()>=100.,   "Maximum wavenumber must be greater than 100 h/Mpc in order to achieve convergence"
         assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
-
         # Reading all cosmological parameters
         self.f_nu         = np.sum(cosmology.f_nu[np.where(cosmology.M_nu!=0.)])
         self.cosmology    = cosmology
-
         # Assertions
         if self.cosmology.w0 != -1. or self.cosmology.wa != 0.:
             warnings.warn("This model does not currently support dynamic dark energy")
-
         # Redshift and scales at which all must be computed
         self.nz   = len(np.atleast_1d(z))
         self.nk   = len(np.atleast_1d(k))
         self.z    = np.atleast_1d(z)
         self.k    = np.atleast_1d(k)
         self.pk   = pk
-
-        if np.shape(pk) != (self.nz,self.nk):
-            raise IndexError("pk must be of shape (len(z), len(k))")
-
+        if np.shape(pk) != (self.nz,self.nk): raise IndexError("pk must be of shape (len(z), len(k))")
         # cdm+b density
         self.rho_field  = self.cosmology.rho_crit(0.)*self.cosmology.Omega_cb
-
         # Initialize mass
         self.mass    = np.logspace(0., 18., 512)
         self.lnmass  = np.log10(self.mass)
@@ -1568,7 +1485,6 @@ class Bird():
         self.nm      = np.size(self.mass)
         self.rr      = self.cosmology.radius_of_mass(self.mass, window = 'g')
         self.lnr     = np.log(self.rr)
-
         # Mass variance, non-linear scales, effective indices
         self.sigma2  = self.mass_variance(k=self.k,pk=self.pk, var = 'cb', window = 'g')  # Smoothing P_mm(k) on cdm+b field seems to work best, but why??
         self.k_nl    = self.nonlinear_scale(sigma2_array=self.sigma2)
@@ -1588,13 +1504,11 @@ class Bird():
         self.betan  = 0.8291+0.9854*self.n_eff+0.3400*self.n_eff**2+self.f_nu*(-6.4868+1.4373*self.n_eff**2)
         self.mun    = 10**(-3.54419+0.19086*self.n_eff)
         self.nun    = 10**(0.95897+1.2857*self.n_eff)
-
         frac        = self.Olz/(1.-self.Omz)
         self.f1     = frac*self.Omz**(-0.0307) + (1.-frac)*self.Omz**(-0.0732)
         self.f2     = frac*self.Omz**(-0.0585) + (1.-frac)*self.Omz**(-0.1423)
         self.f3     = frac*self.Omz**( 0.0743) + (1.-frac)*self.Omz**( 0.0725)
-
-        # Compute!
+        # GO!
         self.compute_nonlinear_pk()
 
     #-----------------------------------------------------------------------------------------
@@ -1615,7 +1529,6 @@ class Bird():
         nz = self.nz
         # Mass variance
         s2_interp    = si.interp1d(self.rr,sigma2_array,'cubic',bounds_error=False,fill_value='extrapolate')
-
         # Find k_sigma
         k_sigma = np.zeros(nz)
         for iz in range(nz):
@@ -1664,7 +1577,6 @@ class Bird():
     #-----------------------------------------------------------------------------------------
     def compute_nonlinear_pk(self):
         self.pk_nl  = np.zeros_like(self.pk)
-
         an     = np.expand_dims(self.an,    0).T
         bn     = np.expand_dims(self.bn,    0).T
         cn     = np.expand_dims(self.cn,    0).T
