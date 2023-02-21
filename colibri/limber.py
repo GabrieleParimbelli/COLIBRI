@@ -872,6 +872,13 @@ class limber():
         for il in xrange(n_l):
             for iz in range(n_z):
                 PS_lz[il,iz] = power_spectra(l[il]/self.geometric_factor[iz], zz[iz])
+        # Add curvature correction (see arXiv:2302.04507)
+        if self.cosmology.K != 0.:
+            KK = self.cosmology.K
+            factor = np.zeros((n_l,n_z))
+            for il,ell in enumerate(l):
+                factor[il]=(1-np.sign(KK)*ell**2/(((ell+0.5)/self.geometric_factor)**2+KK))**-0.5
+            PS_lz *= factor
 
         # 3) load Cls given the source functions
         # 1st key (from 1 to N_keys)
