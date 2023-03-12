@@ -15,7 +15,7 @@ colors = ['b','r','g','m','gray','c']
 # 'bird'        (good for neutrinos)
 # 'halomodel'   (good for neutrinos)
 # 'classichm'   (not good for neutrinos)
-set_halofit = 'bird'#'mead2020'
+set_halofit = 'mead2020'
 #########################
 
 #=================

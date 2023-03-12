@@ -28,10 +28,9 @@ print("nonlinear          : %s" %nonlinear)
 print("------------------------------")
 
 # Redshifts
-if multiple_redshifts:
-    z = np.linspace(0., 5., 6)
-else:
-    z = np.array([0.])
+if multiple_redshifts: z = np.linspace(0., 5., 6)
+else:                  z = 0.
+z = np.atleast_1d(z)
 
 # Text (for later)
 string_redshifts = ''
@@ -78,6 +77,14 @@ k_eh, pk_eh = C.EisensteinHu_Pk(z = z,              # Redshifts
 print(">> Done EH")
 EH = time.time()
 
+# Compute power spectrum with Eisenstein-Hu formula (without wiggles)
+k_eh_nw, pk_eh_nw = C.EisensteinHu_nowiggle_Pk(z = z,              # Redshifts
+                                               k = k,              # Scales
+                                               sigma_8 = 0.831)    # normalization (As cannot be used here)
+print(">> Done EH")
+EHNW = time.time()
+
+
 print("--------------------------------")
 print("    >> TIME REPORT P(k) <<      ")
 print("--------------------------------")
@@ -86,8 +93,9 @@ print("Running CAMB            %.2f s" %(CAMB-INIT))
 print("Running XCAMB           %.2f s" %(XCAMB-CAMB))
 print("Running Class           %.2f s" %(CLASS-XCAMB))
 print("Running EH              %.2f s" %(EH-CLASS))
+print("Running EH-NW           %.2f s" %(EHNW-EH))
 print("--------------------------------")
-print("TOTAL                   %.2f s" %(EH-START))
+print("TOTAL                   %.2f s" %(EHNW-START))
 print("--------------------------------")
 
 import matplotlib.pyplot as plt
@@ -102,14 +110,16 @@ for i in range(len(np.atleast_1d(z))):
     ax[0].loglog(k_xcamb, pk_xcamb['tot-tot'][i], 'r-.', lw = 3.0)
     ax[0].loglog(k_class, pk_class[i],            'g--', lw = 3.0)
     ax[0].loglog(k_eh,    pk_eh[i],               'k:',  lw = 3.0)
+    ax[0].loglog(k_eh_nw, pk_eh_nw[i],            'm:',  lw = 3.0)
 ax[0].plot(0., 0., 'b',   lw = 3.0, label = 'CAMB')
 ax[0].plot(0., 0., 'r-.', lw = 3.0, label = 'XCAMB')
 ax[0].plot(0., 0., 'g--', lw = 3.0, label = 'CLASS')
 ax[0].plot(0., 0., 'k:',  lw = 3.0, label = 'EH')
-ax[0].legend(loc = 'lower left', fontsize = 20, ncol = 4)
+ax[0].plot(0., 0., 'm:',  lw = 3.0, label = 'EH no wiggle')
+ax[0].legend(loc = 'lower left', fontsize = 16, ncol = 5)
 ax[0].set_xlim(k.min(), k.max())
 ax[0].set_ylabel('$P(k)$ $[(\mathrm{Mpc}/h)^3]$')
-ax[0].text(0.75, 0.8, '$z =$ %s' %string_redshifts, transform = ax[0].transAxes, bbox = dict(boxstyle='round', facecolor='white', alpha = 1.0))
+ax[0].text(0.98, 0.8, '$z =$ %s' %string_redshifts, ha='right', transform = ax[0].transAxes, bbox = dict(boxstyle='round', facecolor='white', alpha = 1.0))
 ax[0].grid(True)
 
 # Plot ratios
@@ -117,6 +127,7 @@ for i in range(len(np.atleast_1d(z))):
     ax[1].semilogx(k, (pk_xcamb['tot-tot'][i]/pk_camb[i]-1.)*100., 'r-.', lw = 3.0)
     ax[1].semilogx(k, (pk_class[i]           /pk_camb[i]-1.)*100., 'g--', lw = 3.0)
     ax[1].semilogx(k, (pk_eh[i]              /pk_camb[i]-1.)*100., 'k:',  lw = 3.0)
+    ax[1].semilogx(k, (pk_eh_nw[i]           /pk_camb[i]-1.)*100., 'm:',  lw = 3.0)
 ax[1].set_xlim(k.min(), k.max())
 ax[1].set_ylim(-5., 5.)
 ax[1].set_xlabel('$k$ $[h/\mathrm{Mpc}]$')

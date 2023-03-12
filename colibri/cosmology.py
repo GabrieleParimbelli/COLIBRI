@@ -8,8 +8,6 @@ import colibri.useful_functions as UF
 from scipy.ndimage import gaussian_filter1d
 import sys
 import warnings
-from six.moves import xrange
-from six import iteritems
 try:                from classy import Class
 except ImportError: pass
 try:                import camb
@@ -76,11 +74,12 @@ class cosmo:
     :param Omega_cdm: Cold dark matter density parameter today, :math:`\Omega_{cdm}`.
     :param Omega_cb: Cold dark matter + baryons density parameter today, :math:`\Omega_{cb}`.
     :param Omega_gamma: Photon density parameter today, :math:`\Omega_\gamma`.
+    :param Omega_rad: Photon + massless neutrino density parameter today, :math:`\Omega_\gamma`.
     :param omega_m: Reduced matter density parameter today, :math:`\Omega_m h^2`.
     :param omega_cdm: Reduced cold dark matter density parameter today, :math:`\Omega_{cdm} h^2`.
-    :param omega_cb: Reduced cold dark matter density parameter today, :math:`\Omega_{cb} h^2`.
-    :param omega_b: Reduced baryon parameter today, :math:`\Omega_{b} h^2`.
-    :param omega_nu: Reduced neutrino parameter today, :math:`\Omega_\\nu h^2`.
+    :param omega_cb: Reduced cold dark matter+baryons density parameter today, :math:`\Omega_{cb} h^2`.
+    :param omega_b: Reduced baryon density parameter today, :math:`\Omega_{b} h^2`.
+    :param omega_nu: Reduced neutrino density parameter today, :math:`\Omega_\\nu h^2`.
     :param omega_gamma: Reduced photon density parameter today, :math:`\Omega_\gamma h^2`.
     :param omega_K: Reduced curvature parameter today, :math:`\Omega_K h^2`.
     :param massive_nu: Number of massive neutrinos.
@@ -88,32 +87,31 @@ class cosmo:
     :param Omega_massive_nu: Massive neutrino density parameters today.
     :param Omega_massless_nu: Massless neutrino density parameters today.
     :param log10_As: If ``As`` is not None, base-10 logarithm of initial scalar amplitude.
-    :param f_nu: Neutrino fractions, in units of :math:`\Omega_m`.
-    :param f_nu_tot: Sum of neutrino fractions.
+    :param f_nu: Neutrino fraction, in units of :math:`\Omega_m`.
     :param f_b: Baryon fraction in units of :math:`\Omega_m`.
     :param f_c: Cold dark matter fraction in units of :math:`\Omega_m`.
     :param f_cb: Cold dark matter plus baryon fraction in units of :math:`\Omega_m`.
     :param Gamma_nu: Neutrino-to-photon temperature ratio.
     :param T_nu: Neutrino temperature today.
-    :param M: Array of 512 masses, equally-spaced in logarithmic bins from :math:`10^2` to :math:`10^{18} \ M_\odot/h`, used to sample (e.g.) mass functions
+    :param M: Array of 512 masses, equally-spaced in logarithmic bins from :math:`10^2` to :math:`10^{18} \ M_\odot/h`, used to sample (e.g.) mass functions and variances
     :param delta_sc: Critical overdensity for spherical collapse (linear theory extrapolation), :math:`\delta_{sc} = \\frac{3}{20} \left(12\pi\\right)^{2/3} \\approx 1.686`.
     :param eta_sc: Time of shell-crossing (radians), :math:`\eta_{sc} \\approx 3.488`.
     :param delta_v: Critical underdensity for voids (linear theory extrapolation), :math:`\delta_v = - \\frac{3}{20} \left[6 (\sinh \eta_{sc}-\eta_{sc})\\right]^{2/3} \\approx -2.717`.
     """
 
     def __init__(self,
-                 Omega_m      = 0.3089,
-                 Omega_b      = 0.0486,
-                 Omega_K      = 0.,
-                 N_nu         = 3,
-                 M_nu         = 0.,
-                 N_eff        = 3.046,
-                 As           = 2.14e-9,
-                 ns           = 0.9667,
-                 sigma_8      = None,
-                 h            = 0.6774,
+                 Omega_m      = 0.32,
+                 Omega_b      = 0.05,
+                 h            = 0.67,
+                 As           = 2.12605e-9,
+                 ns           = 0.96,
                  w0           = -1.,
                  wa           = 0.,
+                 M_nu         = 0.,
+                 Omega_K      = 0.,
+                 N_nu         = 3,
+                 N_eff        = 3.046,
+                 sigma_8      = None,
                  tau          = 0.06,
                  T_cmb        = 2.7255):
 
@@ -168,11 +166,13 @@ class cosmo:
         #-------------------------------------
         self.Omega_gamma       = const.alpha_BB*self.T_cmb**4./(const.c*1.e3)**2./const.Msun*1.e3*const.Mpc_to_m**3./const.rhoch2/self.h**2.
         self.Omega_nu          = 15./const.PI**4.*self.Gamma_nu**4.*self.Omega_gamma*np.array([self.FermiDirac_integral(x/(const.kB*self.T_nu[i])) for i,x in enumerate(self.M_nu)])
-        self.Omega_cdm         = self.Omega_m - self.Omega_b - np.sum(self.Omega_nu)
-        self.Omega_cb          = self.Omega_cdm + Omega_b
-        self.Omega_lambda      = 1. - self.Omega_cb - np.sum(self.Omega_nu) - self.Omega_K - self.Omega_gamma
         self.Omega_massive_nu  = self.Omega_nu[np.where(self.M_nu != 0.)]
         self.Omega_massless_nu = self.Omega_nu[np.where(self.M_nu == 0.)]
+        self.Omega_nu_tot      = np.sum(self.Omega_nu)
+        self.Omega_cdm         = self.Omega_m - self.Omega_b - np.sum(self.Omega_massive_nu) #np.sum(self.Omega_nu)
+        self.Omega_rad         = self.Omega_gamma + np.sum(self.Omega_massless_nu)
+        self.Omega_cb          = self.Omega_cdm + self.Omega_b
+        self.Omega_lambda      = 1. - self.Omega_cb - np.sum(self.Omega_nu) - self.Omega_K - self.Omega_gamma
 
         self.omega_m      = self.Omega_m    *h**2.
         self.omega_b      = self.Omega_b    *h**2.
@@ -181,12 +181,12 @@ class cosmo:
         self.omega_cb     = self.Omega_cb   *h**2.
         self.omega_nu     = self.Omega_nu   *h**2.
         self.omega_gamma  = self.Omega_gamma*h**2.
+        self.omega_rad    = self.Omega_rad  *h**2.
 
         #-------------------------------------
         # Density fractions
         #-------------------------------------
-        self.f_nu     = self.Omega_nu/self.Omega_m
-        self.f_nu_tot = np.sum(self.f_nu)
+        self.f_nu     = np.sum(self.Omega_massive_nu)/self.Omega_m
         self.f_cb     = self.Omega_cb/self.Omega_m
         self.f_b      = self.Omega_b/self.Omega_m
         self.f_c      = self.Omega_cdm/self.Omega_m
@@ -1170,7 +1170,7 @@ class cosmo:
         assert np.min(k)<=0.001,  "Minimum k of power spectrum is too high to obtain a convergent result. Use k_min<=0.001 h/Mpc."
         assert len(k)>=100,       "size of 'k' too low to obtain a convergent result. At least 100 points."
         assert np.all([np.isclose(np.log(k[ind+1]/k[ind]), np.log(k[ind+2]/k[ind+1]),
-                atol = 1e-4, rtol = 1e-2) for ind in xrange(len(k[:-2]))]),"k are not regularly log-spaced"
+                atol = 1e-4, rtol = 1e-2) for ind in range(len(k[:-2]))]),"k are not regularly log-spaced"
 
         P_kappa = []
         for iz in range(nz):
@@ -2124,7 +2124,7 @@ class cosmo:
             #d1 = aa*ss.hyp2f1(-1./(3.*ww), 0.5-1./(2*ww), 1.-5./(6.*ww), aa**(-3*ww)*(1.-1./self.Omega_m))/ss.hyp2f1(-1/(3.*ww), 0.5-1./(2*ww), 1.-5./(6.*ww), -(1.-self.Omega_m)/self.Omega_m)
         else:
             d1 = np.zeros(nz)
-            for i in xrange(nz):
+            for i in range(nz):
                 LCDM, _  = sint.quad(lambda x: (1+x)*(self.H0/self.H_massive(x))**3., z[i], np.inf)
                 d1[i] = LCDM*self.H_massive(z[i])/self.H0
             LCDM0, _ = sint.quad(lambda x: (1+x)*(self.H0/self.H_massive(x))**3., 0., np.inf)
@@ -2146,7 +2146,7 @@ class cosmo:
 
         # Same of LCDM if no massive neutrinos
         if np.sum(np.atleast_1d(self.M_nu)) == 0.:
-            LCDM = np.array([LCDM for i in xrange(len(np.atleast_1d(k)))])
+            LCDM = np.array([LCDM for i in range(len(np.atleast_1d(k)))])
             return np.transpose(LCDM)
         else:
             K, Z = np.meshgrid(k,z)
@@ -2154,7 +2154,7 @@ class cosmo:
             f_nu = np.sum(np.atleast_1d(self.f_nu))
             
             # Normalize at z initial
-            LCDM = np.transpose([LCDM for i in xrange(len(np.atleast_1d(k)))])/self.growth_factor_scale_independent(self.z_drag_EH())
+            LCDM = np.transpose([LCDM for i in range(len(np.atleast_1d(k)))])/self.growth_factor_scale_independent(self.z_drag_EH())
             
             # exponent
             p_cb = 1./4.*(5.-np.sqrt(1.+24.*f_cb))
@@ -2191,7 +2191,7 @@ class cosmo:
         
         # Same of LCDM if no massive neutrinos
         if np.sum(self.M_nu) == 0.:
-            LCDM = np.array([LCDM for i in xrange(len(np.atleast_1d(k)))])
+            LCDM = np.array([LCDM for i in range(len(np.atleast_1d(k)))])
             return np.transpose(LCDM)
         else:
             K, Z = np.meshgrid(k,z)
@@ -2199,7 +2199,7 @@ class cosmo:
             f_nu = np.sum(np.atleast_1d(self.f_nu))
 
             # Normalize at z initial
-            LCDM = np.transpose([LCDM for i in xrange(len(np.atleast_1d(k)))])/self.growth_factor_scale_independent(self.z_drag_EH())
+            LCDM = np.transpose([LCDM for i in range(len(np.atleast_1d(k)))])/self.growth_factor_scale_independent(self.z_drag_EH())
 
             # exponent
             p_cb = 1./4.*(5.-np.sqrt(1.+24.*f_cb))
@@ -2412,8 +2412,11 @@ class cosmo:
 
         :return: 2D array of shape ``(len(z), len(k))``
         """
+        # Substitute k_max above 10.
+        if nonlinear: k_new = np.array([i if i<10. else 10. for i in k])
+        else:         k_new = k
         # k,z arrays
-        Z,K      = np.meshgrid(z,k,indexing='ij')
+        Z,K      = np.meshgrid(z,k_new,indexing='ij')
         a        = 1./(1.+Z)
 
         # Non-linear enhancement
@@ -2464,14 +2467,10 @@ class cosmo:
             ratio_high = self.ratio_by_param(r_high, a, K, param_high)  # 1e-5 < fR0 < 1e-4
 
             # Return
-            if   f_R0>5e-5:
-                enhancement = ratio_high
-            elif f_R0<5e-6:
-                enhancement = ratio_low
-            elif f_R0>1e-5:
-                enhancement = ratio_mid + (ratio_high - ratio_mid) * (f_R0 - 1e-5)/(5e-5 - 1e-5)
-            else: 
-                enhancement = ratio_low + (ratio_mid  - ratio_low) * (f_R0 - 5e-6)/(1e-5 - 5e-6)
+            if   f_R0>5e-5: enhancement = ratio_high
+            elif f_R0<5e-6: enhancement = ratio_low
+            elif f_R0>1e-5: enhancement = ratio_mid+(ratio_high-ratio_mid)*(f_R0-1e-5)/(5e-5-1e-5)
+            else:           enhancement = ratio_low+(ratio_mid -ratio_low)*(f_R0-5e-6)/(1e-5-5e-6)
 
             # Change due to Omega_m
             #dom_om       = (self.Omega_m-0.3)/0.3
@@ -2494,6 +2493,9 @@ class cosmo:
             d_Z =  0.14654- 0.01000*(a-1.)- 0.14944*(a-1.)**2.
             e_Z =  1.62807+ 0.71291*(a-1.)- 1.41003*(a-1.)**2.
             enhancement = 1. + (b_Z*K)**2./(1.+c_Z*K**2.) + d_Z*np.abs(np.log(K)*K/(K-1.))*np.arctan(e_Z*K)
+
+        # There cannot be suppression
+        enhancement[np.where(enhancement<1.0)] = 1.0
 
         return enhancement
 
@@ -2851,40 +2853,37 @@ class cosmo:
         """
 
         # Set halofit for non-linear computation
-        if nonlinear == True:
-                halofit = halofit
-        else: halofit = 'none'
+        if nonlinear == True: halofit = halofit
+        else:                 halofit = 'none'
 
         # Setting lengths
         nk = len(np.atleast_1d(k))
         nz = len(np.atleast_1d(z))
-        if nz == 1.: z = np.array([z])
-        else:        z = np.array(z)
-        kmax = max(k[-1],500.)
-        zmax = max(z[-1],101.)
+        z = np.atleast_1d(z)
+        k = np.atleast_1d(k)
+        kmax = max(k.max(),500.)
+        zmax = max(z.max(),101.)
         tau = self.tau
         params = {
             'output': 'mPk dTk',
-            'n_s': self.ns, 
-            'h': self.h,
-            'omega_b': self.Omega_b*self.h**2.,
-            'omega_cdm': self.Omega_cdm*self.h**2.,
-            'Omega_k': self.Omega_K,
-            'tau_reio': self.tau,
-            'T_cmb': self.T_cmb,
+            'n_s':           self.ns, 
+            'h':             self.h,
+            'omega_b':       self.Omega_b*self.h**2.,
+            'omega_cdm':     self.Omega_cdm*self.h**2.,
+            'Omega_k':       self.Omega_K,
+            'tau_reio':      self.tau,
+            'T_cmb':         self.T_cmb,
             'P_k_max_h/Mpc': kmax,
-            'z_max_pk': zmax,
-            'non_linear': halofit}
+            'z_max_pk':      zmax,
+            'non_linear':    halofit}
         # Set initial conditions
-        if self.sigma_8 is not None:
-            params['sigma8'] = self.sigma_8            
-        else:
-            params['A_s'] = self.As            
+        if self.sigma_8 is not None: params['sigma8'] = self.sigma_8            
+        else:                        params['A_s']    = self.As            
         # Set dark energy
         if self.w0 != -1. or self.wa != 0.:
             params['Omega_fld'] = self.Omega_lambda
-            params['w0_fld'] = self.w0
-            params['wa_fld'] = self.wa
+            params['w0_fld']    = self.w0
+            params['wa_fld']    = self.wa
 
         # Set neutrino masses
         # If all masses are zero, then no m_ncdm
@@ -2908,8 +2907,8 @@ class cosmo:
 
         # Storing Pk
         pk = np.zeros((nz,nk))
-        for i in xrange(nk):
-            for j in xrange(nz):
+        for i in range(nk):
+            for j in range(nz):
                 pk[j,i] = cosmo.pk(k[i],z[j])*self.h**3.
         # Re-switching to (Mpc/h) units
         k /= self.h
@@ -2986,40 +2985,37 @@ class cosmo:
 
 
         # Set halofit for non-linear computation
-        if nonlinear == True:
-                halofit = halofit
-        else: halofit = 'none'
+        if nonlinear == True: halofit = halofit
+        else:                 halofit = 'none'
 
         # Setting lengths
         nk = len(np.atleast_1d(k))
         nz = len(np.atleast_1d(z))
-        if nz == 1.: z = np.array([z])
-        else:        z = np.array(z)
-        kmax = max(k[-1],500.)
-        zmax = max(z[-1],101.)
+        z = np.atleast_1d(z)
+        k = np.atleast_1d(k)
+        kmax = max(k.max(),500.)
+        zmax = max(z.max(),101.)
         tau = self.tau
         params = {
-            'output': 'mPk dTk',
-            'n_s': self.ns, 
-            'h': self.h,
-            'omega_b': self.Omega_b*self.h**2.,
-            'omega_cdm': self.Omega_cdm*self.h**2.,
-            'Omega_k': self.Omega_K,
-            'tau_reio': self.tau,
-            'T_cmb': self.T_cmb,
+            'output':        'mPk dTk',
+            'n_s':           self.ns, 
+            'h':             self.h,
+            'omega_b':       self.Omega_b*self.h**2.,
+            'omega_cdm':     self.Omega_cdm*self.h**2.,
+            'Omega_k':       self.Omega_K,
+            'tau_reio':      self.tau,
+            'T_cmb':         self.T_cmb,
             'P_k_max_h/Mpc': kmax,
-            'z_max_pk': zmax,
-            'non_linear': halofit}
+            'z_max_pk':      zmax,
+            'non_linear':    halofit}
         # Set initial conditions
-        if self.sigma_8 is not None:
-            params['sigma8'] = self.sigma_8            
-        else:
-            params['A_s'] = self.As        
+        if self.sigma_8 is not None: params['sigma8'] = self.sigma_8            
+        else:                        params['A_s'] = self.As        
         # Set dark energy
         if self.w0 != -1. or self.wa != 0.:
             params['Omega_fld'] = self.Omega_lambda
-            params['w0_fld'] = self.w0
-            params['wa_fld'] = self.wa
+            params['w0_fld']    = self.w0
+            params['wa_fld']    = self.wa
 
         # Set neutrino masses
         # If all masses are zero, then no m_ncdm
@@ -3042,16 +3038,14 @@ class cosmo:
         # Setting lengths
         n1 = len(var_1)
         n2 = len(var_2)
-        if nz == 1.: z = np.array([z])
-        else:        z = np.array(z)
 
         # I change to k/h since CLASS uses k in units of 1/Mpc
         k *= self.h
         
         # Storing Pk
         pk_m = np.zeros((nz,nk))
-        for i in xrange(nk):
-            for j in xrange(nz):
+        for i in range(nk):
+            for j in range(nz):
                 pk_m[j,i] = cosmo.pk(k[i],z[j])*self.h**3.
 
         # Re-switching to (Mpc/h) units
@@ -3066,7 +3060,7 @@ class cosmo:
                 string = c1+'-'+c2
                 pk[string] = np.zeros((nz,nk))
                 # Loop over redshifts
-                for ind_z in xrange(nz):
+                for ind_z in range(nz):
                     # Get transfer functions at z
                     TF         = cosmo.get_transfer(z = z[ind_z])
                     k_T        = TF['k (h/Mpc)']
@@ -3079,7 +3073,7 @@ class cosmo:
                     T_ur       = TF['d_ur']
                     TF['d_cb'] = (self.Omega_cdm * T_cdm + self.Omega_b * T_b)/self.Omega_cb
                     T_nu       = np.array([el[1] for el in list(filter(lambda item: item[0].startswith('d_ncdm'), TF.items()))])
-                    try:                 TF['d_nu'] = np.sum(self.M_nu[self.M_nu!=0.]*T_nu.T, axis = 1)/np.sum(self.M_nu)
+                    try:                 TF['d_nu'] = np.sum(self.M_nu[self.M_nu!=0.]*T_nu.T, axis = 1) /np.sum(self.M_nu)
                     except np.AxisError: TF['d_nu'] = np.zeros(len(k_T))
                     # Interpolation of matter T(k)
                     tm_int   = si.interp1d(k_T, T_m, kind = 'cubic', fill_value = "extrapolate")
@@ -3215,7 +3209,7 @@ class cosmo:
             z = np.array([z])
         nk = len(np.atleast_1d(k))
         Pk = np.zeros((nz,nk))
-        for i in xrange(nz):
+        for i in range(nz):
             Pk[i] = power_tmp*(self.growth_factor_scale_independent(z[i])/self.growth_factor_scale_independent(0.))**2.
 
         return k, Pk
@@ -3425,7 +3419,7 @@ class cosmo:
         W_kR = self.TopHat_window(k2d*R)
         # Integration in log-bins
         integral = sint.simps(k2d**3.*pk/(2.*const.PI**2.)*W_kR**2.,x=np.log(k),axis=1)
-        return integral**.5
+        return integral**0.5
 
     #-----------------------------------------------------------------------------------------
     # NORMALIZE P(k)

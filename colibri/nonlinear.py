@@ -524,24 +524,24 @@ class HMcode2020():
         n_eff_cc = np.zeros(self.nz)
         for i in xrange(self.nz):
             # Find the mass at which sigma(M) = delta_c
-            sig_int_2  = si.interp1d(self.logmass, sig2_cc[i]-deltac[i]**2.,'cubic', fill_value='extrapolate',bounds_error=False)
-            M_1 = 10.**(so.root(sig_int_2, 13.-1.75*(1+self.z[i]))['x'][0])
+            sig_int_2   = si.interp1d(self.logmass, sig2_cc[i]-deltac[i]**2.,'cubic',
+                                      fill_value='extrapolate',bounds_error=False)
+            M_1         = 10.**(so.root(sig_int_2, 13.-1.75*(1+self.z[i]))['x'][0])
             # Spline the sigma^2(M) function and take derivative at M_1
-            s2_spl      = si.InterpolatedUnivariateSpline(self.lnmass, np.log(sig2_cc[i]), k = 3)
+            s2_spl      = si.InterpolatedUnivariateSpline(self.lnmass,np.log(sig2_cc[i]),k=3)
             spl_logder  = s2_spl.derivative()
             logder      = spl_logder(np.log(M_1))
             # effective spectral index
-            n_eff_cc[i] = - 3. - 3.*logder
+            n_eff_cc[i] = -3.-3.*logder
         # Quasi-linear softening
         alpha  = np.expand_dims(1.875*1.603**n_eff_cc,1)
         # NFW profile, already normalized for bloating and corrected for neutrino fraction
         u_NFW = np.zeros((self.nz, self.nm, self.nk))
         eta_tmp = np.array([eta for x in xrange(self.nm)]).T
         R_bloat = peak_height**eta_tmp*rs
-        for ik in range(self.nk):
-            u_NFW[:,:,ik] = self.FFT_NFW_profile(conc, self.k[ik]*R_bloat)*(1-self.f_nu)
+        for ik in range(self.nk): u_NFW[:,:,ik] = self.FFT_NFW_profile(conc,self.k[ik]*R_bloat)*(1-self.f_nu)
         # Halo mass function
-        hmf = self.dndM(self.z, self.mass, peak_height)
+        hmf = self.dndM(self.z,self.mass,peak_height)
         # power spectrum
         k_over_kdamp = np.outer(1./kdamp,self.k)
         k_over_kstar = np.outer(1./kstar,self.k)
@@ -757,7 +757,7 @@ class halomodel():
                  p_ShethTormen = 0.3):
         # Assertion on k
         assert len(k)>200,     "k must have a length greater than 200 points"
-        assert k.max()>=100.,   "Maximum wavenumber must be greater than 100 h/Mpc in order to achieve convergence"
+        assert k.max()>=10.,   "Maximum wavenumber must be greater than 10 h/Mpc in order to achieve convergence"
         assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
         # Reading all cosmological parameters
         self.f_nu         = np.sum(cosmology.f_nu[np.where(cosmology.M_nu!=0.)])
@@ -1034,7 +1034,7 @@ class classic_halomodel():
 
         # Assertion on k
         assert len(k)>200,     "k must have a length greater than 200 points"
-        assert k.max()>=100.,   "Maximum wavenumber must be greater than 100 h/Mpc in order to achieve convergence"
+        assert k.max()>=10.,   "Maximum wavenumber must be greater than 10 h/Mpc in order to achieve convergence"
         assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
         # Reading all cosmological parameters
         self.cosmology    = cosmology
@@ -1278,7 +1278,7 @@ class Takahashi():
 
         # Assertion on k
         assert len(k)>200,     "k must have a length greater than 200 points"
-        assert k.max()>=100.,   "Maximum wavenumber must be greater than 100 h/Mpc in order to achieve convergence"
+        assert k.max()>=10.,   "Maximum wavenumber must be greater than 10 h/Mpc in order to achieve convergence"
         assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
         # Reading all cosmological parameters
         self.w0           = cosmology.w0
@@ -1460,7 +1460,7 @@ class Bird():
 
         # Assertion on k
         assert len(k)>200,     "k must have a length greater than 200 points"
-        assert k.max()>=100.,   "Maximum wavenumber must be greater than 100 h/Mpc in order to achieve convergence"
+        assert k.max()>=10.,   "Maximum wavenumber must be greater than 10 h/Mpc in order to achieve convergence"
         assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
         # Reading all cosmological parameters
         self.f_nu         = np.sum(cosmology.f_nu[np.where(cosmology.M_nu!=0.)])

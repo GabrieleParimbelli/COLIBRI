@@ -532,8 +532,11 @@ def fR_correction(k, z, f_R0, nonlinear = True):
 
     :return: 2D array of shape ``(len(z), len(k))``
     """
+    # Substitute k_max above 10.
+    if nonlinear: k_new = np.array([i if i<10. else 10. for i in k])
+    else:         k_new = k
     # k,z arrays
-    Z,K      = np.meshgrid(z,k,indexing='ij')
+    Z,K      = np.meshgrid(z,k_new,indexing='ij')
     a        = 1./(1.+Z)
 
     # Non-linear enhancement
@@ -614,6 +617,9 @@ def fR_correction(k, z, f_R0, nonlinear = True):
         d_Z =  0.14654- 0.01000*(a-1.)- 0.14944*(a-1.)**2.
         e_Z =  1.62807+ 0.71291*(a-1.)- 1.41003*(a-1.)**2.
         enhancement = 1. + (b_Z*K)**2./(1.+c_Z*K**2.) + d_Z*np.abs(np.log(K)*K/(K-1.))*np.arctan(e_Z*K)
+
+    # There cannot be suppression
+    enhancement[np.where(enhancement<1.0)] = 1.0
 
     return enhancement
 
