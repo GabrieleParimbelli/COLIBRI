@@ -15,7 +15,7 @@ plt.rc('font', family = 'serif', size = 25)
 # the goodness of the inversion
 
 # Define cosmology 
-C = cc.cosmo(M_nu = 0.0)
+C = cc.cosmo()
 
 # Compute linear power spectrum with camb
 k, pk = C.camb_Pk(z = 0, k = np.logspace(-4., 2.5, 1001))

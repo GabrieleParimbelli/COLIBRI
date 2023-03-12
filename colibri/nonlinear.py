@@ -53,7 +53,7 @@ class HMcode2016():
         assert k.max()>=10.,   "Maximum wavenumber must be greater than 10 h/Mpc in order to achieve convergence"
         assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
         # Reading all cosmological parameters
-        self.f_nu         = np.sum(cosmology.f_nu[np.where(cosmology.M_nu!=0.)])
+        self.f_nu         = cosmology.f_nu
         self.cosmology    = cosmology
         # Minimum halo concentration by Mead et al.
         self.A_bar  = 3.13
@@ -81,7 +81,7 @@ class HMcode2016():
     #-----------------------------------------------------------------------------------------
     def compute_nonlinear_pk(self):
         # CDM Pk
-        pk_cc     = self.pk*(self.cosmology.growth_factor_CDM_baryons(self.k,self.z)/self.cosmology.growth_factor_CDM_baryons_neutrinos(self.k,self.z))**2.
+        pk_cc     = self.pk*(self.cosmology.growth_cb_unnormalized(self.k,self.z)/self.cosmology.growth_cbnu_unnormalized(self.k,self.z))**2.
         # sigma^2
         self.sig2 = self.cosmology.mass_variance(logM = np.log10(self.mass), k = self.k, pk = pk_cc, var = 'tot', window = 'th')
         self.sig8 = self.cosmology.compute_sigma_8(k = self.k, pk = self.pk)
@@ -435,7 +435,7 @@ class HMcode2020():
         assert k.max()>=10.,   "Maximum wavenumber must be greater than 10 Mpc/h in order to achieve convergence"
         assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
         # Reading all cosmological parameters
-        self.f_nu         = np.sum(cosmology.f_nu[np.where(cosmology.M_nu!=0.)])
+        self.f_nu         = cosmology.f_nu
         self.cosmology    = cosmology
         # Redshift and scales at which all must be computed
         self.nz    = len(np.atleast_1d(z))
@@ -760,7 +760,7 @@ class halomodel():
         assert k.max()>=10.,   "Maximum wavenumber must be greater than 10 h/Mpc in order to achieve convergence"
         assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
         # Reading all cosmological parameters
-        self.f_nu         = np.sum(cosmology.f_nu[np.where(cosmology.M_nu!=0.)])
+        self.f_nu         = cosmology.f_nu
         self.cosmology    = cosmology
         # Redshift and scales at which all must be computed
         self.nz    = len(np.atleast_1d(z))
@@ -792,7 +792,7 @@ class halomodel():
     def compute_nonlinear_pk(self):
 
         if self.f_nu != 0.:
-            pk_cc     = self.pk*(self.cosmology.growth_cb(self.k,self.z)/self.cosmology.growth_cbnu(self.k,self.z))**2.
+            pk_cc     = self.pk*(self.cosmology.growth_cb_unnormalized(self.k,self.z)/self.cosmology.growth_cbnu_unnormalized(self.k,self.z))**2.
         else:
             pk_cc = self.pk
         # Compute sigma8 and sigma^2
@@ -1040,7 +1040,7 @@ class classic_halomodel():
         self.cosmology    = cosmology
         self.w0           = cosmology.w0
         self.wa           = cosmology.wa
-        self.f_nu         = np.sum(cosmology.f_nu[np.where(cosmology.M_nu!=0.)])
+        self.f_nu         = cosmology.f_nu
         # Raise warning if neutrino mass is not zero:
         if np.any(self.cosmology.M_nu!=0.):
             warnings.warn("Neutrino mass is different from zero. The Takahashi halofit works best with zero neutrino mass, maybe better to use Takahashi or Bird?")
@@ -1284,7 +1284,7 @@ class Takahashi():
         self.w0           = cosmology.w0
         self.wa           = cosmology.wa
         self.cosmology    = cosmology
-        self.f_nu         = np.sum(cosmology.f_nu[np.where(cosmology.M_nu!=0.)])
+        self.f_nu         = cosmology.f_nu
         # Redshift and scales at which all must be computed
         self.nz   = len(np.atleast_1d(z))
         self.nk   = len(np.atleast_1d(k))
@@ -1463,7 +1463,7 @@ class Bird():
         assert k.max()>=10.,   "Maximum wavenumber must be greater than 10 h/Mpc in order to achieve convergence"
         assert k.min()<=0.001, "Minimum wavenumber must be lower than 0.001 h/Mpc in order to achieve convergence"
         # Reading all cosmological parameters
-        self.f_nu         = np.sum(cosmology.f_nu[np.where(cosmology.M_nu!=0.)])
+        self.f_nu         = cosmology.f_nu
         self.cosmology    = cosmology
         # Assertions
         if self.cosmology.w0 != -1. or self.cosmology.wa != 0.:

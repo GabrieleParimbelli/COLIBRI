@@ -13,13 +13,13 @@ plt.rc('font', family = 'serif', size = 20)
 # We report as example all cosmological parameters
 # but the syntax cc.cosmo() is sufficient to have all
 # parameters set to default value.
-C = cc.cosmo(Omega_m = 0.3089,      # total matter (CDM + baryons + neutrinos) density parameter today
-             Omega_b = 0.0486,      # baryon density parameter today
+C = cc.cosmo(Omega_m = 0.32,        # total matter (CDM + baryons + neutrinos) density parameter today
+             Omega_b = 0.05,        # baryon density parameter today
              Omega_K = 0.,          # Curvature density parameter (Omega_lambda will be set to sum to 1)
-             ns      = 0.9667,      # Scalar spectral index of primordial perturbation
-             As      = 2.14e-9,     # Scalar amplitude of primordial perturbation
+             ns      = 0.96,        # Scalar spectral index of primordial perturbation
+             As      = 2.12605e-9,  # Scalar amplitude of primordial perturbation
              sigma_8 = None,        # Power spectrum normalization (set to None as As is defined)
-             h       = 0.6774,      # Hubble parameter in units of 100 km/s/Mpc
+             h       = 0.67,        # Hubble parameter in units of 100 km/s/Mpc
              w0      = -1.,         # Dark energy parameter of state today
              wa      = 0.,          # Evolution of dark energy parameter of state
              tau     = 0.06,        # Optical depth to reionization

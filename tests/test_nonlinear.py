@@ -24,7 +24,7 @@ set_halofit = 'mead2020'
 # 2) the Halofit operator defined in the `nonlinear.py` module
 #=================
 # Cosmology, redshifts and scales
-C  = cc.cosmo(Omega_m=0.3089,Omega_b=0.0486,As=2.14e-9,ns=0.9667,h=0.6774)#,M_nu=0.3,w0=-1.1, wa=-0.3)
+C  = cc.cosmo(Omega_m=0.32,Omega_b=0.05,As=2.12605e-9,ns=0.96,h=0.67,M_nu=0.06)#,w0=-1.1, wa=-0.3)
 zz = np.linspace(0., 5., 6)
 kk = np.logspace(-4., 2., 201)
 zz = np.atleast_1d(zz)

@@ -187,6 +187,7 @@ class cosmo:
         # Density fractions
         #-------------------------------------
         self.f_nu     = np.sum(self.Omega_massive_nu)/self.Omega_m
+        #self.f_nu     = self.Omega_nu/self.Omega_m
         self.f_cb     = self.Omega_cb/self.Omega_m
         self.f_b      = self.Omega_b/self.Omega_m
         self.f_c      = self.Omega_cdm/self.Omega_m
