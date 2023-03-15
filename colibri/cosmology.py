@@ -2420,6 +2420,12 @@ class cosmo:
         Z,K      = np.meshgrid(z,k_new,indexing='ij')
         a        = 1./(1.+Z)
 
+        # Change f(R) within bounds
+        fR0min = 1e-7
+        fR0max = 1e-4
+        if(f_R0 < fR0min): f_R0 = fR0min
+        if(f_R0 > fR0max): f_R0 = fR0max
+
         # Non-linear enhancement
         if nonlinear:
             # Low values of f(R) and relative table
@@ -2468,10 +2474,10 @@ class cosmo:
             ratio_high = self.ratio_by_param(r_high, a, K, param_high)  # 1e-5 < fR0 < 1e-4
 
             # Return
-            if   f_R0>5e-5: enhancement = ratio_high
-            elif f_R0<5e-6: enhancement = ratio_low
-            elif f_R0>1e-5: enhancement = ratio_mid+(ratio_high-ratio_mid)*(f_R0-1e-5)/(5e-5-1e-5)
-            else:           enhancement = ratio_low+(ratio_mid -ratio_low)*(f_R0-5e-6)/(1e-5-5e-6)
+            if   f_R0>=5e-5: enhancement = ratio_high
+            elif f_R0<=5e-6: enhancement = ratio_low
+            elif f_R0>=1e-5: enhancement = ratio_mid+(ratio_high-ratio_mid)*(f_R0-1e-5)/(5e-5-1e-5)
+            else:            enhancement = ratio_low+(ratio_mid -ratio_low)*(f_R0-5e-6)/(1e-5-5e-6)
 
             # Change due to Omega_m
             #dom_om       = (self.Omega_m-0.3)/0.3
