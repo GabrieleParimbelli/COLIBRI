@@ -18,16 +18,15 @@ C=cc.cosmo()
 #=============
 # Scales, redshift, masses
 #=============
-#zz   = np.atleast_1d(0.)
 zz   = np.linspace(0., 5., 6)
-kk   = np.logspace(-4.,2.,1001)
-logM = np.linspace(5.,16.,111)
+kk   = np.logspace(-3.,2.,501)
+logM = np.arange(7.1,16.,0.1)
 nz, nk, nm = len(np.atleast_1d(zz)), len(np.atleast_1d(kk)), len(np.atleast_1d(logM))
 
 #=============
 # Load linear power spectra
 #=============
-k,pk=C.camb_Pk(z=zz)
+k,pk=C.camb_Pk(k=kk,z=zz)
 
 #=============
 # Mass variance in spheres

@@ -145,13 +145,12 @@ class cosmo:
         self.T_cmb        = T_cmb
         self.N_nu         = N_nu
         self.M_nu         = np.pad(np.atleast_1d(M_nu), (0,self.N_nu-len(np.atleast_1d(M_nu))), 'constant')
-        #self.N_eff        = np.sum((self.FermiDirac_integral(self.M_nu/((4./11.)**(1./3.)*const.kB*self.T_cmb))/self.FermiDirac_integral(self.M_nu/(0.71611*const.kB*self.T_cmb)))**4)
         self.N_eff        = N_eff
         self.Gamma_nu     = np.array([(4./11.)**(1./3.)*(self.N_eff/self.N_nu)**0.25 if x != 0 else (4./11.)**(1./3.) for x in self.M_nu])
         self.massive_nu   = np.count_nonzero(self.M_nu)
         self.massless_nu  = self.N_eff - self.massive_nu
         self.T_nu         = T_cmb*self.Gamma_nu
-        self.K            = -self.Omega_K*(self.H0/self.h/const.c)**2.    # (h/Mpc)^2
+        self.K            = -self.Omega_K*(self.H0/self.h/const.c)**2. # (h/Mpc)^2
 
         #-------------------------------------
         # Quantities for halo mass function and void size function
@@ -224,7 +223,7 @@ class cosmo:
     #-------------------------------------------------------------------------------
     # AGE OF THE UNIVERSE
     #-------------------------------------------------------------------------------
-    def age(self, z = 0.):
+    def age(self, z = 0.,massive_nu_approx = True):
         """
         Cosmic time from Big Bang in :math:`\mathrm{Myr}`.
 
@@ -233,7 +232,8 @@ class cosmo:
 
         :return: float
         """
-        integrand = lambda x: const.Mpc_to_km/(self.H(x)*(1.+x))/const.Myr_to_s
+        H_z = self.H_massive if massive_nu_approx else self.H
+        integrand = lambda x: const.Mpc_to_km/(H_z(x)*(1.+x))/const.Myr_to_s
         age, _ = sint.quad(integrand, z, np.inf)
         return age
 
@@ -645,16 +645,36 @@ class cosmo:
         :return: array.
         """
         z = np.atleast_1d(z)
-        if massive_nu_approx:
-            def integral(x):
-                return sint.quad(lambda x: const.c*1./(self.H_massive(x)/self.h), 0., x, epsabs = 1e-8)[0]
-        else:
-            def integral(x):
-                return sint.quad(lambda x: const.c*1./(self.H(x)/self.h), 0., x, epsabs = 1e-8)[0]
+        if massive_nu_approx: Hz = self.H_massive
+        else:                 Hz = self.H
+        def integral(x): return sint.quad(lambda x: const.c*1./(Hz(x)/self.h), 0., x, epsabs = 1e-8)[0]
         result = np.array(list(map(integral, z)))
-
         return result
 
+    #-------------------------------------------------------------------------------
+    # COMOVING DISTANCE INTERPOLATION
+    #-------------------------------------------------------------------------------
+    def comoving_distance_interpolation(self, z):
+        """
+        Comoving distance to a given redshift in :math:`\mathrm{Mpc}/h`. It uses an logarithmic interpolation of the Hubble function :math:`H(z)` to speed up integration. Tested in the range :math:`10^{-16}<z<10^{4}`
+
+        :param z: Redshifts.
+        :type z: array
+
+        :return: array.
+        """
+        # Change redshift in log10(z); remove all z<1e-16
+        logzmin  = -16.
+        deltaz   = 0.01
+        z        = np.atleast_1d(z)
+        z[np.where(z<10**logzmin)] = 10**logzmin
+        zmax     = max(z.max(),0.01)
+        logz_tmp = np.arange(logzmin,np.log10(zmax)+deltaz,deltaz)
+        z_tmp    = 10**(logz_tmp)
+        # Interpolate c/H(z) in log10(z)
+        cHz_int  = si.interp1d(logz_tmp,const.c*self.h/self.H(z_tmp),'cubic')
+        chiz_int = [sint.quad(lambda x: cHz_int(x)*10**x*np.log(10.), logzmin, np.log10(zi))[0] for zi in z]
+        return np.array(chiz_int)
 
     #-------------------------------------------------------------------------------
     # GEOMETRIC FACTOR
@@ -1167,19 +1187,10 @@ class cosmo:
         pk = np.atleast_2d(pk)
 
         # Assertions on scales, lengths and intervals
-        assert np.max(k)>=10.,    "Maximum k of power spectrum is too low to obtain a convergent result. Use k_max>=10 h/Mpc."
-        assert np.min(k)<=0.001,  "Minimum k of power spectrum is too high to obtain a convergent result. Use k_min<=0.001 h/Mpc."
-        assert len(k)>=100,       "size of 'k' too low to obtain a convergent result. At least 100 points."
+        assert np.min(k)<=0.01, "Minimum 'k' of power spectrum is too high to obtain a convergent result. Use k_min<=0.01 h/Mpc."
+        assert len(k)>=100,     "Size of 'k' too low to obtain a convergent result. At least 100 points."
         assert np.all([np.isclose(np.log(k[ind+1]/k[ind]), np.log(k[ind+2]/k[ind+1]),
                 atol = 1e-4, rtol = 1e-2) for ind in range(len(k[:-2]))]),"k are not regularly log-spaced"
-
-        P_kappa = []
-        for iz in range(nz):
-            k_ext, p_tmp = UF.extrapolate_log(k, pk[iz], 1e-6, 1e8)
-            P_kappa.append(p_tmp)
-        kappa   = np.expand_dims(np.atleast_2d(k_ext),axis=1)
-        P_kappa = np.expand_dims(P_kappa, axis = 1)
-
 
         # Smoothing radii
         if   var == 'cb':   omega = self.Omega_cb
@@ -1189,9 +1200,26 @@ class cosmo:
         elif var == 'tot':  omega = self.Omega_m
         else:               raise NameError("Component unknown, use 'cb', 'cdm', 'b', 'nu', 'tot'")
         rho = self.rho_crit(0.)*omega
-        #M   = self.M
         M   = 10.**logM
-        R   = self.radius_of_mass(M, var = var, window = window, **kwargs)
+        R   = self.radius_of_mass(M,var=var,window=window,**kwargs)
+
+        # Set arrays
+        kappa   = np.expand_dims(np.atleast_2d(k),axis=1)
+        P_kappa = np.expand_dims(pk              ,axis=1)
+
+        # Find possible (approximate) scales where integral does not converge...
+        kappa_min_req = np.pi/R.max()
+        kappa_max_req = np.pi/R.min()
+        kappa_min_pk  = kappa.min()
+        kappa_max_pk  = kappa.max()
+        if kappa_min_req < kappa_min_pk:
+            M_max_trust = np.log10(self.mass_in_radius(np.pi/kappa_min_pk,var=var,window=window,**kwargs))
+            warnings.warn("The maximum mass requested is 10**%.1f Msun/h, corresponding to a radius of %.2e Mpc/h and therefore to a minimum wavenumber of ~%.3e h/Mpc. The power spectrum has been fed only down to k = %.3e h/Mpc. All results above ~10**%.1f Msun/h should not be trusted."
+                           %(logM.max(),R.max(),kappa_min_req,kappa_min_pk,M_max_trust), stacklevel=2)
+        if kappa_max_req > kappa_max_pk:
+            M_min_trust = np.log10(self.mass_in_radius(np.pi/kappa_max_pk,var=var,window=window,**kwargs))
+            warnings.warn("The minimum mass requested is 10**%.1f Msun/h, corresponding to a radius of %.2e Mpc/h and therefore to a maximum wavenumber of ~%.3e h/Mpc. The power spectrum has been fed only up to k = %.3e h/Mpc. All results below ~10**%.1f Msun/h should not be trusted."
+                          %(logM.min(),R.min(),kappa_max_req,kappa_max_pk,M_min_trust), stacklevel=2)
 
         # Window function
         k,r = np.meshgrid(kappa,R)        
@@ -1215,7 +1243,7 @@ class cosmo:
             sm = 1.
 
         # Integration in log-bins (with numpy)
-        sigma2 = sint.simps(kappa**(3.+2.*j)*P_kappa/(2.*const.PI**2.)*W**2.*sm**2.,x=np.log(k_ext),axis=-1)
+        sigma2 = sint.simps(kappa**(3.+2.*j)*P_kappa/(2.*const.PI**2.)*W**2.*sm**2.,x=np.log(kappa),axis=-1)
         return sigma2
 
 
@@ -1736,7 +1764,7 @@ class cosmo:
         :param M_min: Minimum halo mass in :math:`M_\odot/h`.
         :type M_min: float>1e2, default = 1e10
 
-        :param M_min: Maximum halo mass in :math:`M_\odot/h`.
+        :param M_max: Maximum halo mass in :math:`M_\odot/h`.
         :type M_max: float<1e18, default = 1e17
 
         :param k: Scales of power spectrum in units of :math:`h/\mathrm{Mpc}`.
@@ -1757,6 +1785,8 @@ class cosmo:
 
         :return: array, same length as ``z``
         """
+
+        pk = np.atleast_2d(pk)
 
         # mass quantities
         logM   = np.log10(self.M)
@@ -1790,7 +1820,7 @@ class cosmo:
         :param logM: logarithm (base 10!) of the masses at which to compute the variance, in units of :math:`M_\odot/h`. To compute these masses from radii, use :func:`colibri.cosmology.cosmo.mass_in_radius()`.
         :type logM: array
 
-        :param z: Redshift, used only if Tinker and MICE/Crocce mass functions are requested. Must be of same length as ``pk``.
+        :param z: Redshift, used only if Tinker or MICE/Crocce mass functions are requested. Must be of same length as ``pk``.
         :type z: array, default = 0
 
         :param k: Scales of power spectrum in units of :math:`h/\mathrm{Mpc}`.
@@ -1838,8 +1868,8 @@ class cosmo:
 
         # CDM density today
         rho = self.rho_crit(0.)*self.Omega_cb
-        # masses
-        Mtmp     = self.M[1:-1]
+        # masses (only the ones inside the logM interval required)
+        Mtmp     = self.M[1:-1][np.where((self.M>=10**logM.min())&(self.M<=10**logM.max()))]
         logM_tmp = np.log10(Mtmp)
         # sigma^2
         sigma2 = self.mass_variance(logM_tmp,k,pk,'cb',window,prop_const=prop_const,beta=beta)
@@ -2118,18 +2148,23 @@ class cosmo:
         """
         z  = np.atleast_1d(z)
         nz = len(z)
-        if np.sum(self.M_nu) == 0. and self.w0 == -1. and self.wa==0.:
-            aa = 1./(1.+z)
-            ww = self.w0 + (1.-aa)*self.wa
-            d1 = aa*ss.hyp2f1(1/3., 1., 11/6., -aa**3/self.Omega_m*(1.-self.Omega_m))/ss.hyp2f1(1/3., 1., 11/6., -(1.-self.Omega_m)/self.Omega_m)
-            #d1 = aa*ss.hyp2f1(-1./(3.*ww), 0.5-1./(2*ww), 1.-5./(6.*ww), aa**(-3*ww)*(1.-1./self.Omega_m))/ss.hyp2f1(-1/(3.*ww), 0.5-1./(2*ww), 1.-5./(6.*ww), -(1.-self.Omega_m)/self.Omega_m)
-        else:
-            d1 = np.zeros(nz)
-            for i in range(nz):
-                LCDM, _  = sint.quad(lambda x: (1+x)*(self.H0/self.H_massive(x))**3., z[i], np.inf)
-                d1[i] = LCDM*self.H_massive(z[i])/self.H0
-            LCDM0, _ = sint.quad(lambda x: (1+x)*(self.H0/self.H_massive(x))**3., 0., np.inf)
-            d1 = d1/LCDM0
+        #if np.sum(self.M_nu) == 0. and self.w0 == -1. and self.wa==0.:
+        #    aa = 1./(1.+z)
+        #    ww = self.w0 + (1.-aa)*self.wa
+        #    d1 = aa*ss.hyp2f1(1/3., 1., 11/6., -aa**3/self.Omega_m*(1.-self.Omega_m))/ss.hyp2f1(1/3., 1., 11/6., -(1.-self.Omega_m)/self.Omega_m)
+        #else:
+        #    d1 = np.zeros(nz)
+        #    for i in range(nz):
+        #        LCDM, _  = sint.quad(lambda x: (1+x)*(self.H0/self.H_massive(x))**3., z[i], np.inf)
+        #        d1[i] = LCDM*self.H_massive(z[i])/self.H0
+        #    LCDM0, _ = sint.quad(lambda x: (1+x)*(self.H0/self.H_massive(x))**3., 0., np.inf)
+        #    d1 = d1/LCDM0
+        d1 = np.zeros(nz)
+        for i in range(nz):
+            LCDM, _  = sint.quad(lambda x: (1+x)*(self.H0/self.H_massive(x))**3., z[i], np.inf)
+            d1[i] = LCDM*self.H_massive(z[i])/self.H0
+        LCDM0, _ = sint.quad(lambda x: (1+x)*(self.H0/self.H_massive(x))**3., 0., np.inf)
+        d1 = d1/LCDM0
         return d1
 
     def D_1(self, z):
