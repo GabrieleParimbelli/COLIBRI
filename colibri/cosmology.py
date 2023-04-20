@@ -1122,7 +1122,7 @@ class cosmo:
                                  logM,
                                  k      = [],
                                  pk     = [],
-                                 var    = 'cb',
+                                 var    = 'tot',
                                  window = 'th',
                                  j      = 0,
                                  smooth = False,
@@ -1154,7 +1154,7 @@ class cosmo:
          - 'b'  : baryons
          - 'nu' : neutrinos
          - 'tot': total matter
-        :type var: string, default = 'cb'
+        :type var: string, default = 'tot'
 
         :param window: Window function used to filter.
 
@@ -1223,16 +1223,11 @@ class cosmo:
 
         # Window function
         k,r = np.meshgrid(kappa,R)        
-        if window in ['TH','th','tophat', 'top-hat']:
-            W = self.TopHat_window(k*r)
-        elif window in ['gauss', 'Gaussian', 'Gauss', 'gaussian', 'g']:
-            W = self.Gaussian_window(k*r)
-        elif window in ['sharp', 'heaviside', 's']:
-            W = self.Sharp_k_window(k*r)
-        elif window in ['smooth', 'smoothk', 'sm']:
-            W = self.Smooth_k_window(k*r,beta=beta)
-        else:
-            raise NameError("Window not known")
+        if   window in ['TH','th','tophat','top-hat']:              W = self.TopHat_window(k*r)
+        elif window in ['gauss','gaussian','Gauss','Gaussian','g']: W = self.Gaussian_window(k*r)
+        elif window in ['sharp','heaviside','s']:                   W = self.Sharp_k_window(k*r)
+        elif window in ['smooth','smoothk','sm']:                   W = self.Smooth_k_window(k*r,beta=beta)
+        else:                                                       raise NameError("Window not known")
         W = np.expand_dims(W,axis=0)
 
         # Second smoothing
@@ -1875,12 +1870,15 @@ class cosmo:
         sigma2 = self.mass_variance(logM_tmp,k,pk,'cb',window,prop_const=prop_const,beta=beta)
         sigma  = sigma2**.5
         # log-derivative
-        log_der = []
+        log_der    = []
+        s2_interp  = si.interp1d(logM_tmp, sigma2, 'cubic',fill_value='extrapolate',bounds_error=False)
+        ddxx       = 1e-1 if window in ['sharp', 'heaviside', 's'] else 1e-3
         for iz in range(len(pk)):
-            s2_interp  = si.interp1d(logM_tmp, sigma2[iz], 'cubic',fill_value='extrapolate',bounds_error=False)
-            derivative = sm.derivative(s2_interp, logM_tmp, dx = 1e-3, n = 1, order = 3) # d(sigma^2)/dlog10 M ---> factor of log10(e)
-            log_der.append(derivative*(-1.)/2./sigma2[iz]*np.log10(np.e))                # Factor of 1/2 because of sigma^2
-        log_der = np.array(log_der)
+            # d(sigma^2)/dlog10 M
+            derivative = sm.derivative(lambda x: s2_interp(x)[iz],logM_tmp,dx=ddxx,n=1,order=3) 
+            log_der.append(derivative)
+        # From d(sigma^2)/dlog10 M to -dln(sigma)/dln(M)
+        log_der = np.array(log_der)*(-0.5)/sigma2*np.log10(np.e)
 
         # Choose according the mass function
         if mass_fun in ['Sheth-Tormen','ST','ShethTormen']:
