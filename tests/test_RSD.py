@@ -91,7 +91,7 @@ multipoles = [0, 2, 4]
 #---------------------
 # Initialize grid for plots
 #---------------------
-if multiple_redshifts: fig = plt.figure(figsize = (12,12))
+if multiple_redshifts: fig = plt.figure(figsize = (24,24))
 else:                  fig = plt.figure(figsize = (12,12))
 G   = gridspec.GridSpec(3,len(zz)+1, width_ratios = [1. for i in range(len(zz))]+[0.2], figure = fig, wspace = 0.05, hspace = 0.4)
 fig.suptitle("Redshift-space galaxy power spectrum, model: %s" %RSD_model, fontsize = 20, bbox = dict(boxstyle='round', facecolor='white', alpha = 1.0))

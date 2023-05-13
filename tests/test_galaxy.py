@@ -59,10 +59,13 @@ G = gc.galaxy(z = zz,							# Redshift
 # N.B. The number of satellite galaxies is by default multiplied by the number of centrals in order to avoid having
 #      a satellite galaxy with no centrals.
 if multiple_redshifts:
-	G.galaxy_Pk(kind_satellite   = G.power_law,					# ((M-Mcut)/M1)**alpha (when M>Mcut), ranges from 0 to infinity
-				kwargs_satellite = {'log_Mcut':[13., 12.5, 12.3], 'log_M1': [13., 13.4, 13.], 'alpha': [1., 1.5, 1.]},
-				kind_central     = G.logistic_function, 		# 1/2*{1+erf[(log M - log M_min)/sigma_logM]}, ranges from 0 to 1
-				kwargs_central   = {'log_Mmin': [13., 12.4, 11.4], 'sigma_logM': [0.8, 0.5, 0.6]},
+	G.galaxy_Pk(kind_satellite   = G.power_law, # ((M-Mcut)/M1)**alpha (when M>Mcut), ranges from 0 to infinity
+				kwargs_satellite = {'log_Mcut': [12., 12.5, 12.3],
+                                    'log_M1'  : [13., 13.4, 13.],
+                                    'alpha'   : [1., 1.5, 1.]},
+				kind_central     = G.logistic_function, # 1/2*{1+erf[(logM-log M_min)/sigma_logM]}, ranges from 0 to 1
+				kwargs_central   = {'log_Mmin'  : [13., 12.4, 11.4],
+                                    'sigma_logM': [0.8, 0.5, 0.6]},
 				kwargs_mass_function = {'a': 0.707, 'p': 0.3},
 		  		kwargs_concentration = {'c0': 9., 'b': 0.13})
 else:
@@ -73,7 +76,6 @@ else:
 				kwargs_mass_function = {'a': 0.707, 'p': 0.3},
 		  		kwargs_concentration = {'c0': 9., 'b': 0.13})
 pg1, pg2, pgt = G.Pk['galaxies']['real space']['1-halo'], G.Pk['galaxies']['real space']['2-halo'], G.Pk['galaxies']['real space']['total halo']
-
 
 # Compute non-linear matter power spectrum (1-halo, 2-halo, total)
 G.halo_Pk()

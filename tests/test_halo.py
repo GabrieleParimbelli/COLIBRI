@@ -62,9 +62,9 @@ for iz in range(len(np.atleast_1d(zz))):
 	# Ratios
 	ax2.semilogx(H.k, (tot[iz]/pkcamb[iz]-1.)*100., c = colors[iz], lw = 2.0)
 	ax2.set_xlabel('$k$ $[h/\mathrm{Mpc}]$')
-	ax2.set_ylabel(r'$\left(\frac{P_\mathrm{halo}(k)}{P(k)}-1\right)\times 100 \ [\%]$', fontsize = 25)
+	ax2.set_ylabel(r'$\left(\frac{P_\mathrm{halo}(k)}{P(k)}-1\right) \ [\%]$', fontsize = 25)
 	ax2.set_xlim(H.k.min(), H.k.max())
-	ax2.set_ylim(-25., 25.)
+	ax2.set_ylim(-35., 35.)
 	ax2.grid(True)
 
 # Only for the legend
@@ -75,7 +75,7 @@ ax1.plot(0., 0., 'k--', label = 'HALOFIT')
 
 ax1.set_ylabel('$P_X(k) \ [(\mathrm{Mpc}/h)^3]$')
 ax1.set_xlim(H.k.min(), H.k.max())
-ax1.set_ylim(3e-2, 1e6)
+ax1.set_ylim(3e-2, 1e5)
 ax1.grid(True)
 
 ax1.legend(loc='lower left', ncol = 2, fontsize = 20, framealpha = 1)

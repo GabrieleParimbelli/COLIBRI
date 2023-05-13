@@ -35,7 +35,7 @@ class HMcode2016():
     :type cosmology: ``cosmo`` instance, default = ``cosmology.cosmo()``
 
 
-    When the instance is called, the array ``self.mass = np.logspace(0., 18., 512)``, i.e. an array of masses spanning from :math:`1 M_\odot/h` to :math:`10^{18} M_\odot/h` is created, where all the mass functions are computed.
+    When the instance is called, the array ``self.mass = np.logspace(2., 18., 512)``, i.e. an array of masses spanning from :math:`100 M_\odot/h` to :math:`10^{18} M_\odot/h` is created, where all the mass functions are computed.
 
         
     :return: Nothing, but the quantity ``self.pk_nl`` is generated, a 2D array of shape ``(len(z), len(k))`` containing the non-linear matter power spectra in units of :math:`(\mathrm{Mpc}/h)^3`.
@@ -63,12 +63,20 @@ class HMcode2016():
         self.z    = np.atleast_1d(z)
         self.k    = np.atleast_1d(k)
         self.pk   = pk
+        # Extended versions of P(k) for convergence of mass variance
+        pk_ext = []
+        for iz in range(self.nz):
+            k_ext, pk_tmp = UF.extrapolate_log(self.k,self.pk[iz],self.k.min(),1e4)
+            pk_ext.append(pk_tmp)
+        self.k_ext  = k_ext
+        self.pk_ext = np.array(pk_ext)
+        del pk_ext, k_ext
         if np.shape(pk) != (self.nz,self.nk):
             raise IndexError("pk must be of shape (len(z), len(k))")
         # density
         self.rho_field  = self.cosmology.rho_crit(0.)*self.cosmology.Omega_m
         # Initialize mass
-        self.mass   = np.logspace(0., 18., 512)
+        self.mass   = np.logspace(2., 18., 512)
         self.lnmass = np.log(self.mass)
         self.dlnm   = np.log(self.mass[1]/self.mass[0])
         self.nm     = np.size(self.mass)
@@ -81,10 +89,10 @@ class HMcode2016():
     #-----------------------------------------------------------------------------------------
     def compute_nonlinear_pk(self):
         # CDM Pk
-        pk_cc     = self.pk*(self.cosmology.growth_cb_unnormalized(self.k,self.z)/self.cosmology.growth_cbnu_unnormalized(self.k,self.z))**2.
+        pk_cc     = self.pk_ext*(self.cosmology.growth_cb_unnormalized(self.k_ext,self.z)/self.cosmology.growth_cbnu_unnormalized(self.k_ext,self.z))**2.
         # sigma^2
-        self.sig2 = self.cosmology.mass_variance(logM = np.log10(self.mass), k = self.k, pk = pk_cc, var = 'tot', window = 'th')
-        self.sig8 = self.cosmology.compute_sigma_8(k = self.k, pk = self.pk)
+        self.sig2 = self.cosmology.mass_variance(logM = np.log10(self.mass), k = self.k_ext, pk = pk_cc, var = 'tot', window = 'th')
+        self.sig8 = self.cosmology.compute_sigma_8(k = self.k_ext, pk = self.pk_ext)
         # Compute sigma_d at R = 100 and R = 0  (only for cb)
         self.sigd100 = self.sigma_d(R = 100.)
         self.sigd    = self.sigma_d(R = 1e-4)
@@ -416,7 +424,7 @@ class HMcode2020():
     :type cosmology: ``cosmo`` instance, default = ``cosmology.cosmo()``
 
 
-    When the instance is called, the array ``self.mass = np.logspace(0., 18., 512)``, i.e. an array of masses spanning from :math:`1 M_\odot/h` to :math:`10^{18} M_\odot/h` is created, where all the mass functions are computed.
+    When the instance is called, the array ``self.mass = np.logspace(2., 18., 512)``, i.e. an array of masses spanning from :math:`100 M_\odot/h` to :math:`10^{18} M_\odot/h` is created, where all the mass functions are computed.
 
         
     :return: Nothing, but the quantity ``self.pk_nl`` is generated, a 2D array of shape ``(len(z), len(k))`` containing the non-linear matter power spectra in units of :math:`(\mathrm{Mpc}/h)^3`.
@@ -444,6 +452,14 @@ class HMcode2020():
         self.k     = np.atleast_1d(k)
         self.pk_cc = pk_cc
         self.pk_mm = pk_mm
+        # Extended versions of P(k) for convergence of mass variance
+        pk_cc_ext = []
+        for iz in range(self.nz):
+            k_ext, pk_tmp = UF.extrapolate_log(self.k,self.pk_cc[iz],self.k.min(),1e4)
+            pk_cc_ext.append(pk_tmp)
+        self.k_ext     = k_ext
+        self.pk_cc_ext = np.array(pk_cc_ext)
+        del pk_cc_ext, k_ext
         # Introduce smearing if required
         self.pk_nw = np.array([self.cosmology.remove_bao(self.k,self.pk_mm[i],self.cosmology.k_eq()*0.6)
                                  for i in range(self.nz)])
@@ -456,7 +472,7 @@ class HMcode2020():
         # Matter density
         self.rho_field  = self.cosmology.rho_crit(0.)*self.cosmology.Omega_m
         # Initialize mass
-        self.mass    = np.logspace(0., 18., 512)
+        self.mass    = np.logspace(2., 18., 512)
         self.lnmass  = np.log(self.mass)
         self.logmass = np.log10(self.mass)
         self.dlnm    = np.log(self.mass[1]/self.mass[0])
@@ -488,8 +504,8 @@ class HMcode2020():
     def compute_nonlinear_pk(self):
         # Compute sigma8 and sigma^2
         # N.B. Computing sigma^2_cc but smoothing with total matter field returns better agreement than smoothing for the cb field
-        sig8_cc = np.array([self.cosmology.compute_sigma_8(k=self.k,pk=self.pk_cc[iz]) for iz in range(self.nz)])
-        sig2_cc = self.cosmology.mass_variance(self.logmass,k=self.k,pk=self.pk_cc,var='tot')
+        sig8_cc = np.array([self.cosmology.compute_sigma_8(k=self.k_ext,pk=self.pk_cc_ext[iz]) for iz in range(self.nz)])
+        sig2_cc = self.cosmology.mass_variance(self.logmass,k=self.k_ext,pk=self.pk_cc_ext,var='tot')
         # Compute growth factors
         g_growth, G_growth = self.growth_factors(self.z)
         # Omega_m(z)
@@ -736,7 +752,7 @@ class halomodel():
     :type cosmology: ``cosmo`` instance, default = ``cosmology.cosmo()``
 
 
-    When the instance is called, the array ``self.mass = np.logspace(0., 18., 512)``, i.e. an array of masses spanning from :math:`1 M_\odot/h` to :math:`10^{18} M_\odot/h` is created, where all the mass functions are computed.
+    When the instance is called, the array ``self.mass = np.logspace(2., 18., 512)``, i.e. an array of masses spanning from :math:`100 M_\odot/h` to :math:`10^{18} M_\odot/h` is created, where all the mass functions are computed.
 
     :param a_ShethTormen: Sheth-Tormen parameter.
     :type a_ShethTormen: float, default = 0.707
@@ -768,6 +784,14 @@ class halomodel():
         self.z     = np.atleast_1d(z)
         self.k     = np.atleast_1d(k)
         self.pk    = pk
+        # Extended versions of P(k) for convergence of mass variance
+        pk_ext = []
+        for iz in range(self.nz):
+            k_ext, pk_tmp = UF.extrapolate_log(self.k,self.pk[iz],self.k.min(),1e4)
+            pk_ext.append(pk_tmp)
+        self.k_ext     = k_ext
+        self.pk_ext = np.array(pk_ext)
+        del pk_ext, k_ext
         if np.shape(pk) != (self.nz,self.nk): raise IndexError("pk must be of shape (len(z), len(k))")
         # Matter density
         self.rho_field  = self.cosmology.rho_crit(0.)*self.cosmology.Omega_m
@@ -777,7 +801,7 @@ class halomodel():
         self.p         = p_ShethTormen
         self.A_bar     = 4.
         # Initialize mass
-        self.mass    = np.logspace(0., 18., 512)
+        self.mass    = np.logspace(2., 18., 512)
         self.lnmass  = np.log(self.mass)
         self.logmass = np.log10(self.mass)
         self.dlnm    = np.log(self.mass[1]/self.mass[0])
@@ -792,11 +816,11 @@ class halomodel():
     def compute_nonlinear_pk(self):
 
         if self.f_nu != 0.:
-            pk_cc     = self.pk*(self.cosmology.growth_cb_unnormalized(self.k,self.z)/self.cosmology.growth_cbnu_unnormalized(self.k,self.z))**2.
+            pk_cc     = self.pk_ext*(self.cosmology.growth_cb_unnormalized(self.k_ext,self.z)/self.cosmology.growth_cbnu_unnormalized(self.k_ext,self.z))**2.
         else:
-            pk_cc = self.pk
+            pk_cc = self.pk_ext
         # Compute sigma8 and sigma^2
-        self.sig2 = self.cosmology.mass_variance(self.logmass,k=self.k,pk=pk_cc,var='tot')
+        self.sig2 = self.cosmology.mass_variance(self.logmass,k=self.k_ext,pk=pk_cc,var='tot')
         # Omega_m(z)
         self.omz = self.cosmology.Omega_m_z(self.z)
         # Compute growth factors
@@ -1291,11 +1315,19 @@ class Takahashi():
         self.z    = np.atleast_1d(z)
         self.k    = np.atleast_1d(k)
         self.pk   = pk
+        # Extended versions of P(k) for convergence of mass variance
+        pk_ext = []
+        for iz in range(self.nz):
+            k_ext, pk_tmp = UF.extrapolate_log(self.k,self.pk[iz],self.k.min(),1e4)
+            pk_ext.append(pk_tmp)
+        self.k_ext  = k_ext
+        self.pk_ext = np.array(pk_ext)
+        del pk_ext, k_ext
         if np.shape(pk) != (self.nz,self.nk): raise IndexError("pk must be of shape (len(z), len(k))")
         # Matter density
         self.rho_field  = self.cosmology.rho_crit(0.)*self.cosmology.Omega_m
         # Initialize mass
-        self.mass    = np.logspace(0., 18., 512)
+        self.mass    = np.logspace(2., 18., 512)
         self.lnmass  = np.log10(self.mass)
         self.logmass = np.log10(self.mass)
         self.dlnm    = np.log(self.mass[1]/self.mass[0])
@@ -1303,7 +1335,7 @@ class Takahashi():
         self.rr      = self.cosmology.radius_of_mass(self.mass, window = 'g')
         self.lnr     = np.log(self.rr)
         # Mass variance, non-linear scales, effective indices
-        self.sigma2  = self.mass_variance(k=self.k,pk=self.pk)
+        self.sigma2  = self.mass_variance(k=self.k_ext,pk=self.pk_ext)
         self.k_nl    = self.nonlinear_scale(precision = 1e-5)
         self.n_eff   = self.effective_index()
         self.C_eff   = self.effective_curvature()
@@ -1474,11 +1506,19 @@ class Bird():
         self.z    = np.atleast_1d(z)
         self.k    = np.atleast_1d(k)
         self.pk   = pk
+        # Extended versions of P(k) for convergence of mass variance
+        pk_ext = []
+        for iz in range(self.nz):
+            k_ext, pk_tmp = UF.extrapolate_log(self.k,self.pk[iz],self.k.min(),1e4)
+            pk_ext.append(pk_tmp)
+        self.k_ext  = k_ext
+        self.pk_ext = np.array(pk_ext)
+        del pk_ext, k_ext
         if np.shape(pk) != (self.nz,self.nk): raise IndexError("pk must be of shape (len(z), len(k))")
         # cdm+b density
         self.rho_field  = self.cosmology.rho_crit(0.)*self.cosmology.Omega_cb
         # Initialize mass
-        self.mass    = np.logspace(0., 18., 512)
+        self.mass    = np.logspace(2., 18., 512)
         self.lnmass  = np.log10(self.mass)
         self.logmass = np.log10(self.mass)
         self.dlnm    = np.log(self.mass[1]/self.mass[0])
@@ -1486,7 +1526,7 @@ class Bird():
         self.rr      = self.cosmology.radius_of_mass(self.mass, window = 'g')
         self.lnr     = np.log(self.rr)
         # Mass variance, non-linear scales, effective indices
-        self.sigma2  = self.mass_variance(k=self.k,pk=self.pk, var = 'cb', window = 'g')  # Smoothing P_mm(k) on cdm+b field seems to work best, but why??
+        self.sigma2  = self.mass_variance(k=self.k_ext,pk=self.pk_ext,var='cb',window='g')  # Smoothing P_mm(k) on cdm+b field seems to work best, but why??
         self.k_nl    = self.nonlinear_scale(sigma2_array=self.sigma2)
         self.n_eff   = self.effective_index(sigma2_array=self.sigma2)
         self.C_eff   = self.effective_curvature(sigma2_array=self.sigma2)
