@@ -129,7 +129,7 @@ Also distances can be easily computed:
 
 Plotting these quantities would generate
 
-.. image:: ../_static/density_parameters_evolution.png
+.. image:: ../_static/density_parameter_evolution.png
    :width: 700
 
 
