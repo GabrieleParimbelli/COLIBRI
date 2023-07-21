@@ -8,9 +8,9 @@ In a flat Universe such spectra are given by:
 
 .. math::
 
- C_{AB}^{(ij)}(\ell) = \int_{z_{min}}^{z_{max}} dz \ \frac{c}{H(z)} \ \frac{W_A^{(i)}(z) W_B^{(j)}(z)}{\chi^2(z)} \ P\left(k = \frac{\ell}{\chi(z)}, z\right),
+ C_{AB}^{(ij)}(\ell) = \int_{z_\mathrm{min}}^{z_\mathrm{max}} dz \ \frac{c}{H(z)} \ \frac{W_A^{(i)}(z) W_B^{(j)}(z)}{\chi^2(z)} \ P\left(k = \frac{\ell}{\chi(z)}, z\right),
 
-where :math:`A` and :math:`B` can either be weak lensing or galaxy clustering. In an ideal case :math:`z_{min}=0` and :math:`z_{max}=\infty`, :math:`W_A^{(i)}(z)` is the window function for a given redshift bin and :math:`P(k,z)` is the total matter non-linear power spectrum.
+where :math:`A` and :math:`B` can either be weak lensing or galaxy clustering. In an ideal case :math:`z_\mathrm{min}=0` and :math:`z_\mathrm{max}=\infty`, :math:`W_A^{(i)}(z)` is the window function for a given redshift bin and :math:`P(k,z)` is the total matter non-linear power spectrum.
 
 Initialization
 ---------------
