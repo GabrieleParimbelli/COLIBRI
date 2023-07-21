@@ -1,6 +1,10 @@
 #from distutils.core import setup
 from setuptools import setup, Extension, find_packages
 
+# To create build/ and dist/ files, do:
+# python setup.py sdist
+# python setup.py bdist_wheel
+
 with open('README.rst') as f:
     long_description = f.read()
 
