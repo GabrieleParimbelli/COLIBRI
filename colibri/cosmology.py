@@ -29,17 +29,8 @@ class cosmo:
     :param Omega_b: Baryon density parameter today, :math:`\Omega_b`.
     :type Omega_b: float, default = 0.0486
 
-    :param Omega_K: Curvature density parameter today, :math:`\Omega_K`.
-    :type Omega_K: float, default = 0
-        
-    :param N_nu: Number of active neutrino species.
-    :type N_nu: int, default = 3
-
-    :param M_nu: Neutrino masses expressed in eV. Its size must be <= ``N_nu``. When ``cosmo`` is called, this quantity will be transformed to an array (``self.M_nu``) of length ``N_nu`` containing the non-vanishing neutrino masses assigned here padded with zeros in order to reach ``N_nu``. E.g.: if ``M_nu = [0.2, 0.1]`` and ``N_nu = 3``, then ``self.M_nu`` will become ``[0.2, 0.1, 0.0]``.
-    :type M_nu: float or list of floats, default = 0.
-
-    :param N_eff: Effective number of neutrinos. This number should be greater than ``N_nu``. Standard values for 0, 1, 2, 3 massive neutrinos should be 3.046, 3.0328, 3.0196, 3.00641, respectively.
-    :type N_eff: float, default = 3.046
+    :param h: Hubble constant in units of 100 km/s/Mpc.
+    :type h: float, default = 0.6774
 
     :param As: Amplitude of primordial scaled perturbations. At least one between this and `sigma_8` must be different from None. If ``As`` is not None, it will be the parameter used to compute the amplitude of the power spectrum.
     :type As: float, default = 2.14e-9
@@ -50,14 +41,14 @@ class cosmo:
     :param ns: Spectral index of scalar primordial perturbations.
     :type ns: float, default = 0.9667
 
-    :param h: Hubble constant in units of 100 km/s/Mpc.
-    :type h: float, default = 0.6774
-
     :param w0: Dark energy parameter of state today.
     :type w0: float, default = -1
 
     :param wa: Evolution of dark energy parameter of state.
     :type wa: float, default = 0
+
+    :param Omega_K: Curvature density parameter today, :math:`\Omega_K`.
+    :type Omega_K: float, default = 0
 
     :param tau: Optical depth to reionization.
     :type tau: float, default = 0.06
@@ -65,34 +56,60 @@ class cosmo:
     :param T_cmb: CMB temperature today.
     :type T_cmb: float, default = 2.7255
 
+    :param M_nu: Non-vanishine neutrino masses expressed in eV. Its size must be smaller or equal to ``N_nu``.
+    :type M_nu: float or list of floats, default = []
+        
+    :param N_nu: Number of active neutrino species.
+    :type N_nu: int, default = 3
+
+    :param N_eff: Effective number of relativistic species in the early Universe. This number should be greater than ``N_nu``.
+    :type N_eff: float, default = 3.044
+
+    :param M_wdm: WDM masses in eV
+    :type M_wdm: float or list of floats, default = []
+
+    :param Omega_wdm: WDM density parameters
+    :type Omega_wdm: float or list of floats, same length as ``M_wdm``, default = []
+
 
     After initialization, the following quantities will be stored
 
     :param H0: Hubble constant in km/s/Mpc, i.e. :math:`100 h`.
     :param Omega_lambda: Dark energy/cosmological constant density parameter, :math:`\Omega_\Lambda`.
-    :param Omega_nu: Neutrino density parameters, :math:`\Omega_\\nu`.
     :param Omega_cdm: Cold dark matter density parameter today, :math:`\Omega_{cdm}`.
-    :param Omega_cb: Cold dark matter + baryons density parameter today, :math:`\Omega_{cb}`.
+    :param Omega_cb: Cold dark matter+baryons density parameter today, :math:`\Omega_{cb}`.
+    :param Omega_cold: Total cold-warm matter density parameter today, :math:`\Omega_{cold}`.
     :param Omega_gamma: Photon density parameter today, :math:`\Omega_\gamma`.
-    :param Omega_rad: Photon + massless neutrino density parameter today, :math:`\Omega_\gamma`.
+    :param Omega_nu: Massive neutrino density parameters, :math:`\Omega_\\nu`.
+    :param Omega_nu_tot: Total massive neutrino density parameters, :math:`\Omega_\\nu`.
+    :param Omega_ur: Ultra-relativistic species density parameter today, :math:`\Omega_\mathrm{ur}`.
+    :param Omega_rad: Radiation species density parameter today, :math:`\Omega_\mathrm{rad}`.
+    :param Omega_wdm_tot: Total WDM density parameter today.
     :param omega_m: Reduced matter density parameter today, :math:`\Omega_m h^2`.
     :param omega_cdm: Reduced cold dark matter density parameter today, :math:`\Omega_{cdm} h^2`.
     :param omega_cb: Reduced cold dark matter+baryons density parameter today, :math:`\Omega_{cb} h^2`.
+    :param omega_cold: Reduced total cold-warm matter density parameter today, :math:`\Omega_{cold}`.
     :param omega_b: Reduced baryon density parameter today, :math:`\Omega_{b} h^2`.
-    :param omega_nu: Reduced neutrino density parameter today, :math:`\Omega_\\nu h^2`.
     :param omega_gamma: Reduced photon density parameter today, :math:`\Omega_\gamma h^2`.
+    :param omega_nu: Reduced neutrino density parameter today, :math:`\Omega_\\nu h^2`.
+    :param omega_nu_tot: Reduced total neutrino density parameters, for each species today.
+    :param omega_ur: Reduced ultra-relativistic density parameter today, :math:`\Omega_\mathrm{ur} h^2`.
+    :param omega_rad: Reduced radiation density parameter today, :math:`\Omega_\mathrm{rad} h^2`.
     :param omega_K: Reduced curvature parameter today, :math:`\Omega_K h^2`.
+    :param omega_wdm: Reduced warm dark matter density parameters, for each species, today.
+    :param omega_wdm_tot: Reduced total warm dark matter density parameters, for each species, today.
     :param massive_nu: Number of massive neutrinos.
     :param massless_nu: Number of massless neutrinos, :math:`N_{eff} - N_{massive \ \\nu}`
-    :param Omega_massive_nu: Massive neutrino density parameters today.
-    :param Omega_massless_nu: Massless neutrino density parameters today.
     :param log10_As: If ``As`` is not None, base-10 logarithm of initial scalar amplitude.
     :param f_nu: Neutrino fraction, in units of :math:`\Omega_m`.
     :param f_b: Baryon fraction in units of :math:`\Omega_m`.
     :param f_c: Cold dark matter fraction in units of :math:`\Omega_m`.
+    :param f_w: Warm dark matter fraction in units of :math:`\Omega_m`.
     :param f_cb: Cold dark matter plus baryon fraction in units of :math:`\Omega_m`.
     :param Gamma_nu: Neutrino-to-photon temperature ratio.
-    :param T_nu: Neutrino temperature today.
+    :param Gamma_nu_inst: Ultra-relativistic species temperature in units of photon temperature.
+    :param T_nu: Neutrino temperature today, in kelvin.
+    :param T_wdm: WDM temperature today, in kelvin.
     :param M: Array of 512 masses, equally-spaced in logarithmic bins from :math:`10^2` to :math:`10^{18} \ M_\odot/h`, used to sample (e.g.) mass functions and variances
     :param delta_sc: Critical overdensity for spherical collapse (linear theory extrapolation), :math:`\delta_{sc} = \\frac{3}{20} \left(12\pi\\right)^{2/3} \\approx 1.686`.
     :param eta_sc: Time of shell-crossing (radians), :math:`\eta_{sc} \\approx 3.488`.
@@ -104,93 +121,123 @@ class cosmo:
                  Omega_b      = 0.05,
                  h            = 0.67,
                  As           = 2.12605e-9,
+                 sigma_8      = None,
                  ns           = 0.96,
                  w0           = -1.,
                  wa           = 0.,
-                 M_nu         = 0.,
                  Omega_K      = 0.,
-                 N_nu         = 3,
-                 N_eff        = 3.046,
-                 sigma_8      = None,
                  tau          = 0.06,
-                 T_cmb        = 2.7255):
+                 T_cmb        = 2.7255,
+                 M_nu         = [],
+                 N_nu         = 3,
+                 N_eff        = 3.044,
+                 M_wdm        = [],
+                 Omega_wdm    = []):
 
         #-------------------------------------        
-        # Check neutrinos
+        # Check non-cold sector
         #-------------------------------------
-        assert N_nu <= N_eff, "Number of active neutrinos must be smaller than N_eff"
-        assert len(np.atleast_1d(M_nu))<=N_nu, "Provided a number of neutrino masses greater than the actual number of neutrinos. Set N_nu to be at least equal to the length of M_nu"
-
+        M_nu      = np.atleast_1d(M_nu)
+        M_wdm     = np.atleast_1d(M_wdm)
+        Omega_wdm = np.atleast_1d(Omega_wdm)
+        N_wdm     = len(M_wdm)
+        assert np.all(M_nu>=0.), "All neutrino masses must be larger than or equal to zero."
+        assert np.all(M_wdm>0.), "All WDM masses must be larger than zero."
+        assert N_eff >= N_nu+N_wdm, "Number of effective relativistic species (%.3f) must be equal or larger than the sum of number of active neutrinos (%i) and WDM species (%i)" %(N_eff,N_nu,N_wdm)
+        assert len(M_nu)<=N_nu, "Provided a number of neutrino masses greater than the actual number of neutrinos. Set N_nu to be at least equal to the length of M_nu"
+        assert len(M_wdm)==len(Omega_wdm), "Provided a number of WDM masses different from WDM temperatures."
+        
         #-------------------------------------        
         # Check that at least one between As and sigma_8 is given
         #-------------------------------------
         if As is None and sigma_8 is None:
-            raise AssertionError("At least one between As and sigma_8 must be different from None.")
+            raise ValueError("At least one between As and sigma_8 must be different from None.")
 
+        # Constants and normalizations
+        t15_p4             = 15/np.pi**4
+        const_gamma        = 1./const.Msun*1.e3*const.Mpc_to_m**3./const.rhoch2/h**2.
+        self.Gamma_nu_inst = (4/11)**(1/3)
 
         #---------------------------------------------------
-        # Calling the functions related to initialization
+        # Initialization
         #---------------------------------------------------
-        self.Omega_m      = Omega_m
-        self.Omega_b      = Omega_b
-        self.Omega_K      = Omega_K
-        self.h            = h
-        self.H0           = 100.*self.h
-        self.As           = As
-        self.sigma_8      = sigma_8
-        self.ns           = ns
-        self.w0           = w0
-        self.wa           = wa
-        self.tau          = tau
-        self.T_cmb        = T_cmb
-        self.N_nu         = N_nu
-        self.M_nu         = np.pad(np.atleast_1d(M_nu), (0,self.N_nu-len(np.atleast_1d(M_nu))), 'constant')
-        self.N_eff        = N_eff
-        self.Gamma_nu     = np.array([(4./11.)**(1./3.)*(self.N_eff/self.N_nu)**0.25 if x != 0 else (4./11.)**(1./3.) for x in self.M_nu])
-        self.massive_nu   = np.count_nonzero(self.M_nu)
-        self.massless_nu  = self.N_eff - self.massive_nu
-        self.T_nu         = T_cmb*self.Gamma_nu
-        self.K            = -self.Omega_K*(self.H0/self.h/const.c)**2. # (h/Mpc)^2
-
-        #-------------------------------------
-        # Quantities for halo mass function and void size function
-        #-------------------------------------
-        self.delta_sc     = 3./20.*(12.*const.PI)**(2./3.)
-        self.eta_sc       = 3.48752242
-        self.delta_v      = - 3./20.*(6.*(np.sinh(self.eta_sc)-self.eta_sc))**(2./3.)
-        self.M            = np.logspace(2.1, 17.9, 512)
-
-        #-------------------------------------
-        # Other cosmological parameters
-        #-------------------------------------
-        self.Omega_gamma       = const.alpha_BB*self.T_cmb**4./(const.c*1.e3)**2./const.Msun*1.e3*const.Mpc_to_m**3./const.rhoch2/self.h**2.
-        self.Omega_nu          = 15./const.PI**4.*self.Gamma_nu**4.*self.Omega_gamma*np.array([self.FermiDirac_integral(x/(const.kB*self.T_nu[i])) for i,x in enumerate(self.M_nu)])
-        self.Omega_massive_nu  = self.Omega_nu[np.where(self.M_nu != 0.)]
-        self.Omega_massless_nu = self.Omega_nu[np.where(self.M_nu == 0.)]
-        self.Omega_nu_tot      = np.sum(self.Omega_nu)
-        self.Omega_cdm         = self.Omega_m - self.Omega_b - np.sum(self.Omega_massive_nu) #np.sum(self.Omega_nu)
-        self.Omega_rad         = self.Omega_gamma + np.sum(self.Omega_massless_nu)
-        self.Omega_cb          = self.Omega_cdm + self.Omega_b
-        self.Omega_lambda      = 1. - self.Omega_cb - np.sum(self.Omega_nu) - self.Omega_K - self.Omega_gamma
-
-        self.omega_m      = self.Omega_m    *h**2.
-        self.omega_b      = self.Omega_b    *h**2.
-        self.omega_K      = self.Omega_K    *h**2.
-        self.omega_cdm    = self.Omega_cdm  *h**2.
-        self.omega_cb     = self.Omega_cb   *h**2.
-        self.omega_nu     = self.Omega_nu   *h**2.
-        self.omega_gamma  = self.Omega_gamma*h**2.
-        self.omega_rad    = self.Omega_rad  *h**2.
-
-        #-------------------------------------
+        # Cosmo class input parameters
+        self.Omega_m         = Omega_m
+        self.Omega_b         = Omega_b
+        self.h               = h
+        self.H0              = 100.*self.h
+        self.As              = As
+        self.sigma_8         = sigma_8
+        self.ns              = ns
+        self.w0              = w0
+        self.wa              = wa
+        self.Omega_K         = Omega_K
+        self.K               = -self.Omega_K*(self.H0/self.h/const.c)**2.
+        self.tau             = tau
+        self.T_cmb           = T_cmb
+        # Photons
+        self.Omega_gamma     = const.alpha_BB*self.T_cmb**4./(const.c*1.e3)**2.*const_gamma
+        # Neutrinos
+        self.N_nu            = N_nu
+        self.M_nu            = M_nu
+        self.M_nu_tot        = np.sum(M_nu)
+        self.N_eff           = N_eff
+        self.Gamma_nu        = self.Gamma_nu_inst*(N_eff/N_nu)**0.25 # if T_ncdm is passed to Class
+        self.T_nu            = self.Gamma_nu*self.T_cmb
+        FD_term_nu           = self.FermiDirac_integral(self.M_nu/(const.kB*self.T_nu))
+        self.Omega_nu        = t15_p4*self.Omega_gamma*self.Gamma_nu**4.*FD_term_nu
+        self.Omega_nu_tot    = np.sum(self.Omega_nu)
+        # WDM
+        self.N_wdm           = len(np.atleast_1d(M_wdm))
+        self.M_wdm           = M_wdm
+        self.Omega_wdm       = np.atleast_1d(Omega_wdm)
+        self.Gamma_wdm       = self.compute_Gamma_wdm() # if T_ncdm is passed to Class
+        self.T_wdm           = self.Gamma_wdm*self.T_cmb
+        self.Omega_wdm_tot   = np.sum(self.Omega_wdm)
+        self.Delta_N_wdm_eff = (self.Gamma_wdm/self.Gamma_nu_inst)**4.
+        # Ultra-relativistic species
+        self.massive_nu      = len(self.M_nu[np.where(self.M_nu>0.)])
+        self.massless_nu     = self.N_eff-self.massive_nu-self.N_wdm
+        FD_term_ur           = self.FermiDirac_integral(0.)*self.massless_nu
+        self.Omega_ur        = t15_p4*self.Omega_gamma*self.Gamma_nu_inst**4.*FD_term_ur
+        self.Delta_N_eff     = (self.Gamma_nu/self.Gamma_nu_inst)**4.
+        # Cold dark matter
+        self.Omega_cdm       = self.Omega_m-self.Omega_b-self.Omega_nu_tot-self.Omega_wdm_tot-self.Omega_ur
+        # Combined cosmological parameters
+        self.Omega_rad       = self.Omega_gamma + self.Omega_ur
+        self.Omega_cb        = self.Omega_cdm+self.Omega_b
+        self.Omega_cold      = self.Omega_cdm+self.Omega_b+self.Omega_wdm_tot
+        # Dark energy
+        self.Omega_lambda    = 1-self.Omega_cold-self.Omega_nu_tot-self.Omega_K-self.Omega_rad
+        # Reduced cosmological parameters
+        self.omega_m         = self.Omega_m      *self.h**2.
+        self.omega_b         = self.Omega_b      *self.h**2.
+        self.omega_K         = self.Omega_K      *self.h**2.
+        self.omega_cdm       = self.Omega_cdm    *self.h**2.
+        self.omega_wdm       = self.Omega_wdm    *self.h**2. if len(self.M_wdm)>0 else [0.]
+        self.omega_wdm_tot   = self.Omega_wdm_tot*self.h**2.
+        self.omega_cb        = self.Omega_cb     *self.h**2.
+        self.omega_cold      = self.Omega_cold   *self.h**2.
+        self.omega_lambda    = self.Omega_lambda *self.h**2.
+        self.omega_nu        = self.Omega_nu     *self.h**2.
+        self.omega_nu_tot    = self.Omega_nu_tot *self.h**2.
+        self.omega_ur        = self.Omega_ur     *self.h**2.
+        self.omega_gamma     = self.Omega_gamma  *self.h**2.
+        self.omega_rad       = self.Omega_rad    *self.h**2.
         # Density fractions
-        #-------------------------------------
-        self.f_nu     = np.sum(self.Omega_massive_nu)/self.Omega_m
-        #self.f_nu     = self.Omega_nu/self.Omega_m
-        self.f_cb     = self.Omega_cb/self.Omega_m
-        self.f_b      = self.Omega_b/self.Omega_m
-        self.f_c      = self.Omega_cdm/self.Omega_m
+        self.f_nu            = self.Omega_nu_tot /self.Omega_m
+        self.f_cb            = self.Omega_cb     /self.Omega_m
+        self.f_cold          = self.Omega_cold   /self.Omega_m
+        self.f_b             = self.Omega_b      /self.Omega_m
+        self.f_c             = self.Omega_cdm    /self.Omega_m
+        self.f_w             = self.Omega_wdm_tot/self.Omega_m
+        # Quantities for halo mass function and void size function
+        self.delta_sc        = 3./20.*(12.*np.pi)**(2./3.)
+        self.eta_sc          = 3.48752242
+        self.delta_v         = -3./20.*(6.*(np.sinh(self.eta_sc)-self.eta_sc))**(2./3.)
+        self.M               = np.logspace(2.1, 17.9, 512)
 
+        assert self.Omega_cdm>1e-10, "Omega_cdm is too small or even negative, likely because of the choice of M_wdm and T_wdm. Choose different values for this combination of parameters."
 
     #-------------------------------------------------------------------------------
     # SCALE FACTOR FROM REDSHIFT
@@ -230,6 +277,10 @@ class cosmo:
         :param z: Redshift.
         :type z: float, default = 0.0
 
+        :param massive_nu_approx: Whether to use ``self.H_massive()`` or ``self.H()`` to compute Hubble expansion, i.e. whether to consider massive neutrinos as matter (great speed-up).
+        :type massive_nu_approx: boolean, default = True
+
+
         :return: float
         """
         H_z = self.H_massive if massive_nu_approx else self.H
@@ -247,25 +298,35 @@ class cosmo:
         :param z: Redshift.
         :type z: float, default = 1.0
 
+        :param massive_nu_approx: Whether to use ``self.H_massive()`` or ``self.H()`` to compute Hubble expansion, i.e. whether to consider massive neutrinos as matter (great speed-up).
+        :type massive_nu_approx: boolean, default = True
+
+
         :return: float
         """
-        integrand = lambda x: const.Mpc_to_km/(self.H(x)*(1.+x))/const.Myr_to_s
+        H_z = self.H_massive if massive_nu_approx else self.H
+        integrand = lambda x: const.Mpc_to_km/(H_z(x)*(1.+x))/const.Myr_to_s
         lookback, _ = sint.quad(integrand, 0., z)
         return lookback
 
     #-------------------------------------------------------------------------------
     # HORIZON
     #-------------------------------------------------------------------------------
-    def cosmic_horizon(self, z = 0.):
+    def cosmic_horizon(self, z = 0., massive_nu_approx = True):
         """
         Cosmological horizon as function of redshift in :math:`\mathrm{Mpc}/h`.
 
         :param z: Redshift.
         :type z: float, default = 0.0
 
+        :param massive_nu_approx: Whether to use ``self.H_massive()`` or ``self.H()`` to compute Hubble expansion, i.e. whether to consider massive neutrinos as matter (great speed-up).
+        :type massive_nu_approx: boolean, default = True
+
+
         :return: float
         """
-        integrand = lambda x: const.c/(self.H(x)/self.h)
+        H_z = self.H_massive if massive_nu_approx else self.H    
+        integrand = lambda x: const.c/(H_z(x)/self.h)
         hor, _ = sint.quad(integrand, z, np.inf)
         return hor
 
@@ -298,21 +359,6 @@ class cosmo:
         return self.Omega_b*(1.+z)**3.*(self.H0/self.H(z))**2.
 
     #-------------------------------------------------------------------------------
-    # OMEGA CDM + BARYON (as function of z)
-    #-------------------------------------------------------------------------------
-    def Omega_cb_z(self, z):
-        """
-        Cold dark matter plus baryon density parameter at a given redshift
-
-        :param z: Redshifts.
-        :type z: array
-
-        :return: array with :math:`\Omega_{cb}(z)`.
-        """
-        return self.Omega_cb*(1.+z)**3.*(self.H0/self.H(z))**2.
-
-
-    #-------------------------------------------------------------------------------
     # FERMI-DIRAC INTEGRAL
     #-------------------------------------------------------------------------------
     def FermiDirac_integral(self, y):
@@ -332,7 +378,22 @@ class cosmo:
 
         :return: float
         """
-        return sint.quad_vec(lambda x: x**2.*np.sqrt(x**2.+y**2.)/(np.exp(x)+1.), 0., 100.)[0]
+        return sint.quad_vec(lambda x: x**2.*np.sqrt(x**2.+y**2.)/(np.exp(x)+1.), 0., 500.)[0]
+
+    #-------------------------------------------------------------------------------
+    # WDM TEMPERATURE
+    #-------------------------------------------------------------------------------
+    def compute_Gamma_wdm(self):
+        """
+        Returns the WDM temperature in units of CMB
+
+        :return: array, same size of WDM species included in the model
+        """
+        GN  = 0.71611
+        kT  = const.kB*self.T_cmb
+        og  = self.Omega_gamma
+        den = np.pi**4./15.*kT/(GN**3*og*1.5*ss.zeta(3))/self.h**2.
+        return GN*(self.Omega_wdm*self.h**2.*den/self.M_wdm)**(1./3.)
 
     #-------------------------------------------------------------------------------
     # OMEGA NEUTRINO (as function of z)
@@ -341,38 +402,57 @@ class cosmo:
         """
         Neutrino density parameters at a given redshift.
 
+        :param z: Redshifts.
+        :type z: array
+
+        :return: array of shape ``(self.massive_nu, len(z))`` containing :math:`\Omega_\\nu(z)`.
+        
+        """
+        MM,ZZ = np.meshgrid(np.atleast_1d(self.M_nu),np.atleast_1d(z),indexing='ij')
+        Y     = MM/((1.+ZZ)*const.kB*self.T_nu)
+        F     = self.FermiDirac_integral(Y)
+        GN    = self.Gamma_nu**4.
+        onuz  = 15./np.pi**4.*self.Omega_gamma*F*GN*(1.+ZZ)**4.*self.H0**2./np.atleast_2d(self.H(z)**2.)
+        return onuz
+
+    #-------------------------------------------------------------------------------
+    # OMEGA ULTRA-RELATIVISTIC (as function of z)
+    #-------------------------------------------------------------------------------
+    def Omega_ur_z(self, z):
+        """
+        Density parameter of ultra-relativistic species at a given redshift.
 
         :param z: Redshifts.
         :type z: array
 
-        :return: array of shape ``(self.N_nu, len(z))`` containing :math:`\Omega_\\nu(z)`.
+        :return: array
         
         """
-        MM,ZZ = np.meshgrid(np.atleast_1d(self.M_nu),np.atleast_1d(z),indexing='ij')
-        Y     = MM/((1.+ZZ)*const.kB*np.expand_dims(self.T_nu,1))
+        t15_p4 = 15./np.pi**4.
+        F      = self.FermiDirac_integral(0.)
+        GU     = self.Gamma_nu_inst**4
+        ourz   = t15_p4*GU*self.Omega_gamma*F*(1+z)**4*(self.H0/self.H(z))**2*self.massless_nu
+        return ourz
+
+    #-------------------------------------------------------------------------------
+    # OMEGA WDM (as function of z)
+    #-------------------------------------------------------------------------------
+    def Omega_wdm_z(self, z):
+        """
+        WDM density parameters at a given redshift.
+
+        :param z: Redshifts.
+        :type z: array
+
+        :return: array of shape ``(self.N_wdm, len(z))`` containing :math:`\Omega_\\nu(z)`.
+        
+        """
+        MM,ZZ = np.meshgrid(np.atleast_1d(self.M_wdm),np.atleast_1d(z),indexing='ij')
+        Y     = MM/((1.+ZZ)*const.kB*np.expand_dims(self.T_wdm,1))
         F     = self.FermiDirac_integral(Y)
-        onuz  = 15./const.PI**4.*self.Omega_gamma*F*np.expand_dims(self.Gamma_nu,1)**4.*(1.+ZZ)**4.*self.H0**2./np.atleast_2d(self.H(z)**2.)
-        return onuz
-
-    #-------------------------------------------------------------------------------
-    # WARM DARK MATTER TEMPERATURE
-    #-------------------------------------------------------------------------------
-    def T_wdm(self, Omega_wdm, M_wdm):
-        """
-        Temperature of any warm dark matter component (also neutrinos).
-
-        :param Omega_wdm: WDM density parameter today.
-        :type Omega_wdm: float
-
-        :param M_wdm: WDM mass in keV.
-        :type M_wdm: float
-
-        :return: float.
-        
-        """
-        M_wdm *= 1e3 # switch to eV
-        denominator = np.pi**4.*const.kB*self.T_cmb / (15*self.Gamma_nu**3.*self.omega_gamma*1.5*ss.zeta(3))*self.h**2
-        return self.Gamma_nu*(Omega_wdm*denominator/M_wdm)**(1./3.)*self.T_cmb
+        GW    = np.expand_dims(self.Gamma_wdm**4.,1)
+        owz   = 15./np.pi**4.*self.Omega_gamma*F*GW*(1.+ZZ)**4.*self.H0**2./np.atleast_2d(self.H(z)**2.)
+        return owz
 
     #-------------------------------------------------------------------------------
     # OMEGA MATTER (as function of z)
@@ -386,7 +466,7 @@ class cosmo:
 
         :return: array with :math:`\Omega_{m}(z)`.
         """
-        return self.Omega_cdm_z(z) + self.Omega_b_z(z) + np.sum(self.Omega_nu_z(z), axis = 0)
+        return self.Omega_cdm_z(z)+self.Omega_b_z(z)+np.sum(self.Omega_nu_z(z),axis=0)
 
     #-------------------------------------------------------------------------------
     # OMEGA LAMBDA (as function of z)
@@ -432,6 +512,20 @@ class cosmo:
         """
         return self.Omega_gamma*(1.+z)**4.*(self.H0/self.H(z))**2.
 
+    #-------------------------------------------------------------------------------
+    # OMEGA RAD (as function of z)
+    #-------------------------------------------------------------------------------
+    def Omega_rad_z(self, z):
+        """
+        Radiation (photons and ultra-relativistic species) density parameter at a given redshift.
+
+        :param z: Redshifts.
+        :type z: array
+
+        :return: array with :math:`\Omega_{\gamma}(z)`.
+        """
+        return self.Omega_gamma_z(z)+self.Omega_ur_z(z)
+
 
     #-------------------------------------------------------------------------------
     # DARK ENERGY PARAMETER OF STATE (as function of z)
@@ -473,24 +567,46 @@ class cosmo:
 
         :return: array with :math:`H(z)` in units of km/s/Mpc.
         """
-        # Dark energy evolution
-        Xde = self.X_DE(z)
+        prefactor        = 15./np.pi**4.*self.Omega_gamma*(1.+z)**4.
+        # Dark energy contribution
+        Xde              = self.X_DE(z)
         # Neutrino contribution
-        y = np.outer(self.M_nu/(const.kB*self.T_nu), 1./(1.+z))
-        F = self.FermiDirac_integral(np.array(y))
-        neutrino_contribution = 15./const.PI**4.*np.expand_dims(self.Gamma_nu,1)**4.*self.Omega_gamma*F*(1.+z)**4.
+        yn               = np.outer(self.M_nu/(const.kB*self.T_nu), 1./(1.+z))
+        Fn               = self.FermiDirac_integral(np.array(yn))
+        nu_contribution  = prefactor*self.Gamma_nu**4.*Fn
+        # UR contribution
+        Fu               = self.FermiDirac_integral(0.)
+        ur_contribution  = prefactor*self.Gamma_nu_inst**4.*Fu*self.massless_nu
+        # WDM contribution
+        yw               = np.outer(self.M_wdm/(const.kB*self.T_wdm), 1./(1.+z))
+        Fw               = self.FermiDirac_integral(np.array(yw))
+        wdm_contribution = prefactor*np.expand_dims(self.Gamma_wdm**4.,1)*Fw
         # H(z)
-        return self.H0*(self.Omega_cb*(1.+z)**3. +
-                        self.Omega_gamma*(1.+z)**4. + 
+        return self.H0*(self.Omega_cdm   *(1+z)**3 +
+                        self.Omega_b     *(1+z)**3 +
+                        self.Omega_gamma *(1+z)**4 + 
+                        self.Omega_K     *(1+z)**2 +
                         self.Omega_lambda*Xde +
-                        self.Omega_K*(1.+z)**2. +
-                        np.sum(neutrino_contribution, axis = 0))**0.5
+                        ur_contribution +
+                        np.sum(wdm_contribution,axis=0) + 
+                        np.sum(nu_contribution ,axis=0))**0.5
+
+    def H100(self, z):
+        """
+        Hubble function in km/s/(Mpc/h). 
+
+        :param z: Redshifts.
+        :type z: array
+
+        :return: array with :math:`H(z)` in units of km/s/(Mpc/h).
+        """
+        return self.H(z)/self.h
 
 
     def H_massive(self, z):
         """
-        Hubble function in km/s/Mpc. It assumes that all neutrinos are pure matter and therefore
-        :math:`w_\\nu = 0`.
+        Hubble function in km/s/Mpc. It assumes that the massive neutrinos and WDM remain pressureless
+        at all redshifts.
         For the minimum neutrino masses allowed by particle physics, assuming normal hierarchy
         and the correct differences of square masses, the error committed is about
         0.5% at :math:`z = 100` and 5% at :math:`z = 1000`. 
@@ -503,7 +619,7 @@ class cosmo:
         """
         return self.H0*(self.Omega_m*(1.+z)**3. +
                         self.Omega_lambda*self.X_DE(z) +
-                        self.Omega_gamma*(1.+z)**4. +
+                        self.Omega_rad*(1.+z)**4. +
                         self.Omega_K*(1.+z)**2.)**0.5
 
 
@@ -533,7 +649,7 @@ class cosmo:
 
         :return: array.
         """
-        return 3.*self.H(z)**2./(8.*const.PI*const.G)/self.h**2.
+        return 3.*self.H(z)**2./(8.*np.pi*const.G)/self.h**2.
 
     #-------------------------------------------------------------------------------
     # MATTER DENSITY (as function of z)
@@ -656,7 +772,7 @@ class cosmo:
     #-------------------------------------------------------------------------------
     def comoving_distance_interpolation(self, z):
         """
-        Comoving distance to a given redshift in :math:`\mathrm{Mpc}/h`. It uses an logarithmic interpolation of the Hubble function :math:`H(z)` to speed up integration. Tested in the range :math:`10^{-16}<z<10^{4}`
+        Comoving distance to a given redshift in :math:`\mathrm{Mpc}/h`. It uses an logarithmic interpolation of the Hubble function :math:`H(z)` to speed up integration. Tested in the range :math:`10^{-16}<z<10^{6}`
 
         :param z: Redshifts.
         :type z: array
@@ -667,12 +783,14 @@ class cosmo:
         logzmin  = -16.
         deltaz   = 0.01
         z        = np.atleast_1d(z)
+        nz       = len(z)
         z[np.where(z<10**logzmin)] = 10**logzmin
         zmax     = max(z.max(),0.01)
-        logz_tmp = np.arange(logzmin,np.log10(zmax)+deltaz,deltaz)
-        z_tmp    = 10**(logz_tmp)
+        logz_pvt = np.arange(logzmin,np.log10(zmax)+deltaz,deltaz)
+        z_pvt    = 10**(logz_pvt)
         # Interpolate c/H(z) in log10(z)
-        cHz_int  = si.interp1d(logz_tmp,const.c*self.h/self.H(z_tmp),'cubic')
+        cHz_int  = si.interp1d(logz_pvt,const.c*self.h/self.H(z_pvt),'cubic')
+        # Integrate
         chiz_int = [sint.quad(lambda x: cHz_int(x)*10**x*np.log(10.), logzmin, np.log10(zi))[0] for zi in z]
         return np.array(chiz_int)
 
@@ -707,12 +825,41 @@ class cosmo:
         K = self.K
         # Change function according to sign of K
         chi_z = np.array(self.comoving_distance(z, massive_nu_approx))
-        if K == 0.:
-            return chi_z #Mpc/h
-        elif K > 0.:
-            return 1./K**0.5*np.sin(K**0.5*chi_z) #Mpc/h
-        else:
-            return 1./np.abs(K)**0.5*np.sinh(np.abs(K)**0.5*chi_z) #Mpc/h
+        if K == 0.:  return chi_z
+        elif K > 0.: return 1./K**0.5*np.sin(K**0.5*chi_z)
+        else:        return 1./np.abs(K)**0.5*np.sinh(np.abs(K)**0.5*chi_z)
+
+    #-------------------------------------------------------------------------------
+    # GEOMETRIC FACTOR
+    #-------------------------------------------------------------------------------
+    def f_K_interpolation(self, z):
+        """
+        Geometric factor to a given redshift in :math:`\mathrm{Mpc}/h`. It uses interpolation of H(z), making computation faster for non-trivial cosmologies. If :math:`\chi(z)` is the comoving distance and :math:`k` is the curvature, then
+
+        .. math::
+            
+            f_K(z) =\left\{\\begin{array}{ll}
+                    \chi(z) & \\text{for } K=0 \\
+
+                    \\frac{1}{\sqrt{K}} \ \sin[\sqrt{K}\chi(z)] & \\text{for } K>0
+
+                    \\frac{1}{\sqrt{|K|}} \ \sinh[\sqrt{|K|}\chi(z)] & \\text{for } K<0
+
+                    \end{array}.\\right.
+
+        :param z: Redshifts.
+        :type z: array
+
+        :return: array.
+        """
+        # Curvature in (h/Mpc)^2 units. Then I will take the sqrt and it will
+        # go away with comoving_distance(z), giving a final result in units of Mpc/h
+        K = self.K
+        # Change function according to sign of K
+        chi_z = np.array(self.comoving_distance_interpolation(z))
+        if K == 0.:  return chi_z #Mpc/h
+        elif K > 0.: return 1./K**0.5*np.sin(K**0.5*chi_z) #Mpc/h
+        else:        return 1./np.abs(K)**0.5*np.sinh(np.abs(K)**0.5*chi_z) #Mpc/h
 
     #-------------------------------------------------------------------------------
     # DIFFERENTIAL GEOMETRIC FACTOR (FOR WINDOW FUNCTION)
@@ -727,7 +874,6 @@ class cosmo:
         :param z_2: Redshift number 2.
         :type z_2: float
 
-
         :param massive_nu_approx: Whether to use ``self.H_massive()`` or ``self.H()`` to compute Hubble expansion, i.e. whether to consider massive neutrinos as matter (great speed-up).
         :type massive_nu_approx: boolean, default = True
 
@@ -738,12 +884,9 @@ class cosmo:
         K = self.K
         # Change function according to sign of K
         delta_chi = np.array(self.comoving_distance(z_1, massive_nu_approx) - self.comoving_distance(z_2, massive_nu_approx)) #Mpc/h
-        if K == 0.:
-            return delta_chi
-        elif K > 0.:
-            return 1./K**0.5*np.sin(K**0.5*delta_chi) #Mpc/h
-        else:
-            return 1./np.abs(K)**0.5*np.sinh(np.abs(K)**0.5*delta_chi) #Mpc/h
+        if K == 0.:  return delta_chi
+        elif K > 0.: return 1./K**0.5*np.sin(K**0.5*delta_chi) #Mpc/h
+        else:        return 1./np.abs(K)**0.5*np.sinh(np.abs(K)**0.5*delta_chi) #Mpc/h
 
     #-------------------------------------------------------------------------------
     # LUMINOSITY DISTANCE
@@ -779,6 +922,36 @@ class cosmo:
         :return: array.
         """
         com = self.f_K(z, massive_nu_approx)
+        return com/(1.+z)
+
+    #-------------------------------------------------------------------------------
+    # LUMINOSITY DISTANCE INTERPOLATION
+    #-------------------------------------------------------------------------------
+    def luminosity_distance_interpolation(self, z):
+        """
+        Luminosity distance to a given redshift in :math:`\mathrm{Mpc}/h`. It uses interpolation of H(z), making computation faster for non-trivial cosmologies.
+
+        :param z: Redshifts.
+        :type z: array
+
+        :return: array.
+        """
+        com = self.f_K_interpolation(z)
+        return com*(1.+z)
+
+    #-------------------------------------------------------------------------------
+    # ANGULAR DIAMETER DISTANCE
+    #-------------------------------------------------------------------------------
+    def angular_diameter_distance_interpolation(self, z):
+        """
+        Angular diameter distance to a given redshift in :math:`\mathrm{Mpc}/h`. It uses interpolation of H(z), making computation faster for non-trivial cosmologies.
+
+        :param z: Redshifts.
+        :type z: array
+
+        :return: array.
+        """
+        com = self.f_K_interpolation(z)
         return com/(1.+z)
 
     #-------------------------------------------------------------------------------
@@ -889,8 +1062,7 @@ class cosmo:
         """
         fac = 5./3.*5.*ss.zeta(5.)/ss.zeta(3.)
         vel = np.zeros(self.N_nu)
-        vel[np.where(self.M_nu != 0.)] = fac**.5*(const.kB*self.T_nu/self.M_nu[np.where(self.M_nu != 0.)])*(1.+z)*const.c
-        vel[np.where(self.M_nu == 0.)] = const.c
+        vel = fac**.5*(const.kB*self.T_nu/self.M_nu)*(1.+z)*const.c
         return vel
 
     #-------------------------------------------------------------------------------
@@ -1014,9 +1186,9 @@ class cosmo:
             if self.massive_nu != 0:
                 params['m_ncdm'] = ''
                 params['T_ncdm'] = ''
-                for im, m in enumerate(self.M_nu[np.where(self.M_nu!=0.)]):
-                    params['m_ncdm'] += '%.3f, ' %(m)
-                    params['T_ncdm'] += '%.4f, ' %(self.Gamma_nu[im])
+                for im, m in enumerate(self.M_nu):
+                    params['m_ncdm'] += '%.8f, ' %(m)
+                    params['T_ncdm'] += '%.8f, ' %(self.Gamma_nu)
                 params['m_ncdm'] = params['m_ncdm'][:-2]
                 params['T_ncdm'] = params['T_ncdm'][:-2]
 
@@ -1041,10 +1213,8 @@ class cosmo:
         om_b = self.omega_b
         om_n = np.sum(self.omega_nu)
         h    = self.h       
-        if np.sum(self.M_nu) == 0.:
-            rs = 44.5*np.log(9.83/om_m)/np.sqrt(1+10*om_b**0.75)*h
-        else:
-            rs = 55.154*np.exp(-72.3*(om_n+0.0006)**2.)/(om_m**0.25351*om_b**0.12807)*h
+        if self.M_nu_tot == 0.: rs = 44.5*np.log(9.83/om_m)/np.sqrt(1+10*om_b**0.75)*h
+        else:                   rs = 55.154*np.exp(-72.3*(om_n+0.0006)**2.)/(om_m**0.25351*om_b**0.12807)*h
         return rs
 
     def sound_horizon_approx(self):
@@ -1057,7 +1227,7 @@ class cosmo:
         om_b = self.omega_b
         om_n = np.sum(self.omega_nu)
         h    = self.h        
-        if np.sum(self.M_nu) == 0.:
+        if self.M_nu_tot == 0.:
             a1, a2, a3 = 0.00257366, 0.05032, 0.013
             a4, a5, a6 = 0.7720642, 0.24346362, 0.00641072
             a7, a8, a9 = 0.5350899, 32.7525, 0.315473
@@ -1125,8 +1295,6 @@ class cosmo:
                                  var    = 'tot',
                                  window = 'th',
                                  j      = 0,
-                                 smooth = False,
-                                 R_sm   = 5.5,
                                  beta   = 2.,
                                  **kwargs):
         """
@@ -1149,11 +1317,12 @@ class cosmo:
 
         :param var: component with respect to which to compute the variance.
 
-         - 'cb' : cold dark matter + baryons
-         - 'cdm': cold dark matter
-         - 'b'  : baryons
-         - 'nu' : neutrinos
-         - 'tot': total matter
+         - 'cb'  : cold dark matter + baryons
+         - 'cold': cold dark matter + baryons + warm dark matter
+         - 'cdm' : cold dark matter
+         - 'b'   : baryons
+         - 'nu'  : neutrinos
+         - 'tot' : total matter
         :type var: string, default = 'tot'
 
         :param window: Window function used to filter.
@@ -1170,12 +1339,6 @@ class cosmo:
 
         :param j: Order of multipole.
         :type j: even integer, default = 0
-
-        :param smooth: Further smoothing of the density field with a Gaussian filter (useful for void size function).
-        :type smooth: boolean, default = True
-
-        :param R_sm: Size of second Gaussian filter in :math:`\mathrm{Mpc}/h.`
-        :type R_sm: float, default = 5.5
 
         :return: 2D array containing :math:`\\sigma^2_j(\log_{10}M,z)`
         """
@@ -1195,6 +1358,7 @@ class cosmo:
         # Smoothing radii
         if   var == 'cb':   omega = self.Omega_cb
         elif var == 'cdm':  omega = self.Omega_cdm
+        elif var == 'cold': omega = self.Omega_cold
         elif var == 'b':    omega = self.Omega_b
         elif var == 'nu':   omega = np.sum(self.Omega_nu)
         elif var == 'tot':  omega = self.Omega_m
@@ -1230,15 +1394,8 @@ class cosmo:
         else:                                                       raise NameError("Window not known")
         W = np.expand_dims(W,axis=0)
 
-        # Second smoothing
-        if smooth:
-            sm = np.exp(-k**2.*(r/R_sm)**2./2.)
-            sm = np.expand_dims(sm,axis=0)
-        else:
-            sm = 1.
-
         # Integration in log-bins (with numpy)
-        sigma2 = sint.simps(kappa**(3.+2.*j)*P_kappa/(2.*const.PI**2.)*W**2.*sm**2.,x=np.log(kappa),axis=-1)
+        sigma2 = sint.simps(kappa**(3.+2.*j)*P_kappa/(2.*np.pi**2.)*W**2.,x=np.log(kappa),axis=-1)
         return sigma2
 
 
@@ -1254,11 +1411,12 @@ class cosmo:
 
         :param var: component with respect to which to compute the variance.
 
-         - 'cb' : cold dark matter + baryons
-         - 'cdm': cold dark matter
-         - 'b'  : baryons
-         - 'nu' : neutrinos
-         - 'tot': total matter
+         - 'cb'  : cold dark matter + baryons
+         - 'cdm' : cold dark matter
+         - 'cold': cold dark matter + baryons + warm dark matter
+         - 'b'   : baryons
+         - 'nu'  : neutrinos
+         - 'tot' : total matter
         :type var: string, default = 'cb'
 
         :param window: Window function used to filter.
@@ -1277,6 +1435,7 @@ class cosmo:
 
         if   var == 'cb':  omega = self.Omega_cb
         elif var == 'cdm': omega = self.Omega_cdm
+        elif var == 'cold': omega = self.Omega_cold
         elif var == 'b':   omega = self.Omega_b
         elif var == 'nu':  omega = np.sum(self.Omega_nu)
         elif var == 'tot': omega = self.Omega_m
@@ -1286,11 +1445,11 @@ class cosmo:
 
         # Window function
         if window in ['TH','th','tophat', 'top-hat']:
-            return 4./3.*const.PI*rho_bg*R**3.
+            return 4./3.*np.pi*rho_bg*R**3.
         elif window in ['gauss', 'Gaussian', 'Gauss', 'gaussian', 'g']:
-            return rho_bg*(2.*const.PI*R**2.)**(3./2.)
+            return rho_bg*(2.*np.pi*R**2.)**(3./2.)
         elif window in ['sharp', 'heaviside', 's', 'smooth', 'smoothk', 'sm']:
-            return 4./3.*const.PI*rho_bg*(prop_const*R)**3.
+            return 4./3.*np.pi*rho_bg*(prop_const*R)**3.
         else:
             raise NameError("window not known")
         
@@ -1308,11 +1467,12 @@ class cosmo:
 
         :param var: component with respect to which to compute the variance.
 
-         - 'cb' : cold dark matter + baryons
-         - 'cdm': cold dark matter
-         - 'b'  : baryons
-         - 'nu' : neutrinos
-         - 'tot': total matter
+         - 'cb'  : cold dark matter + baryons
+         - 'cdm' : cold dark matter
+         - 'cold': cold dark matter + baryons + warm dark matter
+         - 'b'   : baryons
+         - 'nu'  : neutrinos
+         - 'tot' : total matter
         :type var: string, default = 'cb'
 
         :param window: Window function used to filter.
@@ -1331,6 +1491,7 @@ class cosmo:
         """
         if   var == 'cb':  omega = self.Omega_cb
         elif var == 'cdm': omega = self.Omega_cdm
+        elif var == 'cold': omega = self.Omega_cold
         elif var == 'b':   omega = self.Omega_b
         elif var == 'nu':  omega = np.sum(self.Omega_nu)
         elif var == 'tot': omega = self.Omega_m
@@ -1340,11 +1501,11 @@ class cosmo:
 
         # Window function
         if window in ['TH','th','tophat', 'top-hat']:
-            return (3.*M/(4.*const.PI*rho_bg))**(1./3.)
+            return (3.*M/(4.*np.pi*rho_bg))**(1./3.)
         elif window in ['gauss', 'Gaussian', 'Gauss', 'gaussian', 'g']:
-            return (M/rho_bg)**(1./3.)/(2.*const.PI)**0.5
+            return (M/rho_bg)**(1./3.)/(2.*np.pi)**0.5
         elif window in ['sharp', 'heaviside', 's', 'smooth', 'smoothk', 'sm']:
-            return (3.*M/(4.*const.PI*rho_bg))**(1./3.)/prop_const
+            return (3.*M/(4.*np.pi*rho_bg))**(1./3.)/prop_const
         else:
             raise NameError("window not known")
 
@@ -1360,11 +1521,12 @@ class cosmo:
 
         :param var: component with respect to which to compute the variance.
 
-         - 'cb' : cold dark matter + baryons
-         - 'cdm': cold dark matter
-         - 'b'  : baryons
-         - 'nu' : neutrinos
-         - 'tot': total matter
+         - 'cb'  : cold dark matter + baryons
+         - 'cdm' : cold dark matter
+         - 'cold': cold dark matter + baryons + warm dark matter
+         - 'b'   : baryons
+         - 'nu'  : neutrinos
+         - 'tot' : total matter
         :type var: string, default = 'cb'
 
         :param window: Window function used to filter.
@@ -1384,11 +1546,11 @@ class cosmo:
 
         # Window function
         if window in ['TH','th','tophat', 'top-hat']:
-            return 4./3.*const.PI*R**3.
+            return 4./3.*np.pi*R**3.
         elif window in ['gauss', 'Gaussian', 'Gauss', 'gaussian', 'g']:
-            return (2.*const.PI*R**2.)**1.5
+            return (2.*np.pi*R**2.)**1.5
         elif window in ['sharp', 'heaviside', 's', 'smooth', 'smoothk', 'sm']:
-            return 4./3.*const.PI*(prop_const*R)**3.
+            return 4./3.*np.pi*(prop_const*R)**3.
         else:
             raise NameError("window not known, use 'TH' or 'gauss'")
 
@@ -1404,11 +1566,12 @@ class cosmo:
 
         :param var: component with respect to which to compute the variance.
 
-         - 'cb' : cold dark matter + baryons
-         - 'cdm': cold dark matter
-         - 'b'  : baryons
-         - 'nu' : neutrinos
-         - 'tot': total matter
+         - 'cb'  : cold dark matter + baryons
+         - 'cdm' : cold dark matter
+         - 'cold': cold dark matter + baryons + warm dark matter
+         - 'b'   : baryons
+         - 'nu'  : neutrinos
+         - 'tot' : total matter
         :type var: string, default = 'cb'
 
         :param window: Window function used to filter.
@@ -1502,8 +1665,8 @@ class cosmo:
         if delta_th == None: delta_th = self.delta_sc
         nu = np.abs(delta_th)/sigma
         n = nu**2.
-        A = 1./(1. + 2.**(-p)*ss.gamma(0.5-p)/np.sqrt(const.PI))
-        ST = A * np.sqrt(2.*a*n/const.PI) * (1.+1./(a*n)**p) * np.exp(-a*n/2.)
+        A = 1./(1. + 2.**(-p)*ss.gamma(0.5-p)/np.sqrt(np.pi))
+        ST = A * np.sqrt(2.*a*n/np.pi) * (1.+1./(a*n)**p) * np.exp(-a*n/2.)
         return ST
 
     #-----------------------------------------------------------------------------------------
@@ -1533,7 +1696,7 @@ class cosmo:
         if delta_th == None: delta_th = self.delta_sc
         nu = np.abs(delta_th)/sigma
         n = nu**2.
-        ST = A * np.sqrt(2.*a*n/const.PI) * (1.+1./(a*n)**p) * np.exp(-a*n/2.)
+        ST = A * np.sqrt(2.*a*n/np.pi) * (1.+1./(a*n)**p) * np.exp(-a*n/2.)
         return ST
 
 
@@ -1905,12 +2068,12 @@ class cosmo:
     #-------------------------------------------------------------------------------
     def F_BBKS(self, x):
         num1 = (x**3.-3.*x)/2.*(ss.erf(x*np.sqrt(5./2.)) + ss.erf(x*np.sqrt(5./8.)))
-        num2 = np.sqrt(2./(5.*const.PI))*(31.*x**2./4. + 8./5.)*np.exp(-5.*x**2./8.)
-        num3 = np.sqrt(2./(5.*const.PI))*(x**2./2. - 8./5.)*np.exp(-5.*x**2./2.)
+        num2 = np.sqrt(2./(5.*np.pi))*(31.*x**2./4. + 8./5.)*np.exp(-5.*x**2./8.)
+        num3 = np.sqrt(2./(5.*np.pi))*(x**2./2. - 8./5.)*np.exp(-5.*x**2./2.)
         return (num1 + num2 + num3)
 
     def Gauss(self, x, mean, var):
-        return np.exp(-(x-mean)**2./(2.*var))/np.sqrt(2.*const.PI*var)
+        return np.exp(-(x-mean)**2./(2.*var))/np.sqrt(2.*np.pi*var)
 
     def G_n_BBKS(self, n, gamma_p, nu):
         var  = 1.-np.array(gamma_p)**2.
@@ -2121,15 +2284,15 @@ class cosmo:
     #-------------------------------------------------------------------------------
     def k_FS(self, z):
         """
-        Free-streaming scale in :math:`h/\mathrm{Mpc}`.
+        Massive neutrino free-streaming scale in :math:`h/\mathrm{Mpc}`.
 
         :param z: Redshifts.
         :type z: array
 
-        :return: array
+        :return: array, size of number of massive neutrinos
         """
-        E = self.H_massive(z)/self.H0
-        return 0.82*np.sum(np.atleast_1d(self.M_nu))*E/(1.+z)**2. #h/Mpc
+        E = self.H(z)/self.H0
+        return 0.82*self.M_nu*E/(1.+z)**2. #h/Mpc
 
     #-------------------------------------------------------------------------------
     # GROWTH FACTOR LCDM: 
@@ -2146,7 +2309,7 @@ class cosmo:
         """
         z  = np.atleast_1d(z)
         nz = len(z)
-        #if np.sum(self.M_nu) == 0. and self.w0 == -1. and self.wa==0.:
+        #if self.M_nu_tot == 0. and self.w0 == -1. and self.wa==0.:
         #    aa = 1./(1.+z)
         #    ww = self.w0 + (1.-aa)*self.wa
         #    d1 = aa*ss.hyp2f1(1/3., 1., 11/6., -aa**3/self.Omega_m*(1.-self.Omega_m))/ss.hyp2f1(1/3., 1., 11/6., -(1.-self.Omega_m)/self.Omega_m)
@@ -2179,7 +2342,7 @@ class cosmo:
         LCDM = self.growth_factor_scale_independent(z)
 
         # Same of LCDM if no massive neutrinos
-        if np.sum(np.atleast_1d(self.M_nu)) == 0.:
+        if self.M_nu_tot == 0.:
             LCDM = np.array([LCDM for i in range(len(np.atleast_1d(k)))])
             return np.transpose(LCDM)
         else:
@@ -2224,7 +2387,7 @@ class cosmo:
         LCDM = self.growth_factor_scale_independent(z)
         
         # Same of LCDM if no massive neutrinos
-        if np.sum(self.M_nu) == 0.:
+        if self.M_nu_tot == 0.:
             LCDM = np.array([LCDM for i in range(len(np.atleast_1d(k)))])
             return np.transpose(LCDM)
         else:
@@ -2581,7 +2744,7 @@ class cosmo:
                 z = 0.,
                 k = np.logspace(-4., 2., 1001),
                 nonlinear = False,
-                halofit = 'mead2015',
+                halofit = 'mead2020',
                 var_1 = 'tot',
                 var_2 = 'tot',
                 share_delta_neff = True,
@@ -2601,8 +2764,8 @@ class cosmo:
         :param nonlinear: Whether to return non-linear power spectra.
         :type nonlinear: boolean, default = False
 
-        :type halofit: string, default = 'mead'
         :param halofit: Which version of Halofit to use. See CAMB documentation for further info.
+        :type halofit: string, default = 'mead2020'
 
         :param var_1: Density field for the first component of the power spectrum.
         :type var_1: string, default = 'tot'
@@ -2614,7 +2777,7 @@ class cosmo:
          - `'b'`     : baryons
          - `'nu'`    : neutrinos
          - `'cb'`    : cold dark matter + baryons
-         - `'rad'`   : radiation
+         - `'gamma'` : photons
          - `'v_cdm'` : cdm velocity
          - `'v_b'`   : baryon velocity
          - `'Phi'`   : Weyl potential
@@ -2639,8 +2802,8 @@ class cosmo:
         #nu_mass_degeneracies – (float64 array) Degeneracy of each distinct eigenstate
         #nu_mass_fractions – (float64 array) Mass fraction in each distinct eigenstate
         #nu_mass_numbers – (integer array) Number of physical neutrinos per distinct eigenstate
-        nu_mass_eigen   = len(np.unique([mm for mm in self.M_nu[np.where(self.M_nu!=0.)]])) if np.any(self.M_nu!=0.) else 0
-        nu_mass_numbers = [list(self.M_nu[np.where(self.M_nu!=0.)]).count(x) for x in set(list(self.M_nu[np.where(self.M_nu!=0.)]))]
+        nu_mass_eigen   = len(np.unique([mm for mm in self.M_nu])) if np.any(self.M_nu!=0.) else 0
+        nu_mass_numbers = [list(self.M_nu).count(x) for x in set(list(self.M_nu))]
         nu_mass_numbers = sorted(nu_mass_numbers,reverse=True) if np.any(self.M_nu!=0.) else [0]
         # Set parameters
         cambparams = {
@@ -2649,9 +2812,9 @@ class cosmo:
                       'nu_mass_eigenstates': nu_mass_eigen, 
                       'nu_mass_numbers': nu_mass_numbers,
                       'nnu': self.N_eff,
-                      'omnuh2': np.sum(self.omega_nu[np.where(self.M_nu!=0.)]),
+                      'omnuh2': self.omega_nu_tot,
                       'ombh2': self.omega_b,
-                      'omch2': self.omega_cdm+np.sum(self.omega_nu[np.where(self.M_nu==0.)]),
+                      'omch2': self.omega_cdm+self.omega_wdm_tot,
                       'omk': self.Omega_K,
                       'H0': 100.*self.h,
                       'As': self.As,
@@ -2677,7 +2840,7 @@ class cosmo:
                       'b'    : 'delta_baryon',
                       'nu'   : 'delta_nu',
                       'cb'   : 'delta_nonu',
-                      'rad'  : 'delta_photon',
+                      'gamma': 'delta_photon',
                       'v_cdm': 'v_newtonian_cdm',
                       'v_b'  : 'v_newtonian_baryon',
                       'Phi'  : 'Weyl'}            # Weyl: (phi+psi)/2 is proportional to lensing potential
@@ -2714,7 +2877,7 @@ class cosmo:
             z = 0.,
             k = np.logspace(-4., 2., 1001),
             nonlinear = False,
-            halofit = 'mead2015',
+            halofit = 'mead2020',
             var_1 = ['tot'],
             var_2 = ['tot'],
             share_delta_neff = True,
@@ -2735,8 +2898,8 @@ class cosmo:
         :param nonlinear: Whether to return non-linear power spectra.
         :type nonlinear: boolean, default = False
 
-        :type halofit: string, default = 'mead'
         :param halofit: Which version of Halofit to use. See CAMB documentation for further info.
+        :type halofit: string, default = 'mead2020'
 
         :param var_1: Density field for the first component of the power spectrum.
         :type var_1: list of strings, default = ['tot']
@@ -2748,7 +2911,7 @@ class cosmo:
          - `'b'`     : baryons
          - `'nu'`    : neutrinos
          - `'cb'`    : cold dark matter + baryons
-         - `'rad'`   : radiation
+         - `'gamma'` : photons
          - `'v_cdm'` : cdm velocity
          - `'v_b'`   : baryon velocity
          - `'Phi'`   : Weyl potential
@@ -2769,8 +2932,8 @@ class cosmo:
         """
 
         # Neutrino part
-        nu_mass_eigen   = len(np.unique([mm for mm in self.M_nu[np.where(self.M_nu!=0.)]])) if np.any(self.M_nu!=0.) else 0
-        nu_mass_numbers = [list(self.M_nu[np.where(self.M_nu!=0.)]).count(x) for x in set(list(self.M_nu[np.where(self.M_nu!=0.)]))]
+        nu_mass_eigen   = len(np.unique([mm for mm in self.M_nu])) if np.any(self.M_nu!=0.) else 0
+        nu_mass_numbers = [list(self.M_nu).count(x) for x in set(list(self.M_nu))]
         nu_mass_numbers = sorted(nu_mass_numbers,reverse=True) if np.any(self.M_nu!=0.) else [0]
         # Set parameters
         cambparams = {
@@ -2779,9 +2942,9 @@ class cosmo:
                       'nu_mass_eigenstates': nu_mass_eigen, 
                       'nu_mass_numbers': nu_mass_numbers,
                       'nnu': self.N_eff,
-                      'omnuh2': np.sum(self.omega_nu[np.where(self.M_nu!=0.)]),
+                      'omnuh2': self.omega_nu_tot,
                       'ombh2': self.omega_b,
-                      'omch2': self.omega_cdm+np.sum(self.omega_nu[np.where(self.M_nu==0.)]),
+                      'omch2': self.omega_cdm+self.omega_wdm_tot,
                       'omk': self.Omega_K,
                       'H0': 100.*self.h,
                       'As': self.As,
@@ -2811,7 +2974,7 @@ class cosmo:
                       'b'    : 'delta_baryon',
                       'nu'   : 'delta_nu',
                       'cb'   : 'delta_nonu',
-                      'rad'  : 'delta_photon',
+                      'gamma': 'delta_photon',
                       'v_cdm': 'v_newtonian_cdm',
                       'v_b'  : 'v_newtonian_baryon',
                       'Phi'  : 'Weyl'}
@@ -2905,7 +3068,7 @@ class cosmo:
         zmax = max(z.max(),101.)
         tau = self.tau
         params = {
-            'output': 'mPk dTk',
+            'output':        'mPk dTk',
             'n_s':           self.ns, 
             'h':             self.h,
             'omega_b':       self.Omega_b*self.h**2.,
@@ -2924,14 +3087,21 @@ class cosmo:
             params['Omega_fld'] = self.Omega_lambda
             params['w0_fld']    = self.w0
             params['wa_fld']    = self.wa
-
         # Set neutrino masses
-        # If all masses are zero, then no m_ncdm
         params['N_ur']   = self.massless_nu
         params['N_ncdm'] = self.massive_nu
         if self.massive_nu != 0:
-            params['m_ncdm'] = ', '.join(str(x) for x in self.M_nu[self.M_nu != 0.])
-
+            params['m_ncdm'] = ', '.join(str(x) for x in self.M_nu)
+            params['T_ncdm'] = ', '.join(str(self.Gamma_nu) for x in self.M_nu)
+        # Set WDM masses (remove UR species cause Class treats WDM and neutrinos the same way)
+        params['N_ncdm'] += self.N_wdm
+        if self.N_wdm>0 and self.massive_nu>0.:
+            params['m_ncdm'] += ', ';params['T_ncdm'] += ', '
+            params['m_ncdm'] += ', '.join(str(x) for x in self.M_wdm)
+            params['T_ncdm'] += ', '.join(str(x) for x in self.Gamma_wdm)
+        elif self.N_wdm>0:
+            params['m_ncdm'] = ', '.join(str(x) for x in self.M_wdm)
+            params['T_ncdm'] = ', '.join(str(x) for x in self.Gamma_wdm)
         # Add the keyword arguments
         for key, value in kwargs.items():
             if not key in params: params[key] = value
@@ -2996,7 +3166,8 @@ class cosmo:
          - `'nu'`    : massive neutrinos
          - `'ur'`    : massless neutrinos
          - `'cb'`    : cold dark matter + baryons
-         - `'rad'`   : radiation
+         - `'cold'`  : cold dark matter + baryons + warm dark matter
+         - `'gamma'` : photons
          - `'Phi'`   : Weyl potential
          - `'Psi'`   : Weyl potential
         :type var_2: list of strings, default = ['tot']
@@ -3013,29 +3184,30 @@ class cosmo:
         pk: dictionary
             Keys are given by `'var_1-var_2'`. Each of these is a 2D array of shape ``(len(z), len(k))`` containing :math:`P_\mathrm{var_1-var_2}(z,k)` in units of :math:`(\mathrm{Mpc}/h)^3`.
         """
-        components = {'tot': 'd_tot',
-                      'cdm': 'd_cdm',
-                      'b'  : 'd_b',
-                      'nu' : 'd_nu',
-                      'ur' : 'd_ur',
-                      'cb' : 'd_cb',
-                      'rad': 'd_g',
-                      'Phi': 'phi',
-                      'Psi': 'psi'}
-
+        components = {'tot'   : 'd_tot',
+                      'cdm'   : 'd_cdm',
+                      'wdm'   : 'd_wdm',
+                      'b'     : 'd_b',
+                      'cb'    : 'd_cb',
+                      'cold'  : 'd_cold',
+                      'nu'    : 'd_nu',
+                      'ur'    : 'd_ur',
+                      'gamma' : 'd_g',
+                      'Phi'   : 'phi',
+                      'Psi'   : 'psi'}
 
         # Set halofit for non-linear computation
         if nonlinear == True: halofit = halofit
         else:                 halofit = 'none'
 
         # Setting lengths
-        nk = len(np.atleast_1d(k))
-        nz = len(np.atleast_1d(z))
-        z = np.atleast_1d(z)
-        k = np.atleast_1d(k)
+        nk   = len(np.atleast_1d(k))
+        nz   = len(np.atleast_1d(z))
+        z    = np.atleast_1d(z)
+        k    = np.atleast_1d(k)
         kmax = max(k.max(),500.)
-        zmax = max(z.max(),101.)
-        tau = self.tau
+        zmax = max(z.max(),100.)
+        # Parameters
         params = {
             'output':        'mPk dTk',
             'n_s':           self.ns, 
@@ -3050,21 +3222,27 @@ class cosmo:
             'non_linear':    halofit}
         # Set initial conditions
         if self.sigma_8 is not None: params['sigma8'] = self.sigma_8            
-        else:                        params['A_s'] = self.As        
+        else:                        params['A_s']    = self.As        
         # Set dark energy
         if self.w0 != -1. or self.wa != 0.:
             params['Omega_fld'] = self.Omega_lambda
             params['w0_fld']    = self.w0
             params['wa_fld']    = self.wa
-
         # Set neutrino masses
-        # If all masses are zero, then no m_ncdm
-        #if np.count_nonzero(np.atleast_1d(self.M_nu))!=len(np.atleast_1d(self.M_nu)):
         params['N_ur']   = self.massless_nu
         params['N_ncdm'] = self.massive_nu
         if self.massive_nu != 0:
-            params['m_ncdm'] = ', '.join(str(x) for x in self.M_nu[self.M_nu != 0.])
-
+            params['m_ncdm'] = ', '.join(str(x) for x in self.M_nu)
+            params['T_ncdm'] = ', '.join(str(self.Gamma_nu) for x in self.M_nu)
+        # Set WDM masses (remove UR species cause Class treats WDM and neutrinos the same way)
+        params['N_ncdm'] += self.N_wdm
+        if self.N_wdm>0 and self.massive_nu>0.:
+            params['m_ncdm'] += ', ';params['T_ncdm'] += ', '
+            params['m_ncdm'] += ', '.join(str(x) for x in self.M_wdm)
+            params['T_ncdm'] += ', '.join(str(x) for x in self.Gamma_wdm)
+        elif self.N_wdm>0:
+            params['m_ncdm'] = ', '.join(str(x) for x in self.M_wdm)
+            params['T_ncdm'] = ', '.join(str(x) for x in self.Gamma_wdm)
         # Add the keyword arguments
         for key, value in kwargs.items():
             if not key in params: params[key] = value
@@ -3092,7 +3270,6 @@ class cosmo:
         k /= self.h
 
         # Get transfer functions and rescale the power spectrum
-        #pk = np.zeros((n1,n2,nz,nk))
         pk = {}
         # Loop over variables
         for c1 in var_1:
@@ -3103,24 +3280,35 @@ class cosmo:
                 for ind_z in range(nz):
                     # Get transfer functions at z
                     TF         = cosmo.get_transfer(z = z[ind_z])
-                    k_T        = TF['k (h/Mpc)']
-                    T_m        = TF['d_tot']
-                    T_cdm      = TF['d_cdm']
-                    T_b        = TF['d_b']
-                    T_phi      = TF['phi']
-                    T_psi      = TF['psi']
-                    T_rad      = TF['d_g']
-                    T_ur       = TF['d_ur']
-                    TF['d_cb'] = (self.Omega_cdm * T_cdm + self.Omega_b * T_b)/self.Omega_cb
-                    T_nu       = np.array([el[1] for el in list(filter(lambda item: item[0].startswith('d_ncdm'), TF.items()))])
-                    try:                 TF['d_nu'] = np.sum(self.M_nu[self.M_nu!=0.]*T_nu.T, axis = 1) /np.sum(self.M_nu)
-                    except np.AxisError: TF['d_nu'] = np.zeros(len(k_T))
+                    TF['d_nu'] = np.zeros_like(TF['k (h/Mpc)'])
+                    for inu in range(self.massive_nu):
+                        index       = inu
+                        TF['d_nu'] += self.M_nu[inu]*TF['d_ncdm[%i]'%index]/np.sum(self.M_nu)
+                    TF['d_wdm'] = np.zeros_like(TF['k (h/Mpc)'])
+                    for inw in range(self.N_wdm):
+                        index        = inw+self.massive_nu
+                        TF['d_wdm'] += self.Omega_wdm[inw]/self.Omega_wdm_tot*TF['d_ncdm[%i]'%index]
+                    TF['d_cold'] = (self.Omega_cdm    *TF['d_cdm' ] + 
+                                    self.Omega_wdm_tot*TF['d_wdm' ] + 
+                                    self.Omega_b      *TF['d_b'   ])/self.Omega_cold
+                    TF['d_cb']   = (self.Omega_cdm    *TF['d_cdm' ] + 
+                                    self.Omega_b      *TF['d_b'   ])/self.Omega_cb
+                    # !!!!!!!!!!!
+                    # For reasons unknown, for non-standard cosmological constant, the amplitude is off...
+                    # !!!!!!!!!!!
+                    if self.w0 != -1. or self.wa != 0.: 
+                        TF['d_tot']  = (self.Omega_cold  *TF['d_cold'] + 
+                                        self.Omega_nu_tot*TF['d_nu'  ])/self.Omega_m
+                    # !!!!!!!!!!!
                     # Interpolation of matter T(k)
-                    tm_int   = si.interp1d(k_T, T_m, kind = 'cubic', fill_value = "extrapolate")
+                    tm_int   = si.interp1d(TF['k (h/Mpc)'],TF['d_tot'],
+                                           kind='cubic',fill_value="extrapolate",bounds_error=False)
                     transf_m = tm_int(k)            
                     # Interpolate them to required k
-                    t1_int = si.interp1d(k_T, TF[components[c1]], kind = 'cubic', fill_value = "extrapolate")
-                    t2_int = si.interp1d(k_T, TF[components[c2]], kind = 'cubic', fill_value = "extrapolate")
+                    t1_int = si.interp1d(TF['k (h/Mpc)'],TF[components[c1]],
+                                         kind='cubic',fill_value="extrapolate",bounds_error=False)
+                    t2_int = si.interp1d(TF['k (h/Mpc)'],TF[components[c2]],
+                                         kind='cubic',fill_value="extrapolate",bounds_error=False)
                     transf_1 = t1_int(k)
                     transf_2 = t2_int(k)
                     # Rescaling
@@ -3183,7 +3371,7 @@ class cosmo:
         h     = self.h
         theta = self.T_cmb/2.7
         
-        if np.sum(np.atleast_1d(self.M_nu)) != 0.:
+        if np.sum(self.M_nu) != 0.:
             warnings.warn("EisensteinHu_Pk is not able to reproduce massive neutrinos as it uses the Eisenstein & Hu approximation (1998) for the linear power spectrum. The Omega_nu parameter will be transferred to Omega_lambda such that Omega_lambda -> (Omega_lambda + Omega_nu)")
             om_m -= np.sum(self.Omega_nu)
         if self.w0 != -1. or self.wa != 0.:
@@ -3238,8 +3426,8 @@ class cosmo:
 
         # Power spectrum and normalization
         #delta_H = 1.94e-5*om_m**(-0.785-0.05*np.log(om_m))*np.exp(-0.95*n_tld-0.169*n_tld**2.)
-        #power_tmp = delta_H**2.*(const.c*rk/self.H0)**(3.+self.ns)/rk**3.*(2.*const.PI**2.)*T**2.
-        power_tmp = k**self.ns*(2.*const.PI**2.)*T**2.
+        #power_tmp = delta_H**2.*(const.c*rk/self.H0)**(3.+self.ns)/rk**3.*(2.*np.pi**2.)*T**2.
+        power_tmp = k**self.ns*(2.*np.pi**2.)*T**2.
         norm = sigma_8/self.compute_sigma_8(k = k, pk = power_tmp)
         power_tmp *= norm**(2.)
         
@@ -3458,7 +3646,7 @@ class cosmo:
         # Top-hat window function
         W_kR = self.TopHat_window(k2d*R)
         # Integration in log-bins
-        integral = sint.simps(k2d**3.*pk/(2.*const.PI**2.)*W_kR**2.,x=np.log(k),axis=1)
+        integral = sint.simps(k2d**3.*pk/(2.*np.pi**2.)*W_kR**2.,x=np.log(k),axis=1)
         return integral**0.5
 
     #-----------------------------------------------------------------------------------------
@@ -3552,11 +3740,10 @@ class cosmo:
 
         # Set neutrino masses
         # If all masses are zero, then no m_ncdm
-        #if np.count_nonzero(np.atleast_1d(self.M_nu))!=len(np.atleast_1d(self.M_nu)):
         params['N_ur']   = self.massless_nu
         params['N_ncdm'] = self.massive_nu
         if self.massive_nu != 0:
-            params['m_ncdm'] = ', '.join(str(x) for x in self.M_nu[self.M_nu != 0.])
+            params['m_ncdm'] = ', '.join(str(x) for x in self.M_nu)
 
         # Setting tensors
         if do_tensors:

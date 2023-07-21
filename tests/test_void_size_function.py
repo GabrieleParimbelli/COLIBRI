@@ -1,4 +1,5 @@
 import colibri.cosmology as cc
+import colibri.useful_functions as UU
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -30,19 +31,30 @@ kk=np.logspace(-4.,2,1001)
 _,pk=C.camb_Pk(z=zz,k=kk)
 
 #===========
+# Extrapolate linear power spectra
+#===========
+k_arr  = []
+pk_arr = []
+for iz in range(len(np.atleast_1d(zz))):
+    k_ext,pk_ext = UU.extrapolate_log(kk,pk[iz],1e-4,1e5)
+    pk_arr.append(pk_ext)
+k_arr  = np.array(k_ext )
+pk_arr = np.array(pk_arr)
+
+#===========
 # VSFs
 #===========
-RL_L,VSF_L  = C.void_size_function(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
+RL_L,VSF_L  = C.void_size_function(R=RR,z=zz,k=k_arr,pk=pk_arr,Delta_NL=DNL,
                                    model = 'linear',max_index=IMAX)
-RL_S,VSF_S  = C.void_size_function(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
+RL_S,VSF_S  = C.void_size_function(R=RR,z=zz,k=k_arr,pk=pk_arr,Delta_NL=DNL,
                                    model = 'SvdW'  ,max_index=IMAX)
-RL_V,VSF_V  = C.void_size_function(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
+RL_V,VSF_V  = C.void_size_function(R=RR,z=zz,k=k_arr,pk=pk_arr,Delta_NL=DNL,
                                    model = 'Vdn'   ,max_index=IMAX)
-RL_L,VSF_Ll = C.void_size_function(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
+RL_L,VSF_Ll = C.void_size_function(R=RR,z=zz,k=k_arr,pk=pk_arr,Delta_NL=DNL,
                                    model = 'linear',max_index=IMAX,delta_c=1.06)
-RL_S,VSF_Sl = C.void_size_function(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
+RL_S,VSF_Sl = C.void_size_function(R=RR,z=zz,k=k_arr,pk=pk_arr,Delta_NL=DNL,
                                    model = 'SvdW'  ,max_index=IMAX,delta_c=1.06)
-RL_V,VSF_Vl = C.void_size_function(R=RR,z=zz,k=kk,pk=pk,Delta_NL=DNL,
+RL_V,VSF_Vl = C.void_size_function(R=RR,z=zz,k=k_arr,pk=pk_arr,Delta_NL=DNL,
                                    model = 'Vdn'   ,max_index=IMAX,delta_c=1.06)
 
 #===========

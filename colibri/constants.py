@@ -63,7 +63,6 @@ def explanatory():
      - ``hP``: Planck constant in units of :math:`\mathrm{eV \ s}`
      - ``sSB``: Stefan-Boltzmann constant in :math:`\mathrm{W \ m^{-2} \ K^{-4}}` 
      - ``N_A``: Avogadro constant in :math:`\mathrm{mol^{-1}}`  
-     - ``PI``: :math:`\mathrm{\pi = 3.14159265... }`
 
     Derived constants
 
@@ -159,15 +158,14 @@ kB        = 8.617342791e-5      # Boltzmann constant in [eV/K]
 c         = 2.99792458e5        # Speed of light in [km/s] 
 hP        = 4.135667334e-15     # Planck constant in units of [eV s] 
 N_A       = 6.022140857e23      # Avogadro constant [mol^-1] 
-PI        = math.pi             # pi = 3.14159265...
 
 #-------------------------------
 # Derived constants
 #-------------------------------
 G_mks      = 6.67428e-11                # Newton's gravitational constant in units of [m^3/kg/s^2]
 sSB        = 2*np.pi**5.*(kB*eV)**4/(15*(hP*eV)**3.*(c*km_to_m)**2.) # Stefan-Boltzmann constant [W/m^2 K^4]
-e2         = q**2./(4.*PI*eps_0)        # Electron/proton charge (squared!) in CGS units
-hPb        = hP/(2.*PI)                 # Reduced Planck constant in [eV s]  ('h bar')
+e2         = q**2./(4.*np.pi*eps_0)        # Electron/proton charge (squared!) in CGS units
+hPb        = hP/(2.*np.pi)                 # Reduced Planck constant in [eV s]  ('h bar')
 hPJ        = hP*eV                      # Planck constant in [J s] 
 hPJb       = hPb*eV                     # Reduced Planck constant in [J s]  ('h bar')
 sSB_eV     = sSB/eV                     # Stefan-Boltzmann constant [eV/s m^2 K^4] 
@@ -175,9 +173,9 @@ alpha_BB   = 4.*sSB/(c*km_to_m)         # Constant for blackbody energy density 
 R          = kB*eV*N_A                  # Perfect gas constant [J/mol K] 
 alpha_EM   = e2/(hPJb*c*km_to_m)        # Fine structure constant
 lambda_e   = hP*c*km_to_m/me            # Compton wavelength for electron in [m] 
-r_e        = alpha_EM*lambda_e/(2.*PI)  # Electron classical radius in [m] 
-sigma_T    = 8.*PI/3.*r_e**2.           # Thomson scattering cross section in [m^2] 
-rhoch2     = (3.*100.**2.)/(8*PI*G)     # Critical density of the Universe [h^2 Msun/Mpc^3] 
+r_e        = alpha_EM*lambda_e/(2.*np.pi)  # Electron classical radius in [m] 
+sigma_T    = 8.*np.pi/3.*r_e**2.           # Thomson scattering cross section in [m^2] 
+rhoch2     = (3.*100.**2.)/(8*np.pi*G)     # Critical density of the Universe [h^2 Msun/Mpc^3] 
 rhoch2_mks = 1.8783472458e-31           # Critical density of the Universe [h^2 kg/m^3] 
 
 #-------------------------------

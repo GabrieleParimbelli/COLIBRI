@@ -690,3 +690,79 @@ def compute_sigma_8(k, pk):
     integral = sint.simps(k2d**3.*pk/(2.*np.pi**2.)*W_kR**2.,x=np.log(k),axis=1)
     return integral**.5
 
+#-----------------------------------------------------------------------------------------
+# T_WDM
+#-----------------------------------------------------------------------------------------
+def WDM_temperature_vs_cmb(omega_wdm,m_wdm):
+    """
+    This routine computes the temperature of thermal WDM in units of photon temperature given its mass and its density parameter.
+
+    :param omega_wdm: reduced density parameter of WDM, :math:`\Omega_\mathrm{wdm} h^2`.
+    :type omega_wdm: float
+
+    :param m_wdm: WDM particle mass in :math:`\mathrm{eV}`.
+    :type m_wdm: float
+
+    :return: float
+    """
+    T_nu_over_T_cmb_std = 0.71611
+    return T_nu_over_T_cmb_std * np.power(omega_wdm*93.14/m_wdm,1./3.)
+
+def WDM_temperature(Omega_wdm,m_wdm,h=0.67,T_cmb=2.7255):
+    """
+    This routine computes the temperature of thermal WDM given its mass and its density parameter.
+
+    :param Omega_wdm: reduced density parameter of WDM
+    :type Omega_wdm: float
+
+    :param m_wdm: WDM particle mass in :math:`\mathrm{eV}`.
+    :type m_wdm: float
+
+    :param h: Hubble parameter today in units of :math:`100 \ \mathrm{km/s/Mpc}`.
+    :type h: float, default = 0.67
+
+    :param T_cmb: CMB temperature today, in kelvin
+    :type T_cmb: float, default = 2.7255 K
+
+    :return: float, in kelvin.
+    """
+    return WDM_temperature_vs_cmb(np.array(Omega_wdm)*h**2.,np.array(m_wdm))*T_cmb
+
+#-----------------------------------------------------------------------------------------
+# OMEGA_WDM
+#-----------------------------------------------------------------------------------------
+def omega_wdm_from_mass_and_temperature(m_wdm,T_wdm_wrt_cmb):
+    """
+    This routine computes the reduced density parameter of WDM given its mass and its temperature.
+
+    :param m_wdm: WDM particle mass in :math:`\mathrm{eV}`.
+    :type m_wdm: float
+
+    :param T_wdm_wrt_cmb: WDM temperature in units of photon temperature
+    :type T_wdm_wrt_cmb: float
+
+    :return: float, in kelvin.
+    """
+    T_nu_over_T_cmb_std = 0.71611
+    return m_wdm/93.14*(T_wdm_wrt_cmb/T_nu_over_T_cmb_std)**3.
+
+def Omega_wdm_from_mass_and_temperature(m_wdm,T_wdm,h=0.67,T_cmb=2.7255):
+    """
+    This routine computes the reduced density parameter of WDM given its mass and its temperature.
+
+    :param m_wdm: WDM particle mass in :math:`\mathrm{eV}`.
+    :type m_wdm: float
+
+    :param T_wdm: WDM temperature in kelvin
+    :type T_wdm: float
+
+    :param h: Hubble parameter today in units of :math:`100 \ \mathrm{km/s/Mpc}`.
+    :type h: float, default = 0.67
+
+    :param T_cmb: CMB temperature today, in kelvin
+    :type T_cmb: float, default = 2.7255 K
+
+    :return: float, in kelvin.
+    """
+    return omega_wdm_from_mass_and_temperature(m_wdm,T_wdm/T_cmb)/h**2.
+

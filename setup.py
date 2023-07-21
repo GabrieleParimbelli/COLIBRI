@@ -6,7 +6,7 @@ with open('README.rst') as f:
 
 setup(
     name='colibri-cosmology',
-    version='0.2',
+    version='1.0',
     author='Gabriele Parimbelli',
     author_email='g.parimbelli90@gmail.com',
     packages=find_packages(),
@@ -36,6 +36,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],

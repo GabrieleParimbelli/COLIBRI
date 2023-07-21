@@ -1,6 +1,8 @@
 colibri/*.pyc
 colibri/*.py~
+colibri/ZZZ*
 colibri/__pycache__/
+notebooks/.ipynb*
 doc/build
 colibri/perturbation_theory.py
 tests/test_spt.py

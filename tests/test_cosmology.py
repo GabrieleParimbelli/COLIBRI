@@ -1,106 +1,131 @@
 import colibri.cosmology as cc
-import matplotlib.pyplot as plt
+import colibri.constants as const
 import numpy as np
+import matplotlib.pyplot as plt
 
-plt.rc('text', usetex = True)
-plt.rc('font', family = 'serif', size = 20)
-
-#========================
-# Test of 'cosmology'
-#========================
-
-# Define cosmology instance
-# We report as example all cosmological parameters
-# but the syntax cc.cosmo() is sufficient to have all
-# parameters set to default value.
-C = cc.cosmo(Omega_m = 0.32,        # total matter (CDM + baryons + neutrinos) density parameter today
-             Omega_b = 0.05,        # baryon density parameter today
-             Omega_K = 0.,          # Curvature density parameter (Omega_lambda will be set to sum to 1)
-             ns      = 0.96,        # Scalar spectral index of primordial perturbation
-             As      = 2.12605e-9,  # Scalar amplitude of primordial perturbation
-             sigma_8 = None,        # Power spectrum normalization (set to None as As is defined)
-             h       = 0.67,        # Hubble parameter in units of 100 km/s/Mpc
-             w0      = -1.,         # Dark energy parameter of state today
-             wa      = 0.,          # Evolution of dark energy parameter of state
-             tau     = 0.06,        # Optical depth to reionization
-             T_cmb   = 2.7255,      # CMB temperature today (fixes Omega_gamma)
-             M_nu    = [0.05, 0.01],# Neutrino masses in eV: in this case we have 2 massive neutrinos
-             N_nu    = 3,           # Total number of neutrino species
-             N_eff   = 3.046)       # Effective number of neutrinos
+# Settings for plots
+plt.rc('font',size=20,family='serif')
+plt.rc('text',usetex=True)
 
 
-print("Omega matter:         %.4f" %(C.Omega_m))
-print("Omega CDM:            %.4f" %(C.Omega_cdm))
-print("Omega baryons:        %.4f" %(C.Omega_b))
-print("Omega curvature:      %.4f" %(C.Omega_K))
-print("Omega Lambda:         %.3e" %(C.Omega_lambda))
-print("Omega photons:        %.3e" %(C.Omega_gamma))
-print("Neutrino masses (eV):", C.M_nu)
-print("Omega neutrino:      ", C.Omega_nu)
-print("Total omega neutrino: %.3e" %(np.sum(C.Omega_nu)))
-print("Massive neutrinos:    %i" %(C.massive_nu))
-print("Massless neutrinos:   %.3f" %(C.massless_nu))
-print("Total neutrinos:      %i" %(C.N_nu))
-print("Effective neutrinos:  %.3f" %(C.N_eff))
-print("Primordial amplitude: %.3e" %(C.As))
-print("Spectral index:       %.4f" %(C.ns))
+# Set an array of redshifts
+# here in log-space from 0 to ~1e7
+zz = np.geomspace(1., 1e7, 101)-1
 
+# Precompute neutrino sector
+mnu        = [0.05,0.01]
 
-# Scale factors and redshifts
-aa = np.logspace(-7., 1., 101)    # Scale factor
-zz = C.redshift(aa)               # Corresponding redshifts
+# WDM sector
+mw         = [10.]
+Ow         = [0.1]
 
-# Omegas as functions of z
-onz0 = C.Omega_nu_z(zz)
-ocz0 = C.Omega_cdm_z(zz)
-obz0 = C.Omega_b_z(zz)
-olz0 = C.Omega_lambda_z(zz)
-ogz0 = C.Omega_gamma_z(zz)
-okz0 = C.Omega_K_z(zz)
-otz0 = np.sum(onz0, axis=0)+olz0+ocz0+obz0+ogz0+okz0
+# Number of non-cold species
+mnu        = np.atleast_1d(mnu)
+mw         = np.atleast_1d(mw)
+delta_neff = 0.044
+nn         = len(mnu)
+nnu        = max(nn,3)
+nw         = len(mw)
+neff       = nnu + nw + delta_neff
+nmassive   = nn + nw
 
-plt.figure(figsize=(12,8))
-plt.subplot(211)
-L,B,R,T = 0.1, 0.12, 0.95, 0.95
-plt.subplots_adjust(L,B,R,T,0.3,0.3)
-LS = ['-','--',':']
-for i in range(len(np.atleast_1d(onz0))):
-    plt.semilogx(aa, onz0[i],'m', ls = LS[i], lw = 2.0, label ='$\\nu_%i$' %(i+1))
-plt.semilogx(aa, olz0,    'k',   lw = 2.0, label ='$\Lambda$')
-plt.semilogx(aa, ogz0,    'g',   lw = 2.0, label = '$\\gamma$')
-plt.semilogx(aa, ocz0,    'b',   lw = 2.0, label = 'cdm')
-plt.semilogx(aa, obz0,    'r',   lw = 2.0, label = 'b')
-plt.semilogx(aa, otz0,    'k:',  lw = 4.0, label = 'total')
-plt.axvline(1., c = 'k', ls = '-.', lw = 4.0, label = 'today')
-plt.yscale('log')
-plt.xlabel('$a$')
-plt.ylabel('$\Omega_i(a)$')
-plt.xlim(aa.min(), aa.max())
-plt.ylim(1e-6, 5.)
-plt.legend(loc = 'lower left', ncol = 3, fontsize = 16)
+# Colibri "cosmo" instance
+C  = cc.cosmo(Omega_m   = 0.32,      # Total matter density today
+              Omega_b   = 0.05,      # Baryonic matter density today
+              As        = 2.1265e-9, # Amplitude of primordial fluctuations
+              ns        = 0.96,      # Index of primordial fluctuations
+              h         = 0.67,      # Hubble parameter
+              Omega_K   = 0.0,       # Curvature parameter
+              w0        = -1.0,      # Dark energy parameter of state today (CPL parametrization)
+              wa        = 0.0,       # Variation of dark energy parameter of state (CPL parametrization)
+              T_cmb     = 2.7255,    # CMB temperature in K
+              N_eff     = neff,      # Effective number of relativistic species in the early Universe
+              N_nu      = nnu,       # Number of active neutrinos (integer)
+              M_nu      = mnu,       # List of neutrino masses in eV
+              M_wdm     = mw,        # List of WDM species masses in eV
+              Omega_wdm = Ow)        # List of WDM density parameters
 
-# Distances and Hubble parameter as function of redshift
-# massive_nu_approx = True is a flag that approximate neutrinos as matter
-# (it is faster, but less accurate; anyway the error is much smaller than 0.1% at z < 10.
-zzz   = np.linspace(0., 10., 101)
-d_com = C.comoving_distance(zzz, massive_nu_approx = True)
-d_ang = C.angular_diameter_distance(zzz, massive_nu_approx = True)
-d_lum = C.luminosity_distance(zzz, massive_nu_approx = True)
-d_vol = C.isotropic_volume_distance(zzz, massive_nu_approx = True)
-H_z   = C.H(zzz)
+print("> colibri 'cosmo' class called with following parameters:")
+print("    Matter")
+print("        Omega_m           : %.6f" %C.Omega_m)
+print("        Omega_cdm         : %.6f" %C.Omega_cdm)
+print("        Omega_b           : %.6f" %C.Omega_b)
+print("        Omega_nu          : %s" %(''.join(str(C.Omega_nu))))
+print("        Omega_wdm         : %s" %(''.join(str(C.Omega_wdm))))
+print("    Relativistic species")
+print("        T_cmb             : %.6f K" %C.T_cmb)
+print("        Omega_gamma       : %.6f" %C.Omega_gamma)
+print("        Omega_ur          : %.6f" %C.Omega_ur)
+print("    Dark energy")
+print("        Omega_DE          : %.6f" %C.Omega_lambda)
+print("        w0                : %.6f" %C.w0)
+print("        wa                : %.6f" %C.wa)
+print("    Curvature")
+print("        Omega_K           : %.6f" %C.Omega_K)
+print("        K                 : %.6f (h/Mpc)^2" %C.K)
+print("    Hubble expansion")
+print("        h                 : %.6f" %C.h)
+print("        H0                : %.6f km/s/Mpc" %C.H0)
+print("    Initial conditions")
+print("        As                : %.6e" %C.As)
+print("        ns                : %.6f" %C.ns)
 
-plt.subplot(212) 
-plt.semilogy(zzz, d_com, 'k', lw = 2.0, label = '$\chi(z) \ [\mathrm{Mpc}/h]$')
-plt.semilogy(zzz, d_ang, 'g', lw = 2.0, label = '$D_A(z) \ [\mathrm{Mpc}/h]$')
-plt.semilogy(zzz, d_lum, 'b', lw = 2.0, label = '$D_L(z) \ [\mathrm{Mpc}/h]$')
-plt.semilogy(zzz, d_vol, 'm', lw = 2.0, label = '$D_V(z) \ [\mathrm{Mpc}/h]$')
-plt.semilogy(zzz, H_z,   'r', lw = 2.0, label = '$H(z) \ [\mathrm{km/s/Mpc}]$')
-plt.yscale('log')
-plt.xlabel('$z$')
-plt.xlim(zzz.min(), zzz.max())
-plt.legend(loc = 'lower right', ncol = 3, fontsize = 16)
+# Compute evolution of density parameters
+Omega_de    = C.Omega_lambda_z(zz)
+Omega_cdm   = C.Omega_cdm_z(zz)
+Omega_b     = C.Omega_b_z(zz)
+Omega_gamma = C.Omega_gamma_z(zz)
+Omega_K     = C.Omega_K_z(zz)
+Omega_wdm   = C.Omega_wdm_z(zz)
+Omega_nu    = C.Omega_nu_z(zz)
+Omega_ur    = C.Omega_ur_z(zz)
+print("> Redshift dependence of cosmological parameters computed")
 
-# Show!
+# Compute Hubble parameter, distances
+Hz          = C.H(zz)
+DC          = C.comoving_distance(zz)
+DL          = C.luminosity_distance(zz)
+DA          = C.angular_diameter_distance(zz)
+print("> Hubble function and distances computed")
+
+# Plot
+fig, ax = plt.subplots(2,1,figsize=(9,8),sharex=True)
+L,B,R,T = 0.13,0.13, 0.95, 0.84
+plt.subplots_adjust(L,B,R,T,0.35,0)
+
+# Plot Omegas
+ax[0].loglog(1+zz, Omega_cdm  ,c='blue'     ,lw=2,label='cdm')
+ax[0].loglog(1+zz, Omega_b    ,c='red'      ,lw=2,label='b')
+ax[0].loglog(1+zz, Omega_de   ,c='black'    ,lw=2,label='$\Lambda$')
+ax[0].loglog(1+zz, Omega_gamma,c='green'    ,lw=2,label='$\\gamma$')
+ax[0].loglog(1+zz, Omega_ur   ,c='violet'   ,lw=2,label='ur')
+if C.Omega_K>=0: ax[0].loglog(1+zz, Omega_K    ,c='goldenrod',lw=2,ls='-' ,label='K')
+else           : ax[0].loglog(1+zz,-Omega_K    ,c='goldenrod',lw=2,ls='--',label='-K')
+for i in range(nn): ax[0].loglog(1+zz, Omega_nu[i] ,c='magenta',lw=2)
+for i in range(nw): ax[0].loglog(1+zz, Omega_wdm[i],c='cyan'   ,lw=2)
+ax[0].loglog(np.nan,np.nan,c='magenta',lw=2,label='$\\nu$')
+ax[0].loglog(np.nan,np.nan,c='cyan'   ,lw=2,label='wdm')
+
+# Non-relativistic transition of different free-streaming species
+for i in range(len(C.M_nu)):  ax[0].axvline(1890*C.M_nu[i], c='magenta',ls=':')
+for i in range(len(C.M_wdm)): ax[0].axvline(C.M_wdm[i]/(const.kB*C.T_wdm[i])/np.sqrt(8./np.pi), c='cyan',ls=':')
+
+# Plot H(z), distances
+ax[1].loglog(1+zz, Hz/C.H0,'k',lw=2,label='$H(z)/H_0$')
+ax[1].loglog(1+zz, DC     ,'b',lw=2,label='$\chi(z)$')
+ax[1].loglog(1+zz, DL     ,'r',lw=2,label='$D_L(z)$')
+ax[1].loglog(1+zz, DA     ,'g',lw=2,label='$D_A(z)$')
+
+ax[1].set_xlabel('$1+z$')
+ax[0].set_ylabel('$\Omega_i(z)$')
+
+ax[0].legend(loc='lower center',
+               bbox_to_anchor=(0.5,1.01),
+               bbox_transform=ax[0].transAxes,ncol=4,fontsize=20)
+ax[1].legend(loc='upper left',ncol=2,fontsize=16)
+
+ax[0].set_xlim((1+zz).min(), (1+zz).max())
+ax[0].set_ylim(3e-6, 5.)
+
 plt.show()
-
 

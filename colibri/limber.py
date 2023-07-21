@@ -71,8 +71,8 @@ class limber():
         self.geometric_factor_windows = self.geometric_factor_f_K(self.z_windows)
 
         # Hubble parameters (in km/s/(Mpc/h))
-        self.Hubble         = self.cosmology.H_massive(self.z_integration)/self.cosmology.h
-        self.Hubble_windows = self.cosmology.H_massive(self.z_windows)    /self.cosmology.h
+        self.Hubble         = self.cosmology.H(self.z_integration)/self.cosmology.h
+        self.Hubble_windows = self.cosmology.H(self.z_windows)    /self.cosmology.h
 
         # Factor c/H(z)/f_K(z)^2
         self.c_over_H_over_chi_squared = const.c/self.Hubble/self.geometric_factor**2.
@@ -269,33 +269,6 @@ class limber():
         n = z**0.*lower*upper
         return n
 
-
-    #-------------------------------------------------------------------------------
-    # COMOVING DISTANCE
-    #-------------------------------------------------------------------------------
-    def comoving_distance(self, z, z0 = 0.):
-        """
-        Comoving distance between two redshifts. It assumes neutrinos as matter, which is a good
-        approximation at low redshifts. In fact, this latter assumption introduces a bias of less
-        than 0.02% at :math:`z<10` for even the lowest neutrino masses allowed by particle physics.
-
-        :param z: Redshifts.
-        :type z: array
-
-        :param z0: Pivot redshift.
-        :type z0: float, default = 0
-
-        :return: array
-        """
-        c = const.c
-        z = np.atleast_1d(z)
-        length = len(z)
-        result = np.zeros(length)
-        for i in xrange(length):
-            result[i], _ = sint.quad(lambda x: c*1./(self.cosmology.H_massive(x)/self.cosmology.h), z0, z[i], epsabs = 1e-8)
-
-        return result
-
     #-------------------------------------------------------------------------------
     # GEOMETRIC FACTOR
     #-------------------------------------------------------------------------------
@@ -317,14 +290,12 @@ class limber():
         # Curvature in (h/Mpc)^2 units. Then I will take the sqrt and it will
         # go away with comoving_distance(z), giving a final result in units of Mpc/h
         K = self.cosmology.K
-        chi_z = self.comoving_distance(z, z0)
+        chi_z0 = self.cosmology.comoving_distance(z0)
+        chi_z  = self.cosmology.comoving_distance(z)-chi_z0
         # Change function according to sign of K
-        if K == 0.:
-            return chi_z #Mpc/h
-        elif K > 0.:
-            return 1./K**0.5*np.sin(K**0.5*chi_z) #Mpc/h
-        else:
-            return 1./np.abs(K)**0.5*np.sinh(np.abs(K)**0.5*chi_z) #Mpc/h
+        if K == 0.:  return chi_z #Mpc/h
+        elif K > 0.: return 1./K**0.5*np.sin(K**0.5*chi_z) #Mpc/h
+        else:        return 1./np.abs(K)**0.5*np.sinh(np.abs(K)**0.5*chi_z) #Mpc/h
 
     #-----------------------------------------------------------------------------------------
     # SHEAR WINDOW FUNCTION
@@ -387,16 +358,23 @@ class limber():
 
             # Set windows
             for galaxy_bin in xrange(n_bins):
-                # Select which is the function and which are the arguments and do the integral for window function
+                # Select the n(z) array and do the integral for window function
                 n_z = si.interp1d(z,nz[galaxy_bin],'cubic', bounds_error = False, fill_value = 0.)
-                integral = list(map(lambda z_i: sint.quad(lambda x: n_z(x)*self.geometric_factor_f_K(x,z_i)/self.geometric_factor_f_K(x), z_i, self.z_max, epsrel = 1.e-3)[0], self.z_windows))
+                integral = list(map(lambda z_i: sint.quad(lambda x: n_z(x)*
+                                                                    self.geometric_factor_f_K(x,z_i)/
+                                                                    self.geometric_factor_f_K(x),
+                                                                    z_i, self.z_max,
+                                                                    epsrel = 1.e-3)[0], self.z_windows))
                 # Fill temporary window functions with real values
                 window_function_tmp    = constant*integral/norm_const[galaxy_bin]
-                # Interpolate (the Akima interpolator avoids oscillations around the zero due to the cubic spline)
-                try:
-                    self.window_function[name].append(si.interp1d(self.z_windows, window_function_tmp, 'cubic', bounds_error = False, fill_value = 0.))
-                except ValueError:
-                    self.window_function[name].append(si.Akima1DInterpolator(self.z_windows, window_function_tmp))
+                # Interpolate (Akima interpolator avoids oscillations around the zero due to spline)
+                try:               self.window_function[name].append(si.interp1d(self.z_windows,
+                                                                                 window_function_tmp,
+                                                                                 'cubic',
+                                                                                 bounds_error=False,
+                                                                                 fill_value=0.))
+                except ValueError: self.window_function[name].append(si.Akima1DInterpolator(self.z_windows,
+                                                                                 window_function_tmp))
 
     def load_shear_window_functions_flat(self, z, nz, name = 'shear'):
         # Set number of bins, normalize them, find constant in front
@@ -407,7 +385,7 @@ class limber():
         # Initialize window
         self.window_function[name]  = []
         # Set windows
-        chi_max = self.cosmology.comoving_distance(self.z_max)
+        chi_max = self.cosmology.comoving_distance(self.z_max,False)
         for galaxy_bin in xrange(n_bins):
             # Select which is the function and which are the arguments
             tmp_interp = si.interp1d(z,nz[galaxy_bin],'cubic', bounds_error = False, fill_value = 0.)
