@@ -59,7 +59,7 @@ And then with COLIBRI via the :func:`colibri.nonlinear.HMcode2016` class:
 
 The comparison should look like the figure below, where the maximum deviation is below 1%.
 
-.. image:: ../_static/nonlinear_spectrum.png
+.. image:: ../_static/nonlinear_power_spectrum.png
    :width: 700
 
 
