@@ -63,7 +63,7 @@ The file contains (as is obvious) useful functions such as extrapolation of arra
 Tests
 ----------------------------
 
-Together with the files, two folder containing some useful and explanatory tests and Python example notebooks are provided. Each of them is adequately commented, so check them out and run them!
+Together with the files, two folders containing some useful and explanatory tests and Python example notebooks are provided. Each of them is adequately commented, so check them out and run them!
 
 Otherwise, you may want to go the :ref:`cosmology_test` section.
 
