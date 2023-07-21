@@ -24,7 +24,7 @@ Let us start by importing all the necessary libraries and the :func:`colibri.cos
  C  = cc.cosmo(Omega_m   = 0.32,        # Total matter density today
                Omega_b   = 0.05,        # Baryonic matter density today
                As        = 2.1265e-9,   # Amplitude of primordial fluctuations
-               sigma_8 = None,         # Power spectrum normalization (set to None as As is defined)
+               sigma_8   = None,        # Power spectrum normalization (set to None as As is defined)
                ns        = 0.96,        # Index of primordial fluctuations
                h         = 0.67,        # Hubble parameter
                Omega_K   = 0.0,         # Curvature parameter (Omega_lambda will be set as 1 minus the rest)

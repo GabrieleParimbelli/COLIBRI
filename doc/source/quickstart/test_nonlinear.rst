@@ -26,32 +26,35 @@ We first define a ``cosmo`` instance, without massive neutrinos to have a direct
  import colibri.nonlinear as NL
 
 
- C = cc.cosmo(Omega_m = 0.3089,
-              M_nu    = 0.0,
-              Omega_b = 0.0486,
-              As      = 2.14e-9,
-              ns      = 0.9667,
-              h       = 0.6774)
+ C  = cc.cosmo(Omega_m = 0.32,
+               Omega_b = 0.05,
+               As      = 2.12605e-9,
+               ns      = 0.96,
+               h       = 0.67,
+               M_nu    = 0.06)
  zz = np.linspace(0., 5., 6)
  kk = np.logspace(-4., 2., 201)
 
-Let us set then a method with which to compute the spectra. We will use the Mead method (it works the same for Takahashi and Bird).
+Let us set then a method with which to compute the spectra. We will use the HMcode2020 method.
 We compute at this point the non-linear power spectrum with CAMB
 
 .. code-block:: python
 
  # Compute the non-linear power spectrum with CAMB (use Mead halofit)
- k_camb, pk_camb = C.camb_Pk(k = kk, z = zz, nonlinear = True, halofit = 'mead')
+ k_camb, pk_camb = C.camb_Pk(k = kk, z = zz, nonlinear = True, halofit = 'mead2020')
 
 And then with COLIBRI via the :func:`colibri.nonlinear.HMcode2016` class:
 
 .. code-block:: python
 
- # Use the `HMcode2016' class, which takes as arguments
- # Compute at first the linear power spectrum (in LCDM 'cb' and 'tot' is the same)
- k_l, pk_l    = C.camb_Pk(z = zz, k = kk, var_1 = 'cb', var_2 = 'cb')
- do_nonlinear = NL.HMcode2016(z = zz, k = k_l, pk = pk_l,
-                              field = 'cb', BAO_smearing = False, cosmology = C)
+ # Use the `HMcode2020' class, which takes as arguments
+ # Compute at first the linear power spectrum (for 'cb' and 'tot')
+  k_l, pk_l = C.camb_XPk(z = zz, k = kk, var_1 =  ['cb','tot'], var_2 = ['cb','tot'])
+  do_nonlinear = NL.HMcode2020(z            = zz,
+                               k            = k_l,
+                               pk_cc        = pk_cc,
+                               pk_mm        = pk_mm,
+                               cosmology    = C)
  pk_hf        = do_nonlinear.pk_nl
 
 The comparison should look like the figure below, where the maximum deviation is below 1%.
