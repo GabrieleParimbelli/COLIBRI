@@ -1,6 +1,6 @@
 .. _void_size_function_test:
 
-Void size function: more sofisticated models
+Void size function
 =============================================
 
 The excursion set model is not the only way to compute the void size function.
