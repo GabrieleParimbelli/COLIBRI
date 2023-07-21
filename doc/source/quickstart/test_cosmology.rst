@@ -127,7 +127,7 @@ Also distances can be easily computed:
  DA          = C.angular_diameter_distance(zz)
 
 
-Plotting everything would generate
+Plotting these quantities would generate
 
 .. image:: ../_static/density_parameters_evolution.png
    :width: 700
