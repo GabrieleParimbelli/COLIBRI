@@ -17,7 +17,7 @@ mnu        = [0.05,0.01]
 
 # WDM sector
 mw         = [10.]
-Ow         = [0.1]
+Ow         = [0.01]
 
 # Number of non-cold species
 mnu        = np.atleast_1d(mnu)

@@ -24,22 +24,22 @@ class cosmo:
     It accepts the following arguments, with the default values specified:
 
     :param Omega_m: Matter density parameter today (including massive neutrinos), :math:`\Omega_m`.
-    :type Omega_m: float, default = 0.3089
+    :type Omega_m: float, default = 0.32
 
     :param Omega_b: Baryon density parameter today, :math:`\Omega_b`.
-    :type Omega_b: float, default = 0.0486
+    :type Omega_b: float, default = 0.05
 
     :param h: Hubble constant in units of 100 km/s/Mpc.
-    :type h: float, default = 0.6774
+    :type h: float, default = 0.67
 
     :param As: Amplitude of primordial scaled perturbations. At least one between this and `sigma_8` must be different from None. If ``As`` is not None, it will be the parameter used to compute the amplitude of the power spectrum.
-    :type As: float, default = 2.14e-9
+    :type As: float, default = 2.12065e-9
 
     :param sigma_8: Root mean square amplitude fluctuation on scales of 8 :math:`\mathrm{Mpc}/h`. At least one between this and ``As`` must be different from None. If ``sigma_8`` is not None, and ``As`` is None, the former will be the parameter used to compute the amplitude of the power spectrum.
     :type sigma_8: float, default = ``None``
 
     :param ns: Spectral index of scalar primordial perturbations.
-    :type ns: float, default = 0.9667
+    :type ns: float, default = 0.96
 
     :param w0: Dark energy parameter of state today.
     :type w0: float, default = -1
@@ -1644,9 +1644,9 @@ class cosmo:
     #-----------------------------------------------------------------------------------------
     # SHETH-TORMEN MASS FUNCTION
     #-----------------------------------------------------------------------------------------
-    def ShethTormen_mass_function(self, sigma, a = 0.707, p = 0.3, delta_th = None):
+    def ShethTormen_mass_function(self,sigma,a=0.707,p=0.3,q=1.,delta_th=3/20*(12*np.pi)**(2./3.)):
         """
-        Universal mass function by Sheth-Tormen as function of the RMS mass fluctuation in spheres :math:`\sigma(M)`.
+        Universal mass function by Sheth-Tormen as function of the RMS mass fluctuation in spheres :math:`\sigma(M)`. Also extended according to Bhattacharya et al., 2011.
 
         :param sigma: RMS mass fluctuation.
         :type sigma: array
@@ -1657,20 +1657,23 @@ class cosmo:
         :param p: Sheth-Tormen mass function parameter.
         :type p: float<0.5, default = 0.3
 
+        :param q: Bhattacharya mass function parameter.
+        :type q: float, default = 1
+
         :param delta_th': Threshold for collapse.
         :type delta_th': float, default = None
 
         :return: array
         """
-        if delta_th == None: delta_th = self.delta_sc
-        nu = np.abs(delta_th)/sigma
-        n = nu**2.
-        A = 1./(1. + 2.**(-p)*ss.gamma(0.5-p)/np.sqrt(np.pi))
-        ST = A * np.sqrt(2.*a*n/np.pi) * (1.+1./(a*n)**p) * np.exp(-a*n/2.)
+        #if delta_th == None: delta_th = self.delta_sc
+        nu  = np.abs(delta_th)/sigma
+        anu = a*nu**2.
+        A = 1./(2**(-0.5-p+0.5*q)/(np.pi**0.5)*(2**p*ss.gamma(0.5*q) + ss.gamma(0.5*q-p)))
+        ST = A * np.sqrt(2.*anu/np.pi) * (1.+1./(anu)**p) * np.exp(-anu/2.)*(anu)**(0.5*(q-1.))
         return ST
 
     #-----------------------------------------------------------------------------------------
-    # SHETH-TORMEN MASS FUNCTION
+    # DESPALI MASS FUNCTION
     #-----------------------------------------------------------------------------------------
     def Despali_mass_function(self, sigma, a = 0.794, p = 0.247, A = 0.3333, delta_th = None):
         """
@@ -1894,7 +1897,7 @@ class cosmo:
         :return: array
         """
         # Choose according the mass function
-        if mass_fun in ['Sheth-Tormen','ST','ShethTormen','Despali','D']:
+        if   mass_fun in ['Sheth-Tormen','ST','ShethTormen','Despali','D']:
             return self.ShethTormen_bias(sigma = sigma, **kwargs)
         elif mass_fun in ['Press-Schechter', 'PS', 'PressSchechter']:
             return self.PressSchechter_bias(sigma = sigma)
@@ -2015,8 +2018,9 @@ class cosmo:
 
         :return: 2D array containing :math:`\\frac{dn}{dM}` in :math:`h^4 \ \mathrm{Mpc}^{-3} \ M_\odot^{-1}`
         """
-        # Set number of redshifts
-        pk=np.atleast_2d(pk)
+        # Set pk
+        pk   = np.atleast_2d(pk)
+        logM = np.array(logM)
         # Check dimensions (only if MICE or Tinker are asked)
         if mass_fun in ['Tinker', 'T', 'T08','MICE', 'Crocce', 'C']:
             assert len(np.atleast_1d(z))==len(pk), "Redshifts are not of the same length as power spectra"

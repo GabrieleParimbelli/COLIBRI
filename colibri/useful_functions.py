@@ -4,7 +4,6 @@ import scipy.integrate as sint
 import scipy.fftpack as sfft
 import scipy.optimize
 import sys
-from six.moves import xrange
 
 #-----------------------------------------------------------------------------------------
 # EXTRAPOLATE
@@ -247,7 +246,7 @@ def TopHat_window(x):
     """
     return 3./(x)**3*(np.sin(x)-x*np.cos(x))
 
-def Gaussian_window(self, x):
+def Gaussian_window(x):
     """
     Gaussian window function.
 
@@ -258,7 +257,7 @@ def Gaussian_window(self, x):
     """
     return np.exp(-x**2./2.)
 
-def Sharp_k_window(self, x, step=1e-2):
+def Sharp_k_window(x, step=1e-2):
     """
     Sharp window function in Fourier space.
 
@@ -272,7 +271,7 @@ def Sharp_k_window(self, x, step=1e-2):
     """
     return 0.5*(1.+2./np.pi*np.arctan((1.-x)/1e-2))
 
-def Smooth_k_window(self, x, beta):
+def Smooth_k_window(x, beta):
     """
     Smooth window function in Fourier space.
 
@@ -766,3 +765,153 @@ def Omega_wdm_from_mass_and_temperature(m_wdm,T_wdm,h=0.67,T_cmb=2.7255):
     """
     return omega_wdm_from_mass_and_temperature(m_wdm,T_wdm/T_cmb)/h**2.
 
+#-----------------------------------------------------------------------------------------
+# ALCOCK-PACZYNSKI EFFECT
+#-----------------------------------------------------------------------------------------
+def AP_factors(z,cosmo,cosmo_fid,massive_nu_approx=True):
+    """
+    Compute the Alcock-Paczynski parallel and perpendicular factors.
+
+    :param z: redshift.
+    :type z: float
+
+    :param cosmo: current cosmology for which parameters will be computed
+    :type cosmo: :func:`colibri.cosmology.cosmo()` object
+
+    :param cosmo_fid: fiducial cosmology for which probes are measured
+    :type cosmo_fid: :func:`colibri.cosmology.cosmo()` object
+
+    :param massive_nu_approx: whether to assume neutrinos behave as pure matter at all redshifts
+    :type massive_nu_approx: boolean, default = True
+
+    :return: 2 floats, :math:`q_\parallel` and  :math:`q_\perp`
+
+    """
+    q_par  = cosmo_fid.H(z)/cosmo.H(z)
+    q_perp = cosmo    .angular_diameter_distance(z,massive_nu_approx)/ \
+             cosmo_fid.angular_diameter_distance(z,massive_nu_approx)
+    return q_par, q_perp
+
+def AP_polar_coordinates_fourier_space(z,k_fid,mu_fid,cosmo,cosmo_fid,massive_nu_approx=True):
+    """
+    Compute the Alcock-Paczynski corrected polar coordinates in Fourier space.
+
+    :param z: redshift.
+    :type z: float
+
+    :param k_fid: scales in :math:`h/\mathrm{Mpc}`
+    :type k_fid: array
+
+    :param mu_fid: cosines of angle w.r.t. line of sight.
+    :type mu_fid: array
+
+    :param cosmo: current cosmology for which parameters will be computed
+    :type cosmo: :func:`colibri.cosmology.cosmo()` object
+
+    :param cosmo_fid: fiducial cosmology for which probes are measured
+    :type cosmo_fid: :func:`colibri.cosmology.cosmo()` object
+
+    :param massive_nu_approx: whether to assume neutrinos behave as pure matter at all redshifts
+    :type massive_nu_approx: boolean, default = True
+
+    :return: two 2D arrays of shape ``(len(s_fid), len(mu_fid))`` containing scales and angles in the new cosmology
+
+    """
+    KK,MMUU      = np.meshgrid(k_fid,mu_fid,indexing='ij')
+    q_par,q_perp = AP_factors(z,cosmo,cosmo_fid,massive_nu_approx)
+    F_AP         = q_par/q_perp
+    denominator  = (1.+MMUU**2*(F_AP**(-2.)-1.))**0.5
+    k_prime      = KK/q_perp*denominator
+    mu_prime     = MMUU/F_AP/denominator
+    return k_prime,mu_prime
+
+def AP_polar_coordinates_configuration_space(z,s_fid,mu_fid,cosmo,cosmo_fid,massive_nu_approx=True):
+    """
+    Compute the Alcock-Paczynski corrected polar coordinates in configuration space.
+
+    :param z: redshift.
+    :type z: float
+
+    :param s_fid: scales in :math:`\mathrm{Mpc}/h`
+    :type s_fid: array
+
+    :param mu_fid: cosines of angle w.r.t. line of sight.
+    :type mu_fid: array
+
+    :param cosmo: current cosmology for which parameters will be computed
+    :type cosmo: :func:`colibri.cosmology.cosmo()` object
+
+    :param cosmo_fid: fiducial cosmology for which probes are measured
+    :type cosmo_fid: :func:`colibri.cosmology.cosmo()` object
+
+    :param massive_nu_approx: whether to assume neutrinos behave as pure matter at all redshifts
+    :type massive_nu_approx: boolean, default = True
+
+    :return: two 2D arrays of shape ``(len(s_fid), len(mu_fid))`` containing scales and angles in the new cosmology
+
+    """
+    SS,MMUU      = np.meshgrid(s_fid,mu_fid,indexing='ij')
+    q_par,q_perp = AP_factors(z,cosmo,cosmo_fid,massive_nu_approx)
+    F_AP         = q_par/q_perp
+    denominator  = (1.+MMUU**2*(F_AP**2.-1.))**0.5
+    s_prime      = SS*q_perp*denominator
+    mu_prime     = MMUU*F_AP/denominator
+    return s_prime,mu_prime
+
+def AP_cartesian_coordinates_fourier_space(z,k_par_fid,k_perp_fid,cosmo,cosmo_fid,massive_nu_approx=True):
+    """
+    Compute the Alcock-Paczynski corrected Cartesian coordinates in Fourier space.
+
+    :param z: redshift.
+    :type z: float
+
+    :param k_par_fid: parallel component of the separation wavevector in :math:`h/\mathrm{Mpc}`
+    :type k_par_fid: array
+
+    :param k_perp_fid: perpendicular component of the separation wavevector in :math:`h/\mathrm{Mpc}`
+    :type k_perp_fid: array
+
+    :param cosmo: current cosmology for which parameters will be computed
+    :type cosmo: :func:`colibri.cosmology.cosmo()` object
+
+    :param cosmo_fid: fiducial cosmology for which probes are measured
+    :type cosmo_fid: :func:`colibri.cosmology.cosmo()` object
+
+    :param massive_nu_approx: whether to assume neutrinos behave as pure matter at all redshifts
+    :type massive_nu_approx: boolean, default = True
+
+    :return: two 1D arrays containing scales in the new cosmology
+
+    """
+    q_par,q_perp = AP_factors(z,cosmo,cosmo_fid,massive_nu_approx)
+    k_par_prime,k_perp_prime = k_par_fid/q_par, k_perp_fid/q_perp
+    return k_par_prime,k_perp_prime
+
+def AP_cartesian_coordinates_configuration_space(z,s_par_fid,s_perp_fid,cosmo,cosmo_fid,massive_nu_approx=True):
+    """
+    Compute the Alcock-Paczynski corrected Cartesian coordinates in configuration space.
+
+    :param z: redshift.
+    :type z: float
+
+    :param s_par_fid: parallel component of the separation vector in :math:`\mathrm{Mpc}/h`
+    :type s_par_fid: array
+
+    :param s_perp_fid: perpendicular component of the separation vector in :math:`\mathrm{Mpc}/h`
+    :type s_perp_fid: array
+
+    :param cosmo: current cosmology for which parameters will be computed
+    :type cosmo: :func:`colibri.cosmology.cosmo()` object
+
+    :param cosmo_fid: fiducial cosmology for which probes are measured
+    :type cosmo_fid: :func:`colibri.cosmology.cosmo()` object
+
+    :param massive_nu_approx: whether to assume neutrinos behave as pure matter at all redshifts
+    :type massive_nu_approx: boolean, default = True
+
+    :return: two 1D arrays of shape containing scales in the new cosmology
+
+    """
+    q_par,q_perp = AP_factors(z,cosmo,cosmo_fid,massive_nu_approx)
+    s_par_prime,s_perp_prime = s_par_fid/q_par, s_perp_fid/q_perp
+    return s_par_prime,s_perp_prime

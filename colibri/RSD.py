@@ -6,7 +6,6 @@ import numpy as np
 import scipy
 import colibri.useful_functions as UU
 import colibri.nonlinear as NL
-from six.moves import xrange
 
 
 
@@ -287,19 +286,19 @@ class RSD(gc.galaxy):
             CONC    = self.conc(M, **kwargs_concentration)
             # NFW transforms
             UNFW = np.zeros((self.nz, self.nm, self.nk))
-            for ik in xrange(self.nk):
+            for ik in range(self.nk):
                 UNFW[:, :, ik] = self.u_NFW(CONC, self.k[ik]*R_s)
             # FoG terms for central-satellite and satellite-satellite
             PCS  = np.zeros((self.nz, self.nm, self.nk, self.nmu))
             PSS  = np.zeros((self.nz, self.nm, self.nk, self.nmu))
             if fingers_of_god == 'Gaussian':
-                for im in xrange(self.nm):
-                    for imu in xrange(self.nmu):
+                for im in range(self.nm):
+                    for imu in range(self.nmu):
                         PCS[:, im, :, imu] = UNFW[:, im, :]*self.damping(x = ((1.+ZZ)*SIGMA*KK*MU)[:,:,imu], kind = fingers_of_god)
                 PSS = PCS**2.
             elif fingers_of_god == 'Lorentzian':
-                for im in xrange(self.nm):
-                    for imu in xrange(self.nmu):
+                for im in range(self.nm):
+                    for imu in range(self.nmu):
                         PCS[:, im, :, imu] = UNFW[:, im, :]*self.damping(x =             ((1.+ZZ)*SIGMA*KK*MU)[:,:,imu], kind = fingers_of_god)
                         PSS[:, im, :, imu] = UNFW[:, im, :]*self.damping(x = np.sqrt(2.)*((1.+ZZ)*SIGMA*KK*MU)[:,:,imu], kind = fingers_of_god)
             else:
@@ -315,9 +314,9 @@ class RSD(gc.galaxy):
             # Filling power spectrum array
             P_K_MU = np.zeros_like(PK_BASE)
 
-            for iz in xrange(self.nz):
-                for ik in xrange(self.nk):
-                    for im in xrange(self.nmu):
+            for iz in range(self.nz):
+                for ik in range(self.nk):
+                    for im in range(self.nmu):
                         integrand_1h       = (1./n_avg[iz]**2.*dndM[iz]*(2.*Nc[iz]*Ns[iz]*PCS[iz,:,ik,im]+Ns[iz]**2.*PSS[iz,:,ik,im]))*M
                         integrand_2h       = (1./n_avg[iz]*dndM[iz]*(bias[iz] + growth_rate[iz]*self.mu[im]**2.)*(Nc[iz]+Ns[iz]*PCS[iz,:,ik,im]))*M
                         P_g_1h             = np.trapz(integrand_1h, dx = dlnM)*(1-np.exp(-(self.k[ik]/k_star[iz])**2.))
@@ -502,21 +501,21 @@ class RSD(gc.galaxy):
             CONC    = self.conc(M, **kwargs_concentration)
             # NFW transforms
             UNFW = np.zeros((self.nz, self.nm, self.nk))
-            for ik in xrange(self.nk):
+            for ik in range(self.nk):
                 UNFW[:, :, ik] = self.u_NFW(CONC, self.k[ik]*R_s)
             # FoG terms for central-satellite and satellite-satellite
             PCS     = np.zeros((self.nz, self.nm, self.nk, nmu))
             PSS     = np.zeros((self.nz, self.nm, self.nk, nmu))
             DAMP_CS = self.damping(x = ((1.+ZZ)*SIGMA*KK*MU), kind = fingers_of_god)
             if fingers_of_god == 'Gaussian':
-                for im in xrange(self.nm):
-                    for imu in xrange(nmu):
+                for im in range(self.nm):
+                    for imu in range(nmu):
                         PCS[:, im, :, imu] = UNFW[:, im, :]*DAMP_CS[:,:,imu]
                 PSS = PCS**2.
             elif fingers_of_god == 'Lorentzian':
                 DAMP_SS = self.damping(x = np.sqrt(2.)*((1.+ZZ)*SIGMA*KK*MU), kind = fingers_of_god)
-                for im in xrange(self.nm):
-                    for imu in xrange(nmu):
+                for im in range(self.nm):
+                    for imu in range(nmu):
                         PCS[:, im, :, imu] = UNFW[:, im, :]*DAMP_CS[:,:,imu]
                         PSS[:, im, :, imu] = UNFW[:, im, :]*DAMP_SS[:,:,imu]
             else:
@@ -532,9 +531,9 @@ class RSD(gc.galaxy):
             # Filling power spectrum array
             P_K_MU = np.zeros_like(PK_BASE)
 
-            for iz in xrange(self.nz):
-                for ik in xrange(self.nk):
-                    for imu in xrange(nmu):
+            for iz in range(self.nz):
+                for ik in range(self.nk):
+                    for imu in range(nmu):
                         integrand_1h        = (1./n_avg[iz]**2.*dndM[iz]*(2.*Nc[iz]*Ns[iz]*PCS[iz,:,ik,imu]+Ns[iz]**2.*PSS[iz,:,ik,imu]))*M
                         integrand_2h        = (1./n_avg[iz]*dndM[iz]*(bias[iz] + growth_rate[iz]*mu[imu]**2.)*(Nc[iz]+Ns[iz]*PCS[iz,:,ik,imu]))*M
                         P_g_1h              = np.trapz(integrand_1h, dx = dlnM)*(1-np.exp(-(self.k[ik]/k_star[iz])**2.))
@@ -554,11 +553,11 @@ class RSD(gc.galaxy):
         P_ell = np.zeros((self.nz, nl, self.nk))
         self.Pk['galaxies']['redshift space']['multipoles'] = {}
 
-        for il in xrange(nl):
+        for il in range(nl):
             leg = scipy.special.legendre(l[il])(mu)
             self.Pk['galaxies']['redshift space']['multipoles'][str(l[il])] = np.zeros((self.nz, self.nk))
-            for iz in xrange(self.nz):
-                for ik in xrange(self.nk):
+            for iz in range(self.nz):
+                for ik in range(self.nk):
                     P_ell[iz,il,ik] = (2.*l[il]+1.)/2.*scipy.integrate.simps(P_K_MU[iz,ik,:]*leg, x = mu)
                 self.Pk['galaxies']['redshift space']['multipoles'][str(l[il])][iz] = P_ell[iz,il]
         del P_K_MU, BIAS, GROWTH_RATE, SIGMA, FoG, PK_BASE, P_ell
@@ -664,7 +663,7 @@ class RSD(gc.galaxy):
             BIAS = np.transpose(np.tile(bias, (self.nk_par, self.nk_perp)).reshape((self.nk_perp, self.nk_par, self.nz)), (2,1,0))
             # Take linear matter power spectrum
             PK_BASE = np.zeros_like(ZZ)
-            for iz in xrange(self.nz):
+            for iz in range(self.nz):
                 power_interp = scipy.interpolate.interp1d(self.k, self.Pk['matter']['linear'][iz], kind = 'cubic')
                 PK_BASE[iz] = power_interp(KK[iz])
             # Redshift-space galaxy power spectrum 
@@ -688,7 +687,7 @@ class RSD(gc.galaxy):
             pk_hf_int    = scipy.interpolate.interp1d(k_ext,pk_hf,'cubic')
             pk_hf        = pk_hf_int(self.k)
             PK_BASE      = np.zeros_like(ZZ)
-            for iz in xrange(self.nz):
+            for iz in range(self.nz):
                 power_interp = scipy.interpolate.interp1d(self.k, pk_hf[iz], kind = 'cubic')
                 PK_BASE[iz]  = power_interp(KK[iz])
             # Redshift-space galaxy power spectrum
@@ -711,7 +710,7 @@ class RSD(gc.galaxy):
             BIAS = np.transpose(np.tile(bias[:,0], (self.nk_par, self.nk_perp)).reshape((self.nk_perp, self.nk_par, self.nz)), (2,1,0))
             # Non-linear galaxy power spectrum
             PK_BASE = np.zeros_like(ZZ)
-            for iz in xrange(self.nz):
+            for iz in range(self.nz):
                 power_interp = scipy.interpolate.interp1d(self.k, self.Pk['galaxies']['real space']['total halo'][iz], kind = 'cubic')
                 PK_BASE[iz]  = power_interp(KK[iz])
             # Redshift-space galaxy power spectrum (here, since bias is already included in P_g(k), I do (1+beta*mu^2)
@@ -744,19 +743,19 @@ class RSD(gc.galaxy):
             CONC    = self.conc(M, **kwargs_concentration)
             # NFW transforms
             UNFW = np.zeros((self.nz, self.nm, self.nk_par))
-            for ik in xrange(self.nk_par):
+            for ik in range(self.nk_par):
                 UNFW[:, :, ik] = self.u_NFW(CONC, self.k[ik]*R_s)
             # FoG terms for central-satellite and satellite-satellite
             PCS  = np.zeros((self.nz, self.nm, self.nk_par, self.nk_perp))
             PSS  = np.zeros((self.nz, self.nm, self.nk_par, self.nk_perp))
             if fingers_of_god == 'Gaussian':
-                for im in xrange(self.nm):
-                    for imu in xrange(self.nk_perp):
+                for im in range(self.nm):
+                    for imu in range(self.nk_perp):
                         PCS[:, im, :, imu] = UNFW[:, im, :]*self.damping(x = ((1.+ZZ)*SIGMA*KK*MU)[:,:,imu], kind = fingers_of_god)
                 PSS = PCS**2.
             elif fingers_of_god == 'Lorentzian':
-                for im in xrange(self.nm):
-                    for imu in xrange(self.nk_perp):
+                for im in range(self.nm):
+                    for imu in range(self.nk_perp):
                         PCS[:, im, :, imu] = UNFW[:, im, :]*self.damping(x =             ((1.+ZZ)*SIGMA*KK*MU)[:,:,imu], kind = fingers_of_god)
                         PSS[:, im, :, imu] = UNFW[:, im, :]*self.damping(x = np.sqrt(2.)*((1.+ZZ)*SIGMA*KK*MU)[:,:,imu], kind = fingers_of_god)
             else:
@@ -764,7 +763,7 @@ class RSD(gc.galaxy):
 
             # Linear matter power spectrum
             PK_BASE = np.zeros_like(ZZ)
-            for iz in xrange(self.nz):
+            for iz in range(self.nz):
                 power_interp = scipy.interpolate.interp1d(self.k, self.Pk['matter']['linear'][iz], kind = 'cubic')
                 PK_BASE[iz]  = power_interp(KK[iz])
 
@@ -775,9 +774,9 @@ class RSD(gc.galaxy):
             # Filling power spectrum array
             P_KPAR_KPERP = np.zeros_like(PK_BASE)
 
-            for iz in xrange(self.nz):
-                for ipar in xrange(self.nk_par):
-                    for iperp in xrange(self.nk_perp):
+            for iz in range(self.nz):
+                for ipar in range(self.nk_par):
+                    for iperp in range(self.nk_perp):
                         integrand_1h  = (1./n_avg[iz]**2.*dndM[iz]*(2.*Nc[iz]*Ns[iz]*PCS[iz,:,ipar,iperp]+Ns[iz]**2.*PSS[iz,:,ipar,iperp]))*M
                         integrand_2h  = (1./n_avg[iz]*dndM[iz]*(bias[iz] + growth_rate[iz]*MU[iz,ipar,iperp]**2.)*(Nc[iz]+Ns[iz]*PCS[iz,:,ipar,iperp]))*M
                         P_g_1h        = np.trapz(integrand_1h, dx = dlnM)*(1-np.exp(-(self.k[ik]/k_star[iz])**2.))

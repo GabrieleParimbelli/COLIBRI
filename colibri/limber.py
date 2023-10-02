@@ -6,7 +6,6 @@ import scipy.interpolate as si
 import scipy.integrate as sint
 import scipy.optimize as so
 import colibri.fourier as FF
-from six.moves import xrange
 from math import sqrt
 
 #==================
@@ -357,7 +356,7 @@ class limber():
             self.window_function[name]  = []
 
             # Set windows
-            for galaxy_bin in xrange(n_bins):
+            for galaxy_bin in range(n_bins):
                 # Select the n(z) array and do the integral for window function
                 n_z = si.interp1d(z,nz[galaxy_bin],'cubic', bounds_error = False, fill_value = 0.)
                 integral = list(map(lambda z_i: sint.quad(lambda x: n_z(x)*
@@ -386,7 +385,7 @@ class limber():
         self.window_function[name]  = []
         # Set windows
         chi_max = self.cosmology.comoving_distance(self.z_max,False)
-        for galaxy_bin in xrange(n_bins):
+        for galaxy_bin in range(n_bins):
             # Select which is the function and which are the arguments
             tmp_interp = si.interp1d(z,nz[galaxy_bin],'cubic', bounds_error = False, fill_value = 0.)
             n_z_array  = tmp_interp(self.z_windows)
@@ -466,7 +465,7 @@ class limber():
         # IA kernel
         F_IA = self.intrinsic_alignment_kernel(self.z_integration,A_IA,eta_IA,beta_IA,lum_IA)
         # Compute window
-        for galaxy_bin in xrange(n_bins):
+        for galaxy_bin in range(n_bins):
             tmp_interp = si.interp1d(z,nz[galaxy_bin],'cubic', bounds_error = False, fill_value = 0.)
             self.window_function[name].append(si.interp1d(self.z_integration, tmp_interp(self.z_integration)*F_IA*self.Hubble/const.c/norm_const[galaxy_bin], 'cubic', bounds_error = False, fill_value = 0.))
 
@@ -525,7 +524,7 @@ class limber():
 
         # Initialize window
         self.window_function[name] = []
-        for galaxy_bin in xrange(n_bins):
+        for galaxy_bin in range(n_bins):
             WL = self.window_function['shear_temporary_for_lensing'][galaxy_bin](self.z_windows)+self.window_function['IA_temporary_for_lensing'][galaxy_bin](self.z_windows)
             try:
                 self.window_function[name].append(si.interp1d(self.z_windows, WL, 'cubic', bounds_error = False, fill_value = 0.))
@@ -592,7 +591,7 @@ class limber():
         # Initialize window
         self.window_function[name] = []
         # Compute window
-        for galaxy_bin in xrange(n_bins):
+        for galaxy_bin in range(n_bins):
             tmp_interp = si.interp1d(z,nz[galaxy_bin],'cubic', bounds_error = False, fill_value = 0.)
             self.window_function[name].append(si.interp1d(self.z_integration, tmp_interp(self.z_integration)*self.Hubble/const.c/norm_const[galaxy_bin]*bias[galaxy_bin], 'cubic', bounds_error = False, fill_value = 0.))
 
@@ -660,7 +659,7 @@ class limber():
         # Compute window
         Dz = self.cosmology.growth_factor_scale_independent(self.z_integration)
         Tz = self.brightness_temperature_HI(self.z_integration,Omega_HI)
-        for galaxy_bin in xrange(n_bins):
+        for galaxy_bin in range(n_bins):
             tmp_interp = si.interp1d(z,nz[galaxy_bin],'cubic', bounds_error = False, fill_value = 0.)
             self.window_function[name].append(si.interp1d(self.z_integration, tmp_interp(self.z_integration)*self.Hubble/const.c/norm_const[galaxy_bin]*bias[galaxy_bin]*Tz*Dz, 'cubic', bounds_error = False, fill_value = 0.))
 
@@ -723,7 +722,7 @@ class limber():
         # Comoving distance to last scattering surface
         com_dist_LSS = self.geometric_factor_f_K(z_LSS)
         # Comoving distances to redshifts
-        for galaxy_bin in xrange(n_bins):
+        for galaxy_bin in range(n_bins):
             tmp_interp = si.interp1d(z,nz[galaxy_bin],'cubic', bounds_error = False, fill_value = 0.)
             self.window_function[name].append(si.interp1d(self.z_windows, constant*tmp_interp(self.z_windows)/norm_const[galaxy_bin]*self.Hubble_windows/const.c*(com_dist_LSS-self.geometric_factor_windows)/com_dist_LSS, 'cubic', bounds_error = False, fill_value = 0.))
 
@@ -759,7 +758,7 @@ class limber():
          # Initialize window
         self.window_function[name] = []
         # Compute window
-        for galaxy_bin in xrange(n_bins):
+        for galaxy_bin in range(n_bins):
             self.window_function[name].append(si.interp1d(z,window[galaxy_bin],'cubic', bounds_error = False, fill_value = 0.))
 
     #-----------------------------------------------------------------------------------------
@@ -847,7 +846,7 @@ class limber():
         # 2) Load power spectra
         power_spectra = self.power_spectra_interpolator
         PS_lz = np.zeros((n_l, n_z))
-        for il in xrange(n_l):
+        for il in range(n_l):
             for iz in range(n_z):
                 PS_lz[il,iz] = power_spectra(l[il]/self.geometric_factor[iz], zz[iz])
         # Add curvature correction (see arXiv:2302.04507)
@@ -860,23 +859,23 @@ class limber():
 
         # 3) load Cls given the source functions
         # 1st key (from 1 to N_keys)
-        for index_X in xrange(nkeys):
+        for index_X in range(nkeys):
             key_X = list(keys)[index_X]
             W_X = np.array([windows_to_use[key_X][i](zz) for i in range(n_bins[index_X])])
             # 2nd key (from 1st key to N_keys)
-            for index_Y in xrange(index_X,nkeys):
+            for index_Y in range(index_X,nkeys):
                 key_Y = list(keys)[index_Y]
                 W_Y = np.array([windows_to_use[key_Y][i](zz) for i in range(n_bins[index_Y])])
                 # Symmetry C_{AA}^{ij} == C_{AA}^{ji}
                 if key_X == key_Y:
-                    for bin_i in xrange(n_bins[index_X]):
-                        for bin_j in xrange(bin_i, n_bins[index_Y]):
+                    for bin_i in range(n_bins[index_X]):
+                        for bin_j in range(bin_i, n_bins[index_Y]):
                             Cl['%s-%s' %(key_X,key_Y)][bin_i,bin_j] = [sint.simps(cH_chi2*W_X[bin_i]*W_Y[bin_j]*PS_lz[xx], x = zz) for xx in range(n_l)]
                             Cl['%s-%s' %(key_X,key_Y)][bin_j,bin_i] = Cl['%s-%s' %(key_X,key_Y)][bin_i,bin_j]
                 # Symmetry C_{AB}^{ij} == C_{BA}^{ji}
                 else:
-                    for bin_i in xrange(n_bins[index_X]):
-                        for bin_j in xrange(n_bins[index_Y]):
+                    for bin_i in range(n_bins[index_X]):
+                        for bin_j in range(n_bins[index_Y]):
                             Cl['%s-%s' %(key_X,key_Y)][bin_i,bin_j] = [sint.simps(cH_chi2*W_X[bin_i]*W_Y[bin_j]*PS_lz[xx], x = zz) for xx in range(n_l)]
                             Cl['%s-%s' %(key_Y,key_X)][bin_j,bin_i] = Cl['%s-%s' %(key_X,key_Y)][bin_i,bin_j]
         return Cl
@@ -932,8 +931,8 @@ class limber():
         xi = np.zeros((nbins_i,nbins_j,n_theta))
 
         # 4) Hankel transform (ORDER!!!!)
-        for bin_i in xrange(nbins_i):
-            for bin_j in xrange(nbins_j):
+        for bin_i in range(nbins_i):
+            for bin_j in range(nbins_j):
                 theta_tmp, xi_tmp = FF.Hankel(l, Cl[bin_i,bin_j]/(2.*np.pi), order = order, N = NN)
                 xi_interp = si.interp1d(theta_tmp*180./np.pi*60., xi_tmp, 'cubic', bounds_error = False, fill_value = 0.)
                 xi[bin_i,bin_j] = xi_interp(theta)

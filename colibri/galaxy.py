@@ -3,7 +3,6 @@ import colibri.cosmology as cc
 import colibri.halo as hc
 import numpy as np
 import scipy
-from six.moves import xrange
 
 
 # class galaxy: is a 'halo' subclass
@@ -195,7 +194,7 @@ class galaxy (hc.halo):
 			values_sat = [values_sat]
 
 		# Fill the number of galaxies for every redshift
-		for iz in xrange(self.nz):
+		for iz in range(self.nz):
 
 			# Create a new dictionary for every redshift
 			new_dict_cen = dict(zip(keys_cen, list(values_cen[iz])))
@@ -292,8 +291,8 @@ class galaxy (hc.halo):
 		r_s     = self.R_s(M)
 		c       = self.conc(M, **kwargs_concentration)
 		nfw     = np.zeros((self.nz, self.nk, self.nm))
-		for iz in xrange(self.nz):
-			for i in xrange(self.nk):
+		for iz in range(self.nz):
+			for i in range(self.nk):
 				nfw[iz, i] = self.u_NFW(c[iz], k[i]*r_s[iz])
 		power   = self.Pk['matter']['linear']
 

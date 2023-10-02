@@ -7,7 +7,8 @@ plt.rc('text',usetex=True)
 plt.rc('font',size=20,family='serif')
 
 # Colors
-colors = ['r', 'b','g','goldenrod','m', 'k', 'springgreen', 'darkorange', 'pink', 'darkcyan', 'salmon']
+colors = ['r', 'b','g','goldenrod','m', 'k','springgreen','darkorange','pink','darkcyan','salmon',
+          'c','y','grey']
 # Linewidth
 LW = 3
 
@@ -62,6 +63,7 @@ elif nbins == 7 : bin_edges = [0.01,0.48,0.66,0.82,0.98,1.17,1.45,5.00]
 elif nbins == 8 : bin_edges = [0.01,0.48,0.62,0.76,0.90,1.05,1.23,1.50,5.00]
 elif nbins == 9 : bin_edges = [0.01,0.44,0.59,0.71,0.84,0.96,1.11,1.28,1.54,5.00]
 elif nbins == 10: bin_edges = [0.01,0.42,0.56,0.68,0.79,0.90,1.02,1.15,1.32,1.57,5.00]
+#elif nbins == 13: bin_edges = [0.01,0.15,0.31,0.46,0.62,0.77,0.92,1.08,1.23,1.38,1.54,1.69,1.85,2.00]
 else: raise ValueError("Choose among 2->10 bins (or implement your own set of galaxy distributions).")
 
 # The lines below find the bin edges with another method

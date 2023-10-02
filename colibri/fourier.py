@@ -5,7 +5,6 @@ import scipy.integrate as sint
 import scipy.optimize
 import sys
 import colibri.constants as const
-from six.moves import xrange
 try:
     import fftlog
 except ImportError:
@@ -185,7 +184,7 @@ def FFT_2D(x, y, f_xy, compl = False, sort = True):
         else:
             H = (N+1)//2
             S = H-1
-        return [i+S if i<H else i-H for i in xrange(N)]
+        return [i+S if i<H else i-H for i in range(N)]
 
 
     # Linear spacing and useful stuff
@@ -278,7 +277,7 @@ def iFFT_2D(kx, ky, f_kxky, compl = False, sort = True):
         else:
             H = (N+1)//2
             S = H-1
-        return [i+S if i<H else i-H for i in xrange(N)]
+        return [i+S if i<H else i-H for i in range(N)]
 
 
     # Linear spacing and useful stuff
@@ -377,7 +376,7 @@ def FFT_3D(x, y, z, f_xyz, compl = False, sort = True):
         else:
             H = (N+1)//2
             S = H-1
-        return [i+S if i<H else i-H for i in xrange(N)]
+        return [i+S if i<H else i-H for i in range(N)]
 
     # Linear spacing and useful stuff
     Dx = x[1]-x[0]
@@ -474,7 +473,7 @@ def iFFT_3D(kx, ky, kz, f_kxkykz, compl = False, sort = True):
         else:
             H = (N+1)//2
             S = H-1
-        return [i+S if i<H else i-H for i in xrange(N)]
+        return [i+S if i<H else i-H for i in range(N)]
 
 
     # Linear spacing and useful stuff

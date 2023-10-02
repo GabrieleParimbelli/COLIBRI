@@ -9,7 +9,7 @@ Presentation
 **COLIBRÌ** (which roughly stands for "Cosmological Libraries") is a set of Python files containing useful routines to compute cosmological quantities such as ages, distances, power spectra, correlation functions. It supports Lambda-CDM cosmologies plus extensions including massive neutrinos, non-flat geometries, evolving dark energy (w0-wa) models and numerical recipes for f(R) gravity.
 These files are built especially for large-scale structure purposes.
 
-It is compatible with both Python 2 and 3 (soon Python 2 compatibility will be deprecated).
+It is compatible with Python 3.
 Furthermore, it can interact with the Boltzmann solvers `CAMB <https://camb.info/>`_ (by Antony Lewis and Anthony Challinor) and `Class <http://class-code.net/>`_ (by Julien Lesgourgues).
 
 Please, cite the GitHub repository ( `<https://github.com/GabrieleParimbelli/COLIBRI>`_ ) if you use this library.

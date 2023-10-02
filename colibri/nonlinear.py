@@ -9,7 +9,6 @@ import scipy.misc as sm
 import scipy.optimize as so
 from scipy.ndimage import gaussian_filter1d
 import warnings
-from six.moves import xrange
 
 ########################################################################################################################
 # HMcode2016: applies Halofit to a given power spectrum
@@ -114,7 +113,7 @@ class HMcode2016():
         self.n_eff = np.zeros(self.nz)
         self.conc  = np.zeros((self.nz, self.nm))
         self.rv    = np.zeros((self.nz, self.nm))
-        for i in xrange(self.nz):
+        for i in range(self.nz):
             # Find the mass at which sigma(M) = delta_c
             sig_int_2  = si.interp1d(np.log10(self.mass), self.sig2[i]-self.deltac[i]**2., 'cubic',fill_value='extrapolate',bounds_error=False)
             M_1 = 10.**(so.root(sig_int_2, 13.)['x'][0])
@@ -140,10 +139,10 @@ class HMcode2016():
         self.rs = self.rv/self.conc
         # NFW profile, already normalized for bloating
         u = np.zeros((self.nz, self.nm, self.nk))
-        eta_tmp = np.array([self.eta for x in xrange(self.nm)]).T
+        eta_tmp = np.array([self.eta for x in range(self.nm)]).T
         R_bloat = self.nu**eta_tmp*self.rs
-        for i in xrange(self.nz):
-            for j in xrange(self.nm):
+        for i in range(self.nz):
+            for j in range(self.nm):
                 u[i,j] = self.u_NFW(self.conc[i,j], self.k*R_bloat[i,j])
         # Halo mass function
         hmf = self.dndM()
@@ -153,8 +152,8 @@ class HMcode2016():
         self.pk_1h   = np.zeros((self.nz, self.nk))
         self.pk_2h   = np.zeros((self.nz, self.nk))
         self.pk_nl   = np.zeros((self.nz, self.nk))
-        for iz in xrange(self.nz):
-            for ik in xrange(self.nk):
+        for iz in range(self.nz):
+            for ik in range(self.nk):
                 integrand         = ((self.mass/self.rho_field)**2.*hmf[iz]*u[iz,:,ik]**2.)*self.mass
                 self.pk_1h[iz,ik] = sint.simps(integrand, x = np.log(self.mass))
             # Power spectra (BETTER WITH '3' EXPONENT, THAT IN MEAD ET AL. IS NOT PRESENT!!)
@@ -184,7 +183,7 @@ class HMcode2016():
         dlnk    = np.log(kappa[1]/kappa[0])        
         # Integration in log-bins (with numpy)
         integral  = np.zeros(len(self.rr))
-        for i in xrange(len(self.rr)):
+        for i in range(len(self.rr)):
             integrand = kappa**3.*P_kappa/(2.*np.pi**2.)*UF.TopHat_window(kappa*self.rr[i])**2.
             integral[i]  = np.trapz(integrand, dx = dlnk)
         return integral
@@ -194,7 +193,7 @@ class HMcode2016():
     #-----------------------------------------------------------------------------------------
     def sigma_d(self, R):
         integral = np.zeros(self.nz)
-        for i in xrange(self.nz):
+        for i in range(self.nz):
             # Scales and power
             k_ext, pk_ext = UF.extrapolate_log(self.k, self.pk[i], 1e-6, 1e8)
             dlnk = np.log(k_ext[1]/k_ext[0])
@@ -208,7 +207,7 @@ class HMcode2016():
     #-----------------------------------------------------------------------------------------
     def sigma_d0(self):
         integral = np.zeros(self.nz)
-        for i in xrange(self.nz):
+        for i in range(self.nz):
             # Scales and power
             k_ext, pk_ext = UF.extrapolate_log(self.k, self.pk[i], 1e-6, 1e8)
             dlnk = np.log(k_ext[1]/k_ext[0])
@@ -276,12 +275,12 @@ class HMcode2016():
         rhs   = np.zeros((self.nz, self.nm))
         Dzf  = self.growth_LCDM_base(z_tmp)
         zf_D = si.interp1d(Dzf, z_tmp, 'cubic')
-        for iz in xrange(self.nz):
+        for iz in range(self.nz):
             m_ext, sig_ext = UF.extrapolate_log(self.mass, self.sig2[iz]**0.5, 1.e-1*frac*self.mass[0], 1.e1*self.mass[-1])
             sig_int        = si.interp1d(m_ext, sig_ext, 'cubic')
             s_fmz          = sig_int(fm)
             rhs[iz]        = self.growth_LCDM_base(self.z[iz])*self.deltac[iz]/s_fmz
-            for im in xrange(self.nm):
+            for im in range(self.nm):
                 try:
                     res[iz, im] = zf_D(rhs[iz,im])
                     if zf_D(rhs[iz,im]) < self.z[iz]:
@@ -321,7 +320,7 @@ class HMcode2016():
     def dndM(self):
         m    = self.mass
         hmf  = np.zeros((self.nz, self.nm))
-        for i in xrange(self.nz):    
+        for i in range(self.nz):    
             nu = self.nu[i]
             # derivative
             log_der = np.gradient(nu, self.dlnm, edge_order = 2)/nu
@@ -538,7 +537,7 @@ class HMcode2020():
         rs = rv/conc
         # n_eff(z) and quasi-linear softening
         n_eff_cc = np.zeros(self.nz)
-        for i in xrange(self.nz):
+        for i in range(self.nz):
             # Find the mass at which sigma(M) = delta_c
             sig_int_2   = si.interp1d(self.logmass, sig2_cc[i]-deltac[i]**2.,'cubic',
                                       fill_value='extrapolate',bounds_error=False)
@@ -553,7 +552,7 @@ class HMcode2020():
         alpha  = np.expand_dims(1.875*1.603**n_eff_cc,1)
         # NFW profile, already normalized for bloating and corrected for neutrino fraction
         u_NFW = np.zeros((self.nz, self.nm, self.nk))
-        eta_tmp = np.array([eta for x in xrange(self.nm)]).T
+        eta_tmp = np.array([eta for x in range(self.nm)]).T
         R_bloat = peak_height**eta_tmp*rs
         for ik in range(self.nk): u_NFW[:,:,ik] = self.FFT_NFW_profile(conc,self.k[ik]*R_bloat)*(1-self.f_nu)
         # Halo mass function
@@ -563,8 +562,8 @@ class HMcode2020():
         k_over_kstar = np.outer(1./kstar,self.k)
         self.pk_1h   = np.zeros((self.nz, self.nk))
         self.pk_2h   = np.zeros((self.nz, self.nk))
-        for iz in xrange(self.nz):
-            for ik in xrange(self.nk):
+        for iz in range(self.nz):
+            for ik in range(self.nk):
                 integrand            = ((self.mass/self.rho_field)**2.*hmf[iz]*u_NFW[iz,:,ik]**2.)*self.mass
                 self.pk_1h[iz,ik] = np.trapz(integrand,x=self.lnmass)
         self.pk_2h  = self.pk_dw*(1.-f_2h*k_over_kdamp**nd_2h/(1.+k_over_kdamp**nd_2h))
@@ -674,13 +673,13 @@ class HMcode2020():
         rhs   = np.zeros((nz, nm))
         Dzf   = self.growth_LCDM_base(z_tmp)
         zf_D  = si.interp1d(Dzf, z_tmp, 'cubic')
-        for iz in xrange(nz):
+        for iz in range(nz):
             m_ext, sig_ext = UF.extrapolate_log(mass, sig2[iz]**0.5, 1.e-1*frac*mass[0], 1.e1*mass[-1])
             sig_int        = si.interp1d(m_ext, sig_ext, 'cubic')
             s_fmz          = sig_int(fm)
             aa             = 1/(1.+z[iz])
             rhs[iz]        = self.growth_LCDM_base(z[iz])*deltac[iz]/s_fmz
-            for im in xrange(nm):
+            for im in range(nm):
                 try:
                     res[iz, im] = zf_D(rhs[iz,im])
                     if zf_D(rhs[iz,im]) < z[iz]:
@@ -719,7 +718,7 @@ class HMcode2020():
         dlnm     = np.diff(np.log(M))[0]
         hmf      = np.zeros((nz, nm))
         mass_fun = self.ST_mass_fun(peak_height)
-        for iz in xrange(nz):    
+        for iz in range(nz):    
             # derivative
             log_der = np.gradient(peak_height[iz], dlnm, edge_order = 2)/peak_height[iz]
             # Halo mass function
@@ -916,12 +915,12 @@ class halomodel():
         rhs   = np.zeros((self.nz, self.nm))
         Dzf = self.cosmology.growth_factor_scale_independent(z_tmp)
         zf_D = si.interp1d(Dzf, z_tmp, 'cubic')
-        for iz in xrange(self.nz):
+        for iz in range(self.nz):
             m_ext, sig_ext = UF.extrapolate_log(self.mass, self.sig2[iz]**0.5, 1.e-1*frac*self.mass[0], 1.e1*self.mass[-1])
             sig_int        = si.interp1d(m_ext, sig_ext, 'cubic')
             s_fmz          = sig_int(fm)
             rhs[iz]        = self.cosmology.growth_factor_scale_independent(self.z[iz])*self.delta_sc/s_fmz
-            for im in xrange(self.nm):
+            for im in range(self.nm):
                 try:
                     res[iz, im] = zf_D(rhs[iz,im])
                     if zf_D(rhs[iz,im]) < self.z[iz]:
@@ -1000,7 +999,7 @@ class halomodel():
         dlnm   = np.diff(np.log(M))[0]
         hmf    = np.zeros((nz, nm))
         mass_fun = self.ST_mass_fun(peak_height,a,p)
-        for iz in xrange(nz):    
+        for iz in range(nz):    
             # derivative
             log_der = np.gradient(peak_height[iz], dlnm, edge_order = 2)/peak_height[iz]
             # Halo mass function
@@ -1248,8 +1247,8 @@ class classic_halomodel():
         rho     = self.cosmology.rho(0.)
         c       = self.conc(M, **kwargs_concentration)
         nfw     = np.zeros((self.nz, self.nk, self.nm))
-        for iz in xrange(self.nz):
-            for i in xrange(self.nk):
+        for iz in range(self.nz):
+            for i in range(self.nk):
                 nfw[iz, i] = self.u_NFW(c[iz], k[i]*r_s[iz])
         # Normalization for 2-halo term
         normalization = self.norm_2h(bias, **kwargs_mass_function)
@@ -1258,8 +1257,8 @@ class classic_halomodel():
         # Power spectrum
         P_1h = np.zeros_like(self.pk)
         P_2h = np.zeros_like(self.pk)
-        for iz in xrange(self.nz):
-            for ik in xrange(len(self.k)):
+        for iz in range(self.nz):
+            for ik in range(len(self.k)):
                 integrand_1h = ((M/rho)**2*dndM[iz]*nfw[iz,ik]**2)*M
                 integrand_2h = (M/rho*dndM[iz]*nfw[iz,ik]*bias[iz])*M
                 P_1h[iz,ik]  = np.trapz(integrand_1h, dx = dlnM)*(1.-np.exp(-(self.k[ik]/k_damp[iz])**2.))

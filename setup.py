@@ -23,26 +23,21 @@ setup(
     description='Python libraries for cosmology.',
     long_description=long_description,
     long_description_content_type='text/x-rst',
-    py_modules=['six', 'numpy', 'scipy', 'matplotlib'],
-	python_requires='>=2.7',
+    #py_modules=['six', 'numpy', 'scipy', 'matplotlib'],
+    py_modules=['numpy', 'scipy', 'matplotlib'],
+	python_requires='>=3.6',
     install_requires=[
         "numpy >= 1.14",
         "scipy >= 0.16",
     ],
     classifiers=[
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.0',
-        'Programming Language :: Python :: 3.1',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    options = {'bdist_wheel':{'universal':'1'}},	# Generate wheel for both Python 2 and 3
+    #options = {'bdist_wheel':{'universal':'1'}},	# Generate wheel for both Python 2 and 3
 )

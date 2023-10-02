@@ -1,7 +1,6 @@
 import numpy as np
 from scipy.special import *
 import scipy.interpolate as si
-from six.moves import xrange
 import colibri.constants as const
 import colibri.cosmology as cc
 import colibri.useful_functions as UF
@@ -456,8 +455,8 @@ class halo:
         rho     = self.cosmology.rho(0.)
         c       = self.conc(M, **kwargs_concentration)
         nfw     = np.zeros((self.nz, self.nk, self.nm))
-        for iz in xrange(self.nz):
-            for i in xrange(self.nk):
+        for iz in range(self.nz):
+            for i in range(self.nk):
                 nfw[iz, i] = self.u_NFW(c[iz], k[i]*r_s[iz])
 
         # Normalization for 2-halo term
@@ -475,8 +474,8 @@ class halo:
         P_1h = np.zeros_like(pk_linear)
         P_2h = np.zeros_like(pk_linear)
 
-        for iz in xrange(self.nz):
-            for ik in xrange(len(self.k)):
+        for iz in range(self.nz):
+            for ik in range(len(self.k)):
                 integrand_1h = ((M/rho)**2*dndM[iz]*nfw[iz,ik]**2)*M
                 integrand_2h = (M/rho*dndM[iz]*nfw[iz,ik]*bias[iz])*M
                 P_1h[iz,ik]  = np.trapz(integrand_1h, dx = dlnM)*(1.-np.exp(-(self.k[ik]/k_damp[iz])**2.))
