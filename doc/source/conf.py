@@ -28,10 +28,11 @@ autodoc_member_order = 'bysource'
 
 breathe_projects = {}
 
+
 # -- Project information -----------------------------------------------------
 
 project = 'COLIBRI'
-copyright = '2020, Gabriele Parimbelli'
+copyright = '2023, Gabriele Parimbelli'
 author = 'Gabriele Parimbelli'
 
 # Master document is `index.rst`
@@ -42,14 +43,14 @@ master_doc = 'index'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [ 'breathe',
-               'sphinx.ext.autodoc',
+extensions = [ 'sphinx.ext.autodoc',
                'sphinx.ext.coverage',
                'sphinx.ext.napoleon',
                'sphinx.ext.todo',
                'sphinx.ext.intersphinx',
                'sphinx.ext.viewcode',
-               'sphinx.ext.autosectionlabel']
+               'sphinx.ext.autosectionlabel',
+               'breathe']
 
 # Add any Sphinx extension module names here, as strings. They can be                                           
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom                                           
@@ -84,7 +85,7 @@ sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 
 # Avoid documentation from these files
-autodoc_mock_imports = ['numpy', 'scipy', 'math', 'six', 'classy', 'camb', 'cython', 'fftlog']
+autodoc_mock_imports = ['numpy', 'scipy', 'math', 'classy', 'camb', 'cython', 'fftlog']
 
 # -- Options for HTML output -------------------------------------------------
 
