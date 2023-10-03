@@ -26,7 +26,7 @@ read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
 # Sort functions as they are, not in alphabetical order
 autodoc_member_order = 'bysource'
 
-#breathe_projects = {}
+breathe_projects = {}
 
 
 # -- Project information -----------------------------------------------------
@@ -49,8 +49,8 @@ extensions = [ 'sphinx.ext.autodoc',
                'sphinx.ext.todo',
                'sphinx.ext.intersphinx',
                'sphinx.ext.viewcode',
-               'sphinx.ext.autosectionlabel']#,
-               #'breathe']
+               'sphinx.ext.autosectionlabel',
+               'breathe']
 
 # Add any Sphinx extension module names here, as strings. They can be                                           
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom                                           
