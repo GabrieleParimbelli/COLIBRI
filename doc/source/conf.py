@@ -50,6 +50,7 @@ extensions = [ 'sphinx.ext.autodoc',
                'sphinx.ext.intersphinx',
                'sphinx.ext.viewcode',
                'sphinx.ext.autosectionlabel',
+               'sphinx_rtd_theme',
                'breathe']
 
 # Add any Sphinx extension module names here, as strings. They can be                                           
