@@ -92,7 +92,7 @@ autodoc_mock_imports = ['numpy', 'scipy', 'math', 'classy', 'camb', 'cython', 'f
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx-rtd-theme'
+html_theme = 'sphinx_rtd_theme'
 #html_theme = 'classic'
 
 # Add any paths that contain custom static files (such as style sheets) here,
