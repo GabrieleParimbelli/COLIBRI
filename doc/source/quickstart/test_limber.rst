@@ -44,7 +44,7 @@ where first we generate a table of power spectra. These must have the dimensions
 
 
 Bins, galaxy distributions and window functions
-------------------
+------------------------------------------------------
 
 The window functions depend on the source galaxy distributions.
 
