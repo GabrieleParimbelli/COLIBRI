@@ -76,13 +76,20 @@ exclude_patterns = []
 # Import Mock classes to avoid import errors on libraries that depend on C modules
 # (this basically avoids that when other files import e.g. `cosmology` the compilation
 #  does not get stuck in some `import numpy` or similar command)
-from unittest.mock import MagicMock
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-        return MagicMock()
+#from unittest.mock import MagicMock
+#class Mock(MagicMock):
+#    @classmethod
+#    def __getattr__(cls, name):
+#        return MagicMock()
+#MOCK_MODULES = ['numpy', 'scipy', 'pandas']
+#sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+from unittest import mock
+
+# Mock open3d because it fails to build in readthedocs
+#MOCK_MODULES = ["open3d", "numpy", "matplotlib", "matplotlib.pyplot"]
 MOCK_MODULES = ['numpy', 'scipy', 'pandas']
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = mock.Mock()
 
 
 # Avoid documentation from these files
