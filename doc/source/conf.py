@@ -73,6 +73,9 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
+# Avoid documentation from these files
+autodoc_mock_imports = ['numpy', 'scipy', 'math', 'classy', 'camb', 'cython', 'fftlog']
+
 # Import Mock classes to avoid import errors on libraries that depend on C modules
 # (this basically avoids that when other files import e.g. `cosmology` the compilation
 #  does not get stuck in some `import numpy` or similar command)
@@ -89,9 +92,6 @@ for mod_name in MOCK_MODULES:
     #sys.modules[mod_name] = mock.Mock()
     sys.modules[mod_name] = mock.MagicMock()
 
-
-# Avoid documentation from these files
-autodoc_mock_imports = ['numpy', 'scipy', 'math', 'classy', 'camb', 'cython', 'fftlog']
 
 # -- Options for HTML output -------------------------------------------------
 
