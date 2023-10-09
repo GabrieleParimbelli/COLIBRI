@@ -48,8 +48,6 @@ FYI, "colibrì" is the Italian for `"hummingbird" <https://en.wikipedia.org/wiki
    modules/useful_functions_doc
    modules/constants_doc
 
-
-
 .. toctree::
    :caption: Extras
    :maxdepth: 1
