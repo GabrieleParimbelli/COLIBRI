@@ -84,12 +84,10 @@ exclude_patterns = []
 #MOCK_MODULES = ['numpy', 'scipy', 'pandas']
 #sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 from unittest import mock
-
-# Mock open3d because it fails to build in readthedocs
-#MOCK_MODULES = ["open3d", "numpy", "matplotlib", "matplotlib.pyplot"]
 MOCK_MODULES = ['numpy', 'scipy', 'pandas']
 for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock.Mock()
+    #sys.modules[mod_name] = mock.Mock()
+    sys.modules[mod_name] = mock.MagicMock()
 
 
 # Avoid documentation from these files
