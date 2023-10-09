@@ -141,7 +141,7 @@ class cosmo:
         M_wdm     = np.atleast_1d(M_wdm)
         Omega_wdm = np.atleast_1d(Omega_wdm)
         N_wdm     = len(M_wdm)
-        assert np.all(M_nu>=0.), "All neutrino masses must be larger than or equal to zero."
+        #assert np.all(M_nu>=0.), "All neutrino masses must be larger than or equal to zero."
         assert np.all(M_wdm>0.), "All WDM masses must be larger than zero."
         assert N_eff >= N_nu+N_wdm, "Number of effective relativistic species (%.3f) must be equal or larger than the sum of number of active neutrinos (%i) and WDM species (%i)" %(N_eff,N_nu,N_wdm)
         assert len(M_nu)<=N_nu, "Provided a number of neutrino masses greater than the actual number of neutrinos. Set N_nu to be at least equal to the length of M_nu"
