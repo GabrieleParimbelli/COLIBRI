@@ -1,7 +1,7 @@
 .. _prerequisites:
 
-Prerequisites
-=============
+Prerequisites for installation
+===============================
 
 The only mandatory requirements needed for COLIBRÌ are the usual Python packages such as NumPy and SciPy (better if updated versions).
 
@@ -34,6 +34,10 @@ Installation
 The best way to install **COLIBRÌ** is to clone the GitHub repository `<https://github.com/GabrieleParimbelli/COLIBRI>`__ , enter in the ``COLIBRI`` directory and run::
 
     python setup.py install --user
+
+or::
+
+    pip install .
 
 A second way consists of cloning the repository and add the libraries to your ``PYTHONPATH`` editing your ``.bashrc`` file.::
 

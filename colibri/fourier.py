@@ -2,7 +2,6 @@ import numpy as np
 import scipy.interpolate as si
 import scipy.fftpack as sfft
 import scipy.integrate as sint
-import scipy.optimize
 import sys
 import colibri.constants as const
 try:
@@ -1050,7 +1049,7 @@ def angular_correlation_function(theta, k, pk, z, chi_z, N_z, H_z, N = 4096):
     # Interpolation
     wt_int     = si.interp1d(rt,wt)
     # angular correlation function
-    wt         = sint.simps(H_2d/const.c/(2.*np.pi)*N_2d**2.*wt_int(theta_2d*chi_2d),x=z,axis=0)
+    wt         = sint.simpson(H_2d/const.c/(2.*np.pi)*N_2d**2.*wt_int(theta_2d*chi_2d),x=z,axis=0)
     return theta, wt
 
 

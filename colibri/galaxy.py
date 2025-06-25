@@ -2,7 +2,7 @@ import colibri.constants as const
 import colibri.cosmology as cc
 import colibri.halo as hc
 import numpy as np
-import scipy
+import scipy.special as ss
 
 
 # class galaxy: is a 'halo' subclass
@@ -75,7 +75,7 @@ class galaxy (hc.halo):
 		:return: array   
 		"""
 		arg = np.log10(M/10.**log_Mmin)/sigma_logM
-		galaxies = 0.5*(1+scipy.special.erf(arg))
+		galaxies = 0.5*(1+ss.erf(arg))
 		return galaxies
 
 	def step_function(self, M, logMmin):

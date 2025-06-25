@@ -77,7 +77,7 @@ class limber():
         self.c_over_H_over_chi_squared = const.c/self.Hubble/self.geometric_factor**2.
 
         # Initialize window functions
-        self.window_function = {}
+        #self.window_function = {}
 
 
     #-----------------------------------------------------------------------------------------
@@ -100,22 +100,28 @@ class limber():
         """
 
         # Select scales and redshifts
-        self.k     = np.atleast_1d(k)
-        self.z     = np.atleast_1d(z)
-        self.k_min = k.min()
-        self.k_max = k.max()
+        k = np.atleast_1d(k)
+        z = np.atleast_1d(z)
 
         # Interpolate
-        kind_of_interpolation = 'cubic' if (len(self.z)>3) and (len(self.k)>3) else 'linear'
-        self.power_spectra_interpolator = si.interp2d(self.k, self.z,
-                                                      power_spectra,
-                                                      kind_of_interpolation,
-                                                      bounds_error = False, fill_value = 0.)
+        #kind_of_interpolation = 'cubic' if (len(z)>3) and (len(k)>3) else 'linear'
+        #power_spectra_interpolator = si.interp2d(k,z,
+        #                                         power_spectra,
+        #                                         kind_of_interpolation,
+        #                                         bounds_error = False, fill_value = 0.)
+        kind_x = 3 if len(z)>3 else 1
+        kind_y = 5 if len(k)>5 else 3 if len(k)>3 else 1
+        power_spectra_interpolator = si.RectBivariateSpline(z,k,power_spectra,kx=kind_x,ky=kind_y)
+
+        self.k = k
+        self.power_spectra = power_spectra
+
+        return power_spectra_interpolator
 
     #-----------------------------------------------------------------------------------------
     # EXAMPLES OF GALAXY PDF'S
     #-----------------------------------------------------------------------------------------
-    def euclid_distribution(self, z, zmin, zmax, a = 2.0, b = 1.5, z_med = 0.9, step = 5e-3):
+    def euclid_distribution(self,z,zmin,zmax,a=2.0,b=1.5,z_med=0.9,step=5e-3):
         """
         Example function for the distribution of source galaxy. This distribution in particular is expected to be used in the Euclid mission:
 
@@ -157,7 +163,10 @@ class limber():
         n = (z/z_0)**a*np.exp(-(z/z_0)**b)*lower*upper
         return n
 
-    def euclid_distribution_with_photo_error(self, z, zmin, zmax, a = 2.0, b = 1.5, z_med = 0.9, f_out = 0.1, c_b = 1.0, z_b = 0.0, sigma_b = 0.05, c_o = 1.0, z_o = 0.1, sigma_o = 0.05):
+    def euclid_distribution_with_photo_error(self,z,zmin,zmax,a=2.0,b=1.5,z_med=0.9,
+                                             f_out=0.1,
+                                             c_b=1.0,z_b=0.0,sigma_b=0.05,
+                                             c_o=1.0,z_o=0.1,sigma_o=0.05):
         """
         Example function for the distribution of source galaxy. This distribution in particular is expected to be used in the Euclid mission. Here also the effect of photometric errors is included.
 
@@ -224,7 +233,7 @@ class limber():
         photo_err_func = distr_in + distr_out
         return photo_err_func*gal_distr
 
-    def gaussian_distribution(self, z, mean, sigma):
+    def gaussian_distribution(self,z,mean,sigma):
         """
         Example function for the distribution of source galaxy. Here we use a Gaussian galaxy distribution
 
@@ -243,7 +252,7 @@ class limber():
         return np.exp(exponent)
 
 
-    def constant_distribution(z, zmin, zmax, step = 5e-3):
+    def constant_distribution(self,z,zmin,zmax,step=5e-3):
         """
         Example function for the distribution of source galaxy. Here we use a constant distribution of sources.
 
@@ -299,7 +308,7 @@ class limber():
     #-----------------------------------------------------------------------------------------
     # SHEAR WINDOW FUNCTION
     #-----------------------------------------------------------------------------------------
-    def load_shear_window_functions(self, z, nz, name = 'shear'):
+    def load_shear_window_functions(self, z, nz):
         """
         This function computes the window function for cosmic shear given the galaxy distribution in input.
         The function automatically normalizes the galaxy distribution such that the integral over
@@ -318,9 +327,6 @@ class limber():
         :param nz: 2-D array or 2-D list where each sublist is the galaxy distribution of a given redshift bin
         :type nz: 2-D array with shape ``(n_bins, len(z))``, default = None
 
-        :param name: name of the key to add to the dictionary
-        :type name: string, default = 'shear'
-
         An example call can be, for 3 bins all with a :func:`colibri.limber.limber.euclid_distribution` with default arguments for ``a`` and ``b`` but different bin edges ``zmin``, ``zmax``:
 
         .. code-block:: python
@@ -329,9 +335,9 @@ class limber():
            nbins     = len(bin_edges)-1
            z_w       = np.linspace(0., 6., 1001)
            nz_w      = [S.euclid_distribution(z = z_w, a = 2.0, b = 1.5, zmin = bin_edges[i], zmax = bin_edges[i+1]) for i in range(nbins)]
-           S.load_shear_window_functions(z = z_w, nz = nz_w)
+           W_s       = S.load_shear_window_functions(z = z_w, nz = nz_w)
 
-        :return: A key of a given name is added to the ``self.window_function`` dictionary
+        :return: A 2-D array containing the windows of all galaxy bins as function of redshift
 
         """
         nz = np.array(nz)
@@ -344,7 +350,7 @@ class limber():
 
         # Call a simpler function if Omega_K == 0.
         if self.cosmology.Omega_K == 0.:
-            self.load_shear_window_functions_flat(z,nz,name)
+            window_function = self.load_shear_window_functions_flat(z,nz)
         # Otherwise compute window function in curved geometry
         else:
             # Set number of bins, normalize them, find constant in front
@@ -353,7 +359,7 @@ class limber():
             constant = 3./2.*self.cosmology.Omega_m*(self.cosmology.H0/self.cosmology.h/const.c)**2.*(1.+self.z_windows)*self.geometric_factor_windows
 
             # Initialize windows
-            self.window_function[name]  = []
+            window_function  = []
 
             # Set windows
             for galaxy_bin in range(n_bins):
@@ -367,13 +373,14 @@ class limber():
                 # Fill temporary window functions with real values
                 window_function_tmp    = constant*integral/norm_const[galaxy_bin]
                 # Interpolate (Akima interpolator avoids oscillations around the zero due to spline)
-                try:               self.window_function[name].append(si.interp1d(self.z_windows,
+                try:               window_function.append(si.interp1d(self.z_windows,
                                                                                  window_function_tmp,
                                                                                  'cubic',
                                                                                  bounds_error=False,
                                                                                  fill_value=0.))
-                except ValueError: self.window_function[name].append(si.Akima1DInterpolator(self.z_windows,
+                except ValueError: window_function.append(si.Akima1DInterpolator(self.z_windows,
                                                                                  window_function_tmp))
+        return window_function
 
     def load_shear_window_functions_flat(self, z, nz, name = 'shear'):
         # Set number of bins, normalize them, find constant in front
@@ -382,7 +389,7 @@ class limber():
         constant = 3./2.*self.cosmology.Omega_m*(self.cosmology.H0/self.cosmology.h/const.c)**2.*(1.+self.z_windows)*self.geometric_factor_windows
 
         # Initialize window
-        self.window_function[name]  = []
+        window_function  = []
         # Set windows
         chi_max = self.cosmology.comoving_distance(self.z_max,False)
         for galaxy_bin in range(n_bins):
@@ -396,15 +403,16 @@ class limber():
             window_function_tmp    = constant*integral/norm_const[galaxy_bin]
             # Interpolate (the Akima interpolator avoids oscillations around the zero due to the cubic spline)
             try:
-                self.window_function[name].append(si.interp1d(self.z_windows, window_function_tmp, 'cubic', bounds_error = False, fill_value = 0.))
+                window_function.append(si.interp1d(self.z_windows, window_function_tmp, 'cubic', bounds_error = False, fill_value = 0.))
             except ValueError:
-                self.window_function[name].append(si.Akima1DInterpolator(self.z_windows, window_function_tmp))
+                window_function.append(si.Akima1DInterpolator(self.z_windows, window_function_tmp))
+        return window_function
 
 
     #-----------------------------------------------------------------------------------------
     # INTRINSIC ALIGNMENT WINDOW FUNCTION
     #-----------------------------------------------------------------------------------------
-    def load_IA_window_functions(self, z, nz, A_IA = 1.0, eta_IA = 0.0, beta_IA = 0.0, lum_IA=1.0, name = 'IA'):
+    def load_IA_window_functions(self, z, nz, A_IA = 1.0, eta_IA = 0.0, beta_IA = 0.0, lum_IA=1.0):
         """
         This function computes the window function for intrinsic alignment given a galaxy distribution.
         The function automatically normalizes the galaxy distribution such that the integral over
@@ -435,9 +443,6 @@ class limber():
         :param lum_IA: Relative luminosity of galaxies :math:`L(z)/L_*(z)`.
         :type lum_IA: float or callable whose **only** argument is :math:`z`, default = 1
 
-        :param name: name of the key to add to the dictionary
-        :type name: string, default = 'IA'
-
         An example call can be, for 3 bins all with a :func:`colibri.limber.limber.euclid_distribution` with default arguments for ``a`` and ``b`` but different bin edges ``zmin``, ``zmax``:
 
         .. code-block:: python
@@ -446,9 +451,9 @@ class limber():
            nbins     = len(bin_edges)-1
            z_w       = np.linspace(0., 6., 1001)
            nz_w      = [S.euclid_distribution(z = z_w, a = 2.0, b = 1.5, zmin = bin_edges[i], zmax = bin_edges[i+1]) for i in range(nbins)]
-           S.load_IA_window_functions(z = z_w, nz = nz_w, A_IA = 1, eta_IA = 0, beta_IA = 0, lum_IA = 1)
+           W_IA      = S.load_IA_window_functions(z = z_w, nz = nz_w, A_IA = 1, eta_IA = 0, beta_IA = 0, lum_IA = 1)
 
-        :return: A key of a given name is added to the ``self.window_function`` dictionary
+        :return: A 2-D array containing the windows of all galaxy bins as function of redshift
 
         """
         nz = np.array(nz)
@@ -461,18 +466,19 @@ class limber():
         assert z.min() <= self.z_min, "Minimum input redshift must be < %.3f, the minimum redshift of integration" %(self.z_min)
         assert z.max() >= self.z_max, "Maximum input redshift must be > %.3f, the maximum redshift of integration" %(self.z_max)
         # Initialize window
-        self.window_function[name] = []
+        window_function = []
         # IA kernel
         F_IA = self.intrinsic_alignment_kernel(self.z_integration,A_IA,eta_IA,beta_IA,lum_IA)
         # Compute window
         for galaxy_bin in range(n_bins):
             tmp_interp = si.interp1d(z,nz[galaxy_bin],'cubic', bounds_error = False, fill_value = 0.)
-            self.window_function[name].append(si.interp1d(self.z_integration, tmp_interp(self.z_integration)*F_IA*self.Hubble/const.c/norm_const[galaxy_bin], 'cubic', bounds_error = False, fill_value = 0.))
+            window_function.append(si.interp1d(self.z_integration, tmp_interp(self.z_integration)*F_IA*self.Hubble/const.c/norm_const[galaxy_bin], 'cubic', bounds_error = False, fill_value = 0.))
+        return window_function
 
     #-----------------------------------------------------------------------------------------
     # LENSING WINDOW FUNCTION
     #-----------------------------------------------------------------------------------------
-    def load_lensing_window_functions(self, z, nz, A_IA = 0.0, eta_IA = 0.0, beta_IA = 0.0, lum_IA=1.0, name = 'lensing'):
+    def load_lensing_window_functions(self, z, nz, A_IA = 0.0, eta_IA = 0.0, beta_IA = 0.0, lum_IA=1.0):
         """
         This function computes the window function for lensing (comprehensive of shear and intrinsic
         alignment) given a galaxy distribution.
@@ -501,9 +507,6 @@ class limber():
         :param lum_IA: Relative luminosity of galaxies :math:`L(z)/L_*(z)`.
         :type lum_IA: float or callable whose **only** argument is :math:`z`, default = 1
 
-        :param name: name of the key to add to the dictionary
-        :type name: string, default = 'lensing'
-
         An example call can be, for 3 bins all with a :func:`colibri.limber.limber.euclid_distribution` with default arguments for ``a`` and ``b`` but different bin edges ``zmin``, ``zmax``:
 
         .. code-block:: python
@@ -512,31 +515,30 @@ class limber():
            nbins     = len(bin_edges)-1
            z_w       = np.linspace(0., 6., 1001)
            nz_w      = [S.euclid_distribution(z = z_w, a = 2.0, b = 1.5, zmin = bin_edges[i], zmax = bin_edges[i+1]) for i in range(nbins)]
-           S.load_lensing_window_functions(z = z_w, nz = nz_w, A_IA = 1, eta_IA = 0, beta_IA = 0, lum_IA = 1)
+           W_L       = S.load_lensing_window_functions(z = z_w, nz = nz_w, A_IA = 1, eta_IA = 0, beta_IA = 0, lum_IA = 1)
 
-        :return: A key of a given name is added to the ``self.window_function`` dictionary
+        :return: A 2-D array containing the windows of all galaxy bins as function of redshift
 
         """
         # Compute shear and IA
-        self.load_shear_window_functions(z,nz,name='shear_temporary_for_lensing')
-        self.load_IA_window_functions(z,nz,A_IA,eta_IA,beta_IA,lum_IA,name='IA_temporary_for_lensing')
-        n_bins = len(self.window_function['shear_temporary_for_lensing'])
+        Ws = self.load_shear_window_functions(z,nz)
+        WI = self.load_IA_window_functions(z,nz,A_IA,eta_IA,beta_IA,lum_IA)
+        n_bins = len(Ws)
 
         # Initialize window
-        self.window_function[name] = []
+        window_function = []
         for galaxy_bin in range(n_bins):
-            WL = self.window_function['shear_temporary_for_lensing'][galaxy_bin](self.z_windows)+self.window_function['IA_temporary_for_lensing'][galaxy_bin](self.z_windows)
+            WL = Ws[galaxy_bin](self.z_windows)+WI[galaxy_bin](self.z_windows)
             try:
-                self.window_function[name].append(si.interp1d(self.z_windows, WL, 'cubic', bounds_error = False, fill_value = 0.))
+                window_function.append(si.interp1d(self.z_windows,WL,'cubic',bounds_error=False,fill_value=0.))
             except ValueError:
-                self.window_function[name].append(si.Akima1DInterpolator(self.z_windows, WL))   
-        del self.window_function['shear_temporary_for_lensing']
-        del self.window_function['IA_temporary_for_lensing']
+                window_function.append(si.Akima1DInterpolator(self.z_windows, WL))   
+        return window_function
 
     #-----------------------------------------------------------------------------------------
     # GALAXY CLUSTERING WINDOW FUNCTION
     #-----------------------------------------------------------------------------------------
-    def load_galaxy_clustering_window_functions(self, z, nz, bias = 1.0, name = 'galaxy'):
+    def load_galaxy_clustering_window_functions(self, z, nz, bias = 1.0):
         """
         This function computes the window function for galaxy clustering given a galaxy distribution.
         The function automatically normalizes the galaxy distribution such that the integral over
@@ -558,9 +560,6 @@ class limber():
         :param bias: Galaxy bias.
         :type bias: float or array, same length of ``nz``, default = 1
 
-        :param name: name of the key to add to the dictionary
-        :type name: string, default = 'galaxy'
-
 
         An example call can be, for 3 bins all with a :func:`colibri.limber.limber.euclid_distribution` with default arguments for ``a`` and ``b`` but different bin edges ``zmin``, ``zmax``:
 
@@ -570,9 +569,9 @@ class limber():
            nbins     = len(bin_edges)-1
            z_w       = np.linspace(0., 6., 1001)
            nz_w      = [S.euclid_distribution(z = z_w, a = 2.0, b = 1.5, zmin = bin_edges[i], zmax = bin_edges[i+1]) for i in range(nbins)]
-           S.load_galaxy_clustering_window_functions(z = z_w, nz = nz_w, bias = 1)
+           W_G       = S.load_galaxy_clustering_window_functions(z = z_w, nz = nz_w, bias = 1)
 
-        :return: A key of a given name is added to the ``self.window_function`` dictionary
+        :return: A 2-D array containing the windows of all galaxy bins as function of redshift
 
         """
         nz = np.array(nz)
@@ -589,16 +588,17 @@ class limber():
         elif isinstance(bias, int)  : bias = np.float(bias)*np.ones(n_bins)
         else:                         assert len(bias)==n_bins, "Number of bias factors different from number of bins"
         # Initialize window
-        self.window_function[name] = []
+        window_function = []
         # Compute window
         for galaxy_bin in range(n_bins):
             tmp_interp = si.interp1d(z,nz[galaxy_bin],'cubic', bounds_error = False, fill_value = 0.)
-            self.window_function[name].append(si.interp1d(self.z_integration, tmp_interp(self.z_integration)*self.Hubble/const.c/norm_const[galaxy_bin]*bias[galaxy_bin], 'cubic', bounds_error = False, fill_value = 0.))
+            window_function.append(si.interp1d(self.z_integration, tmp_interp(self.z_integration)*self.Hubble/const.c/norm_const[galaxy_bin]*bias[galaxy_bin], 'cubic', bounds_error = False, fill_value = 0.))
+        return window_function
 
     #-----------------------------------------------------------------------------------------
     # HI WINDOW FUNCTION
     #-----------------------------------------------------------------------------------------
-    def load_HI_window_functions(self, z, nz, Omega_HI = 6.25e-4, bias = 1., name = 'HI'):
+    def load_HI_window_functions(self, z, nz, Omega_HI = 6.25e-4, bias = 1.):
         """
         This function computes the window function for HI brightness temperature given a galaxy distribution.
         The function automatically normalizes the galaxy distribution such that the integral over
@@ -623,9 +623,6 @@ class limber():
         :param bias: Galaxy bias.
         :type bias: float or array, same length of ``nz``, default = 1
 
-        :param name: name of the key to add to the dictionary
-        :type name: string, default = 'HI'
-
 
         An example call can be, for 3 bins all with a :func:`colibri.limber.limber.euclid_distribution` with default arguments for ``a`` and ``b`` but different bin edges ``zmin``, ``zmax``:
 
@@ -635,9 +632,9 @@ class limber():
            nbins     = len(bin_edges)-1
            z_w       = np.linspace(0., 6., 1001)
            nz_w      = [S.euclid_distribution(z = z_w, a = 2.0, b = 1.5, zmin = bin_edges[i], zmax = bin_edges[i+1]) for i in range(nbins)]
-           S.load_HI_window_functions(z = z_w, nz = nz_w, Omega_HI = 0.00063, bias = 1)
+           W_HI      = S.load_HI_window_functions(z = z_w, nz = nz_w, Omega_HI = 0.00063, bias = 1)
 
-        :return: A key of a given name is added to the ``self.window_function`` dictionary
+        :return: A 2-D array containing the windows of all galaxy bins as function of redshift
 
         """
 
@@ -652,21 +649,22 @@ class limber():
         assert z.max() >= self.z_max, "Maximum input redshift must be > %.3f, the maximum redshift of integration" %(self.z_max)
 
         if   isinstance(bias, float): bias = bias*np.ones(n_bins)
-        elif isinstance(bias, int)  : bias = np.float(bias)*np.ones(n_bins)
+        elif isinstance(bias, int)  : bias = np.float32(bias)*np.ones(n_bins)
         else:                         assert len(bias)==n_bins, "Number of bias factors different from number of bins"
         # Initialize window
-        self.window_function[name] = []
+        window_function = []
         # Compute window
         Dz = self.cosmology.growth_factor_scale_independent(self.z_integration)
         Tz = self.brightness_temperature_HI(self.z_integration,Omega_HI)
         for galaxy_bin in range(n_bins):
             tmp_interp = si.interp1d(z,nz[galaxy_bin],'cubic', bounds_error = False, fill_value = 0.)
-            self.window_function[name].append(si.interp1d(self.z_integration, tmp_interp(self.z_integration)*self.Hubble/const.c/norm_const[galaxy_bin]*bias[galaxy_bin]*Tz*Dz, 'cubic', bounds_error = False, fill_value = 0.))
+            window_function.append(si.interp1d(self.z_integration, tmp_interp(self.z_integration)*self.Hubble/const.c/norm_const[galaxy_bin]*bias[galaxy_bin]*Tz*Dz, 'cubic', bounds_error = False, fill_value = 0.))
+        return window_function
 
     #-----------------------------------------------------------------------------------------
     # CMB LENSING WINDOW FUNCTION
     #-----------------------------------------------------------------------------------------
-    def load_CMB_lensing_window_functions(self, z, nz, z_LSS = 1089., name = 'CMB lensing'):
+    def load_CMB_lensing_window_functions(self, z, nz, z_LSS = 1089.):
         """
         This function computes the window function for CMB lensing given a galaxy distribution.
         The function automatically normalizes the galaxy distribution such that the integral over
@@ -688,9 +686,6 @@ class limber():
         :param z_LSS: last-scattering surface redshift.
         :type z_LSS: float, default = 1089
 
-        :param name: name of the key to add to the dictionary
-        :type name: string, default = 'CMB lensing'
-
 
         An example call can be, for 3 bins all with a :func:`colibri.limber.limber.euclid_distribution` with default arguments for ``a`` and ``b`` but different bin edges ``zmin``, ``zmax``:
 
@@ -702,7 +697,7 @@ class limber():
            nz_w      = [S.euclid_distribution(z = z_w, a = 2.0, b = 1.5, zmin = bin_edges[i], zmax = bin_edges[i+1]) for i in range(nbins)]
            S.load_CMB_window_functions(z = z_w, nz = nz_w, z_LSS = 1089.)
 
-        :return: A key of a given name is added to the ``self.window_function`` dictionary
+        :return: A 2-D array containing the windows of all galaxy bins as function of redshift
 
         """
         nz = np.array(nz)
@@ -717,20 +712,22 @@ class limber():
         assert z.max() >= self.z_max, "Maximum input redshift must be > %.3f, the maximum redshift of integration" %(self.z_max)
 
         # Initialize window
-        self.window_function[name] = []
+        window_function = []
         
         # Comoving distance to last scattering surface
         com_dist_LSS = self.geometric_factor_f_K(z_LSS)
         # Comoving distances to redshifts
         for galaxy_bin in range(n_bins):
             tmp_interp = si.interp1d(z,nz[galaxy_bin],'cubic', bounds_error = False, fill_value = 0.)
-            self.window_function[name].append(si.interp1d(self.z_windows, constant*tmp_interp(self.z_windows)/norm_const[galaxy_bin]*self.Hubble_windows/const.c*(com_dist_LSS-self.geometric_factor_windows)/com_dist_LSS, 'cubic', bounds_error = False, fill_value = 0.))
+            window_function.append(si.interp1d(self.z_windows, constant*tmp_interp(self.z_windows)/norm_const[galaxy_bin]*self.Hubble_windows/const.c*(com_dist_LSS-self.geometric_factor_windows)/com_dist_LSS, 'cubic', bounds_error = False, fill_value = 0.))
+
+        return window_function
 
 
     #-----------------------------------------------------------------------------------------
     # ADD WINDOW FUNCTION
     #-----------------------------------------------------------------------------------------
-    def load_custom_window_functions(self, z, window, name):
+    def load_custom_window_functions(self, z, window):
         """
         This function loads a custom window function and adds the key to the dictionary
         The window function in input must already be normalized.
@@ -741,10 +738,7 @@ class limber():
         :param window: 2-D array or 2-D list where each sublist is the galaxy distribution of a given redshift bin
         :type window: 2-D array with shape ``(n_bins, len(z))``, default = None
 
-        :param name: name of the key to add to the dictionary
-        :type name: string
-
-        :return: A key of a given name is added to the ``self.window_function`` dictionary
+        :return: A 2-D array containing the windows of all galaxy bins as function of redshift
 
         """
         nz = np.array(window)
@@ -756,10 +750,11 @@ class limber():
         assert z.min() <= self.z_min, "Minimum input redshift must be < %.3f, the minimum redshift of integration" %(self.z_min)
         assert z.max() >= self.z_max, "Maximum input redshift must be > %.3f, the maximum redshift of integration" %(self.z_max)   
          # Initialize window
-        self.window_function[name] = []
+        window_function = []
         # Compute window
         for galaxy_bin in range(n_bins):
-            self.window_function[name].append(si.interp1d(z,window[galaxy_bin],'cubic', bounds_error = False, fill_value = 0.))
+            window_function.append(si.interp1d(z,window[galaxy_bin],'cubic', bounds_error = False, fill_value = 0.))
+        return window_function
 
     #-----------------------------------------------------------------------------------------
     # CORRECTION FUNCTION FOR INTRINSIC ALIGNMENT
@@ -789,7 +784,7 @@ class limber():
     #-----------------------------------------------------------------------------------------
     # ANGULAR SPECTRA
     #-----------------------------------------------------------------------------------------
-    def limber_angular_power_spectra(self, l, windows = None):
+    def limber_angular_power_spectra(self, l, window_1, window_2, power_spectra):
         """
         This function computes the angular power spectra (using the Limber's and the flat-sky approximations) for the window function specified.
         Given two redshift bins `i` and `j` the equation is
@@ -803,52 +798,35 @@ class limber():
         :param l: Multipoles at which to compute the shear power spectra.
         :type l: array
 
-        :param windows: which spectra (auto and cross) must be computed. If set to ``None`` all the spectra will be computed.
-        :type windows: list of strings, default = ``None``
+        :param window_1: an array of interpolated objects containing the window functions of the first observable. They must be computed with the functions provided in this file.
+        :type window_1: 2-D array
 
-        :return: dictionary whose keys are combinations of window functions specified in ``windows``. Each key is a 3-D array whose entries are ``Cl[bin i, bin j, multipole l]``
+        :param window_2: an array of interpolated objects containing the window functions of the second observable. They must be computed with the functions provided in this file.
+        :type window_2: 2-D array
+
+        :param power_spectra: an interpolated object in scales and redshifts, containing the power spectra of observables 1 and 2. It must be computed using the function :func:`colibri.limber.limber.load_power_spectra`)
+        :type power_spectra: 2-D interpolated object
+
+        :return: 3-D array containing the Limber power spectrum. The first and second indices are galaxy bins, the third is the multipole.
         """
 
-        # Check existence of power spectrum
-        try: self.power_spectra_interpolator
-        except AttributeError: raise AttributeError("Power spectra have not been loaded yet")
-
         # Check convergence with (l, k, z):
-        assert np.atleast_1d(l).min() > self.k_min*self.geometric_factor_f_K(self.z_min), "Minimum 'l' is too low. Extend power spectra to lower k_min? Use lower z_min for power spectrum?"
-        assert np.atleast_1d(l).max() < self.k_max*self.geometric_factor_f_K(self.z_max), "Maximum 'l' is too high. Extend power spectra to higher k_max? Use higher z_max for power spectrum?"
-
-        # Check window functions to use
-        if windows is None:
-            windows_to_use = self.window_function
-        else:
-            windows_to_use = {}
-            for key in windows:
-                try:             windows_to_use[key] = self.window_function[key]
-                except KeyError: raise KeyError("Requested window function '%s' not known" %key)
-
-        # Check window functions 
-        keys   = windows_to_use.keys()
-        if len(keys) == 0: raise AttributeError("No window function has been computed!")
-        nkeys  = len(keys)
-        n_bins = [len(windows_to_use[key]) for key in keys]
+        #assert np.atleast_1d(l).min() > self.k_min*self.geometric_factor_f_K(self.z_min), "Minimum 'l' is too low. Extend power spectra to lower k_min? Use lower z_min for power spectrum?"
+        #assert np.atleast_1d(l).max() < self.k_max*self.geometric_factor_f_K(self.z_max), "Maximum 'l' is too high. Extend power spectra to higher k_max? Use higher z_max for power spectrum?"
 
         # 1) Define lengths and quantities
+        nbin_1   = len(window_1)
+        nbin_2   = len(window_2)
         zz       = self.z_integration
         n_l      = len(np.atleast_1d(l))
         n_z      = self.nz_integration
-        HH       = self.Hubble
         cH_chi2  = self.c_over_H_over_chi_squared
-        Cl       = {}
-        for i,ki in enumerate(keys):
-            for j,kj in enumerate(keys):
-                Cl['%s-%s' %(ki,kj)] = np.zeros((n_bins[i],n_bins[j], n_l))
-
+        Cl       = np.zeros((nbin_1,nbin_2,n_l))
         # 2) Load power spectra
-        power_spectra = self.power_spectra_interpolator
         PS_lz = np.zeros((n_l, n_z))
         for il in range(n_l):
             for iz in range(n_z):
-                PS_lz[il,iz] = power_spectra(l[il]/self.geometric_factor[iz], zz[iz])
+                PS_lz[il,iz] = power_spectra.ev(zz[iz],l[il]/self.geometric_factor[iz])
         # Add curvature correction (see arXiv:2302.04507)
         if self.cosmology.K != 0.:
             KK = self.cosmology.K
@@ -857,27 +835,14 @@ class limber():
                 factor[il]=(1-np.sign(KK)*ell**2/(((ell+0.5)/self.geometric_factor)**2+KK))**-0.5
             PS_lz *= factor
 
-        # 3) load Cls given the source functions
-        # 1st key (from 1 to N_keys)
-        for index_X in range(nkeys):
-            key_X = list(keys)[index_X]
-            W_X = np.array([windows_to_use[key_X][i](zz) for i in range(n_bins[index_X])])
-            # 2nd key (from 1st key to N_keys)
-            for index_Y in range(index_X,nkeys):
-                key_Y = list(keys)[index_Y]
-                W_Y = np.array([windows_to_use[key_Y][i](zz) for i in range(n_bins[index_Y])])
-                # Symmetry C_{AA}^{ij} == C_{AA}^{ji}
-                if key_X == key_Y:
-                    for bin_i in range(n_bins[index_X]):
-                        for bin_j in range(bin_i, n_bins[index_Y]):
-                            Cl['%s-%s' %(key_X,key_Y)][bin_i,bin_j] = [sint.simpson(cH_chi2*W_X[bin_i]*W_Y[bin_j]*PS_lz[xx], x = zz) for xx in range(n_l)]
-                            Cl['%s-%s' %(key_X,key_Y)][bin_j,bin_i] = Cl['%s-%s' %(key_X,key_Y)][bin_i,bin_j]
-                # Symmetry C_{AB}^{ij} == C_{BA}^{ji}
-                else:
-                    for bin_i in range(n_bins[index_X]):
-                        for bin_j in range(n_bins[index_Y]):
-                            Cl['%s-%s' %(key_X,key_Y)][bin_i,bin_j] = [sint.simpson(cH_chi2*W_X[bin_i]*W_Y[bin_j]*PS_lz[xx], x = zz) for xx in range(n_l)]
-                            Cl['%s-%s' %(key_Y,key_X)][bin_j,bin_i] = Cl['%s-%s' %(key_X,key_Y)][bin_i,bin_j]
+        # 3) Unpack window functions
+        W1 = np.array([window_1[i](zz) for i in range(nbin_1)])
+        W2 = np.array([window_2[i](zz) for i in range(nbin_2)])
+
+        # 4) Compute Cl
+        for bi in range(nbin_1):
+            for bj in range(nbin_2):
+                Cl[bi,bj] = [sint.simpson(cH_chi2*W1[bi]*W2[bj]*PS_lz[xx],x=zz) for xx in range(n_l)]
         return Cl
 
 

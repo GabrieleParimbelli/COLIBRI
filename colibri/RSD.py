@@ -3,7 +3,9 @@ import colibri.cosmology as cc
 import colibri.halo as hc
 import colibri.galaxy as gc
 import numpy as np
-import scipy
+import scipy.interpolate as si
+import scipy.integrate as sint
+import scipy.special as ss
 import colibri.useful_functions as UU
 import colibri.nonlinear as NL
 
@@ -233,7 +235,7 @@ class RSD(gc.galaxy):
             pk_ext = np.array(pk_ext)
             do_nonlinear = NL.HMcode2016(z = self.z, k = k_ext, pk = pk_ext, cosmology = self.cosmology)
             pk_hf        = do_nonlinear.pk_nl
-            pk_hf_int    = scipy.interpolate.interp1d(k_ext,pk_hf,'cubic')
+            pk_hf_int    = si.interp1d(k_ext,pk_hf,'cubic')
             pk_hf        = pk_hf_int(self.k)
             PK_BASE = np.transpose(np.tile(pk_hf,self.nmu).reshape((self.nz, self.nmu, self.nk)), (0,2,1))
             # Redshift-space galaxy power spectrum
@@ -448,7 +450,7 @@ class RSD(gc.galaxy):
             pk_ext = np.array(pk_ext)
             do_nonlinear = NL.HMcode2016(z = self.z, k = k_ext, pk = pk_ext, cosmology = self.cosmology)
             pk_hf        = do_nonlinear.pk_nl
-            pk_hf_int    = scipy.interpolate.interp1d(k_ext,pk_hf,'cubic')
+            pk_hf_int    = si.interp1d(k_ext,pk_hf,'cubic')
             pk_hf        = pk_hf_int(self.k)
             PK_BASE = np.transpose(np.tile(pk_hf,nmu).reshape((self.nz, nmu, self.nk)), (0,2,1))
             # Redshift-space galaxy power spectrum
@@ -554,11 +556,11 @@ class RSD(gc.galaxy):
         self.Pk['galaxies']['redshift space']['multipoles'] = {}
 
         for il in range(nl):
-            leg = scipy.special.legendre(l[il])(mu)
+            leg = ss.legendre(l[il])(mu)
             self.Pk['galaxies']['redshift space']['multipoles'][str(l[il])] = np.zeros((self.nz, self.nk))
             for iz in range(self.nz):
                 for ik in range(self.nk):
-                    P_ell[iz,il,ik] = (2.*l[il]+1.)/2.*scipy.integrate.simps(P_K_MU[iz,ik,:]*leg, x = mu)
+                    P_ell[iz,il,ik] = (2.*l[il]+1.)/2.*sint.simpson(P_K_MU[iz,ik,:]*leg, x = mu)
                 self.Pk['galaxies']['redshift space']['multipoles'][str(l[il])][iz] = P_ell[iz,il]
         del P_K_MU, BIAS, GROWTH_RATE, SIGMA, FoG, PK_BASE, P_ell
 
@@ -664,7 +666,7 @@ class RSD(gc.galaxy):
             # Take linear matter power spectrum
             PK_BASE = np.zeros_like(ZZ)
             for iz in range(self.nz):
-                power_interp = scipy.interpolate.interp1d(self.k, self.Pk['matter']['linear'][iz], kind = 'cubic')
+                power_interp = si.interp1d(self.k, self.Pk['matter']['linear'][iz], kind = 'cubic')
                 PK_BASE[iz] = power_interp(KK[iz])
             # Redshift-space galaxy power spectrum 
             P_KPAR_KPERP = (BIAS + GROWTH_RATE*MU**2.)**2.*FoG*PK_BASE
@@ -684,11 +686,11 @@ class RSD(gc.galaxy):
             pk_ext = np.array(pk_ext)
             do_nonlinear = NL.HMcode2016(z = self.z, k = k_ext, pk = pk_ext, cosmology = self.cosmology)
             pk_hf        = do_nonlinear.pk_nl
-            pk_hf_int    = scipy.interpolate.interp1d(k_ext,pk_hf,'cubic')
+            pk_hf_int    = si.interp1d(k_ext,pk_hf,'cubic')
             pk_hf        = pk_hf_int(self.k)
             PK_BASE      = np.zeros_like(ZZ)
             for iz in range(self.nz):
-                power_interp = scipy.interpolate.interp1d(self.k, pk_hf[iz], kind = 'cubic')
+                power_interp = si.interp1d(self.k, pk_hf[iz], kind = 'cubic')
                 PK_BASE[iz]  = power_interp(KK[iz])
             # Redshift-space galaxy power spectrum
             P_KPAR_KPERP = (BIAS + GROWTH_RATE*MU**2.)**2.*FoG*PK_BASE
@@ -711,7 +713,7 @@ class RSD(gc.galaxy):
             # Non-linear galaxy power spectrum
             PK_BASE = np.zeros_like(ZZ)
             for iz in range(self.nz):
-                power_interp = scipy.interpolate.interp1d(self.k, self.Pk['galaxies']['real space']['total halo'][iz], kind = 'cubic')
+                power_interp = si.interp1d(self.k, self.Pk['galaxies']['real space']['total halo'][iz], kind = 'cubic')
                 PK_BASE[iz]  = power_interp(KK[iz])
             # Redshift-space galaxy power spectrum (here, since bias is already included in P_g(k), I do (1+beta*mu^2)
             P_KPAR_KPERP = (1. + GROWTH_RATE/BIAS*MU**2.)**2.*FoG*PK_BASE
@@ -764,7 +766,7 @@ class RSD(gc.galaxy):
             # Linear matter power spectrum
             PK_BASE = np.zeros_like(ZZ)
             for iz in range(self.nz):
-                power_interp = scipy.interpolate.interp1d(self.k, self.Pk['matter']['linear'][iz], kind = 'cubic')
+                power_interp = si.interp1d(self.k, self.Pk['matter']['linear'][iz], kind = 'cubic')
                 PK_BASE[iz]  = power_interp(KK[iz])
 
             # normalization and scale of cutoff

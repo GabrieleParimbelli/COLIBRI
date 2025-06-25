@@ -155,7 +155,7 @@ class HMcode2016():
         for iz in range(self.nz):
             for ik in range(self.nk):
                 integrand         = ((self.mass/self.rho_field)**2.*hmf[iz]*u[iz,:,ik]**2.)*self.mass
-                self.pk_1h[iz,ik] = sint.simps(integrand, x = np.log(self.mass))
+                self.pk_1h[iz,ik] = sint.simpson(integrand, x = np.log(self.mass))
             # Power spectra (BETTER WITH '3' EXPONENT, THAT IN MEAD ET AL. IS NOT PRESENT!!)
             self.pk_1h[iz]  *= (1.-np.exp(-self.k/self.k_star[iz])**2.)**3.
             self.pk_2h[iz]   = self.pk[iz]*(1.-self.fdamp[iz]*tanh2[iz])
@@ -845,7 +845,7 @@ class halomodel():
         # Power spectrum
         M_over_rho  = np.expand_dims(self.mass/self.rho_field,0)
         M           = np.expand_dims(self.mass,0)
-        self.pk_1h  = np.transpose([sint.simps(M_over_rho**2.*hmf*u_NFW[:,:,ik]**2.*M,x=self.lnmass, axis = 1)
+        self.pk_1h  = np.transpose([sint.simpson(M_over_rho**2.*hmf*u_NFW[:,:,ik]**2.*M,x=self.lnmass, axis = 1)
                                      for ik in range(self.nk)])
         self.pk_2h  = self.pk
         self.pk_nl  = self.pk_1h + self.pk_2h

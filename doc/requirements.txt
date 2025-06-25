@@ -1,2 +1,4 @@
 sphinx>=5,<7
 breathe
+numpy>1.14
+scipy>1

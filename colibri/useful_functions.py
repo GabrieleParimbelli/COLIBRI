@@ -1,8 +1,7 @@
 import numpy as np
 import scipy.interpolate as si
 import scipy.integrate as sint
-import scipy.fftpack as sfft
-import scipy.optimize
+import scipy.optimize as so
 import sys
 
 #-----------------------------------------------------------------------------------------
@@ -55,7 +54,7 @@ def extrapolate(x, y, xmin, xmax, order):
     x_high = np.arange(x[-1] + dx, xmax, dx) 
     y_high = np.polyval(high_fit, x_high)
 
-    # Concatenating the arrays. These are the 'k' and the 'P(k)' arrays I will use to compute sigma^2
+    # Concatenating the arrays.
     x_ext = np.concatenate([x_low, x, x_high])
     y_ext = np.concatenate([y_low, y, y_high])
 
@@ -115,7 +114,7 @@ def extrapolate_log(x, y, xmin, xmax):
     x_high = np.exp(lnx_high)
     y_high = np.exp(lny_high)
 
-    # Concatenating the arrays. These are the 'k' and the 'P(k)' arrays I will use to compute sigma^2
+    # Concatenating the arrays.
     x_ext = np.concatenate([x_low, x, x_high])
     y_ext = np.concatenate([y_low, y, y_high])
 
@@ -159,7 +158,7 @@ def neutrino_masses(M_nu, hierarchy = 'normal'):
             raise ValueError('Normal hierarchy non allowed for M_nu = %.4f eV' %M_nu)
         else:
             m1_fun = lambda x: M_nu - x - np.sqrt(delta21+x**2) - np.sqrt(delta31+x**2)
-            m1 = scipy.optimize.brentq(m1_fun, 0.0, M_nu)
+            m1 = so.brentq(m1_fun, 0.0, M_nu)
             m2 = np.sqrt(delta21+m1**2)
             m3 = np.sqrt(delta31+m1**2)
 
@@ -168,7 +167,7 @@ def neutrino_masses(M_nu, hierarchy = 'normal'):
             raise ValueError('Inverted hierarchy non allowed for M_nu = %.4f eV' %M_nu)
         else:
             m3_fun = lambda x: M_nu - x - np.sqrt(delta31+x**2) - np.sqrt(delta21+np.sqrt(delta31+x**2)**2)
-            m3 = scipy.optimize.brentq(m3_fun, 0.0, M_nu)
+            m3 = so.brentq(m3_fun, 0.0, M_nu)
             m1 = np.sqrt(delta31+m3**2)
             m2 = np.sqrt(delta21+m1**2)
 
@@ -686,7 +685,7 @@ def compute_sigma_8(k, pk):
     # Top-hat window function
     W_kR = TopHat_window(k2d*R)
     # Integration in log-bins
-    integral = sint.simps(k2d**3.*pk/(2.*np.pi**2.)*W_kR**2.,x=np.log(k),axis=1)
+    integral = sint.simpson(k2d**3.*pk/(2.*np.pi**2.)*W_kR**2.,x=np.log(k),axis=1)
     return integral**.5
 
 #-----------------------------------------------------------------------------------------
@@ -764,6 +763,73 @@ def Omega_wdm_from_mass_and_temperature(m_wdm,T_wdm,h=0.67,T_cmb=2.7255):
     :return: float, in kelvin.
     """
     return omega_wdm_from_mass_and_temperature(m_wdm,T_wdm/T_cmb)/h**2.
+
+#-------------------------------------------------------------------------------
+# REMOVE_BAO
+#-------------------------------------------------------------------------------
+def remove_bao(k_in, pk_in, k_low = 2.8e-2, k_high = 4.5e-1):
+    """
+    This routine removes the BAOs from the input power spectrum and returns
+    the no-wiggle power spectrum in :math:`(\mathrm{Mpc}/h)^3`.
+    Originally written by Mario Ballardini (you can find it in `the montepython repository <https://github.com/brinckmann/montepython_public/blob/master/montepython/likelihood_class.py>`_ .
+    )
+
+    :param k_in: Scales in units of :math:`h/\mathrm{Mpc}`.
+    :type k_in: array
+
+    :param pk_in: Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.
+    :type pk_in: array
+
+    :param k_low: Lowest scale to spline in :math:`h/\mathrm{Mpc}`.
+    :type k_low: float, default = 2.8e-2
+
+    :param k_high: Highest scale to spline in :math:`h/\mathrm{Mpc}`.
+    :type k_high: float, default = 4.5e-1
+
+    :return: array, power spectrum without BAO.
+    """
+
+    # This k range has to contain the BAO features:
+    k_ref = [k_low, k_high]
+
+    # Get interpolating function for input P(k) in log-log space:
+    _interp_pk = si.interp1d(np.log(k_in), np.log(pk_in),
+                                                kind='quadratic', bounds_error=False )
+    interp_pk = lambda x: np.exp(_interp_pk(np.log(x)))
+
+    # Spline all (log-log) points outside k_ref range:
+    idxs = np.where(np.logical_or(k_in <= k_ref[0], k_in >= k_ref[1]))
+    _pk_smooth = si.UnivariateSpline( np.log(k_in[idxs]),
+                                                         np.log(pk_in[idxs]), k = 3, s = 0 )
+    pk_smooth = lambda x: np.exp(_pk_smooth(np.log(x)))
+
+    # Find second derivative of each spline:
+    fwiggle = si.UnivariateSpline(k_in, pk_in / pk_smooth(k_in), k = 3, s = 0)
+    derivs  = np.array([fwiggle.derivatives(_k) for _k in k_in]).T
+    d2      = si.UnivariateSpline(k_in, derivs[2], k = 3, s = 1.0)
+
+    # Find maxima and minima of the gradient (zeros of 2nd deriv.), then put a
+    # low-order spline through zeros to subtract smooth trend from wiggles fn.
+    wzeros = d2.roots()
+    wzeros = wzeros[np.where(np.logical_and(wzeros >= k_ref[0], wzeros <= k_ref[1]))]
+    wzeros = np.concatenate((wzeros, [k_ref[1],]))
+    try:
+        wtrend = si.UnivariateSpline(wzeros, fwiggle(wzeros), k = 3, s = None, ext = 'extrapolate')
+    except:
+        wtrend = si.UnivariateSpline(k_in, fwiggle(k_in), k = 3, s = None, ext = 'extrapolate')
+
+    # Construct smooth no-BAO:
+    idxs = np.where(np.logical_and(k_in > k_ref[0], k_in < k_ref[1]))
+    pk_nobao = pk_smooth(k_in)
+    pk_nobao[idxs] *= wtrend(k_in[idxs])
+
+    # Construct interpolating functions:
+    ipk = si.interp1d( k_in, pk_nobao, kind='cubic',
+                           bounds_error=False, fill_value=0. )
+
+    pk_nobao = ipk(k_in)
+
+    return pk_nobao
 
 #-----------------------------------------------------------------------------------------
 # ALCOCK-PACZYNSKI EFFECT

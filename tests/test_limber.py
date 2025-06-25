@@ -26,7 +26,7 @@ print("> Cosmology loaded")
 #-----------------
 
 #-----------------
-# 2) Define an angular_spectra instance.
+# 2) Define a Limber instance.
 #-----------------
 # This takes as arguments:
 #   - a cosmology instance:
@@ -54,16 +54,15 @@ print("> Power spectra loaded")
 # Select number of redshift bins
 # In this case we chose to assume that each redshift bin has the same number of galaxies
 # (according to the galaxy distribution we want to use)
-if   nbins == 2 : bin_edges = [0.01,0.90,5.00]
-elif nbins == 3 : bin_edges = [0.01,0.71,1.11,5.00]
-elif nbins == 4 : bin_edges = [0.01,0.62,0.90,1.23,5.00]
-elif nbins == 5 : bin_edges = [0.01,0.56,0.79,1.02,1.32,5.00]
-elif nbins == 6 : bin_edges = [0.01,0.52,0.71,0.90,1.11,1.39,5.00]
-elif nbins == 7 : bin_edges = [0.01,0.48,0.66,0.82,0.98,1.17,1.45,5.00]
-elif nbins == 8 : bin_edges = [0.01,0.48,0.62,0.76,0.90,1.05,1.23,1.50,5.00]
-elif nbins == 9 : bin_edges = [0.01,0.44,0.59,0.71,0.84,0.96,1.11,1.28,1.54,5.00]
-elif nbins == 10: bin_edges = [0.01,0.42,0.56,0.68,0.79,0.90,1.02,1.15,1.32,1.57,5.00]
-#elif nbins == 13: bin_edges = [0.01,0.15,0.31,0.46,0.62,0.77,0.92,1.08,1.23,1.38,1.54,1.69,1.85,2.00]
+if   nbins == 2 : bin_edges = [0.01,0.90,2.50]
+elif nbins == 3 : bin_edges = [0.01,0.71,1.11,2.50]
+elif nbins == 4 : bin_edges = [0.01,0.62,0.90,1.23,2.50]
+elif nbins == 5 : bin_edges = [0.01,0.56,0.79,1.02,1.32,2.50]
+elif nbins == 6 : bin_edges = [0.01,0.52,0.71,0.90,1.11,1.39,2.50]
+elif nbins == 7 : bin_edges = [0.01,0.48,0.66,0.82,0.98,1.17,1.45,2.50]
+elif nbins == 8 : bin_edges = [0.01,0.48,0.62,0.76,0.90,1.05,1.23,1.50,2.50]
+elif nbins == 9 : bin_edges = [0.01,0.44,0.59,0.71,0.84,0.96,1.11,1.28,1.54,2.50]
+elif nbins == 10: bin_edges = [0.01,0.42,0.56,0.68,0.79,0.90,1.02,1.15,1.32,1.57,2.50]
 else: raise ValueError("Choose among 2->10 bins (or implement your own set of galaxy distributions).")
 
 # The lines below find the bin edges with another method
@@ -78,7 +77,7 @@ def integral(a,b):
     return numerator/denominator
 bin_edges    = np.zeros(nbins+1)
 bin_edges[0]  = 0.01
-bin_edges[-1] = 5.00
+bin_edges[-1] = 2.50
 for i in range(nbins-1):
     bin_edges[i+1] = so.root(lambda x: integral(bin_edges[i], x)-1./nbins, bin_edges[i])['x']
 """
@@ -140,8 +139,6 @@ print("> Window functions loaded")
 if fourier:
     ll    = np.geomspace(2., 1e4, 51)
     Cl    = S.limber_angular_power_spectra(l = ll, windows = None)
-    # Multiplication constant for plotting
-    c = ll*(ll+1.)/(2.*np.pi)
     # Single components
     Cl_ss = Cl['shear-shear']
     Cl_sI = Cl['shear-IA']+Cl['IA-shear']
@@ -199,6 +196,8 @@ for j in range(1, nbins):
     plt.subplots_adjust(wspace=0, hspace=0)
 
 if fourier:
+    # Multiplication constant for plotting
+    c = ll*(ll+1.)/(2.*np.pi)
     for i in range(nbins):
         for j in range(i, nbins):
 

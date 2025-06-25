@@ -12,8 +12,8 @@ In a flat Universe such spectra are given by:
 
 where :math:`A` and :math:`B` can either be weak lensing or galaxy clustering. In an ideal case :math:`z_\mathrm{min}=0` and :math:`z_\mathrm{max}=\infty`, :math:`W_A^{(i)}(z)` is the window function for a given redshift bin and :math:`P(k,z)` is the total matter non-linear power spectrum.
 
-Initialization
----------------
+Initialization of Limber class
+-------------------------------
 
 To start, initialize a :func:`colibri.cosmology.cosmo` instance and assign it to a :func:`colibri.limber.limber` instance.
 
