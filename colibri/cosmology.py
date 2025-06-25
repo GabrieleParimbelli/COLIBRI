@@ -2748,7 +2748,6 @@ class cosmo:
                 halofit = 'mead2020',
                 var_1 = 'tot',
                 var_2 = 'tot',
-                share_delta_neff = True,
                 **kwargs
                 ):
         """
@@ -2824,7 +2823,6 @@ class cosmo:
                       'wa': self.wa,
                       'TCMB': self.T_cmb,
                       'tau': self.tau,
-                      'share_delta_neff':share_delta_neff,
                       'dark_energy_model':'DarkEnergyPPF'}
         # kwargs
         for key, value in kwargs.items():
@@ -2881,7 +2879,6 @@ class cosmo:
             halofit = 'mead2020',
             var_1 = ['tot'],
             var_2 = ['tot'],
-            share_delta_neff = True,
             **kwargs
             ):
         """
@@ -2954,7 +2951,6 @@ class cosmo:
                       'wa': self.wa,
                       'TCMB': self.T_cmb,
                       'tau': self.tau,
-                      'share_delta_neff':share_delta_neff,
                       'dark_energy_model':'DarkEnergyPPF'}
         # kwargs
         for key, value in kwargs.items():
