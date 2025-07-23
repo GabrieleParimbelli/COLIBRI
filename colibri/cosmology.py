@@ -3042,11 +3042,6 @@ class cosmo:
         pk: 2D array of shape ``(len(z), len(k))``
             Power spectrum in units of :math:`(\mathrm{Mpc}/h)^3`.
         """
-
-        # Set halofit for non-linear computation
-        if nonlinear == True: halofit = halofit
-        else:                 halofit = 'none'
-
         # Setting lengths
         nk = len(np.atleast_1d(k))
         nz = len(np.atleast_1d(z))
@@ -3064,8 +3059,7 @@ class cosmo:
             'tau_reio':      self.tau,
             'T_cmb':         self.T_cmb,
             'P_k_max_h/Mpc': kmax,
-            'z_max_pk':      zmax,
-            'non_linear':    halofit}
+            'z_max_pk':      zmax}
         # Set initial conditions
         if self.sigma_8 is not None: params['sigma8'] = self.sigma_8
         else:                        params['A_s']    = self.As
@@ -3089,6 +3083,8 @@ class cosmo:
         elif self.N_wdm>0:
             params['m_ncdm'] = ', '.join(str(x) for x in self.M_wdm)
             params['T_ncdm'] = ', '.join(str(x) for x in self.Gamma_wdm)
+        # Set halofit for non-linear computation
+        if nonlinear == True: params['non_linear'] = halofit
         # Add the keyword arguments
         for key, value in kwargs.items():
             if not key in params: params[key] = value
@@ -3182,11 +3178,6 @@ class cosmo:
                       'gamma' : 'd_g',
                       'Phi'   : 'phi',
                       'Psi'   : 'psi'}
-
-        # Set halofit for non-linear computation
-        if nonlinear == True: halofit = halofit
-        else:                 halofit = 'none'
-
         # Setting lengths
         nk   = len(np.atleast_1d(k))
         nz   = len(np.atleast_1d(z))
@@ -3205,8 +3196,7 @@ class cosmo:
             'tau_reio':      self.tau,
             'T_cmb':         self.T_cmb,
             'P_k_max_h/Mpc': kmax,
-            'z_max_pk':      zmax,
-            'non_linear':    halofit}
+            'z_max_pk':      zmax}
         # Set initial conditions
         if self.sigma_8 is not None: params['sigma8'] = self.sigma_8
         else:                        params['A_s']    = self.As
@@ -3230,6 +3220,8 @@ class cosmo:
         elif self.N_wdm>0:
             params['m_ncdm'] = ', '.join(str(x) for x in self.M_wdm)
             params['T_ncdm'] = ', '.join(str(x) for x in self.Gamma_wdm)
+        # Set halofit for non-linear computation
+        if nonlinear == True: params['non_linear'] = halofit
         # Add the keyword arguments
         for key, value in kwargs.items():
             if not key in params: params[key] = value
