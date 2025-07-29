@@ -237,7 +237,8 @@ class cosmo:
         self.delta_v         = -3./20.*(6.*(np.sinh(self.eta_sc)-self.eta_sc))**(2./3.)
         self.M               = np.logspace(2.1, 17.9, 512)
 
-        assert self.Omega_cdm>1e-10, "Omega_cdm is too small or even negative, likely because of the choice of M_wdm and T_wdm. Choose different values for this combination of parameters."
+        #assert self.Omega_cdm>1e-10, "Omega_cdm is too small or even negative, likely because of the choice of M_wdm and T_wdm. Choose different values for this combination of parameters."
+        assert self.Omega_cdm>=0., "Omega_cdm is negative, likely because of the choice of M_wdm and T_wdm. Choose different values for this combination of parameters."
 
     #-------------------------------------------------------------------------------
     # SCALE FACTOR FROM REDSHIFT
