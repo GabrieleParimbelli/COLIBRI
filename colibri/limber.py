@@ -107,10 +107,14 @@ class limber():
 
         # Interpolate
         kind_of_interpolation = 'cubic' if (len(self.z)>3) and (len(self.k)>3) else 'linear'
-        self.power_spectra_interpolator = si.interp2d(self.k, self.z,
-                                                      power_spectra,
-                                                      kind_of_interpolation,
-                                                      bounds_error = False, fill_value = 0.)
+        # self.power_spectra_interpolator = si.interp2d(self.k, self.z,
+        #                                               power_spectra,
+        #                                               kind_of_interpolation,
+        #                                               bounds_error = False, fill_value = 0.)
+        self.power_spectra_interpolator = si.RegularGridInterpolator(
+                                            (self.z, self.k),power_spectra,
+                                            method=kind_of_interpolation,
+                                            bounds_error=False,fill_value=0.)
 
     #-----------------------------------------------------------------------------------------
     # EXAMPLES OF GALAXY PDF'S
@@ -848,7 +852,8 @@ class limber():
         PS_lz = np.zeros((n_l, n_z))
         for il in range(n_l):
             for iz in range(n_z):
-                PS_lz[il,iz] = power_spectra(l[il]/self.geometric_factor[iz], zz[iz])
+                #PS_lz[il,iz] = power_spectra(l[il]/self.geometric_factor[iz], zz[iz])
+                PS_lz[il,iz] = power_spectra((zz[iz],l[il]/self.geometric_factor[iz]))
         # Add curvature correction (see arXiv:2302.04507)
         if self.cosmology.K != 0.:
             KK = self.cosmology.K
