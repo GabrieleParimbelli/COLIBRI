@@ -3,7 +3,7 @@ import numpy as np
 import scipy.special as ss
 import scipy.integrate as sint
 import scipy.interpolate as si
-import scipy.misc as sm
+import scipy.differentiate as sm
 import colibri.useful_functions as UF
 from scipy.ndimage import gaussian_filter1d
 import sys
@@ -2039,7 +2039,8 @@ class cosmo:
         ddxx       = 1e-1 if window in ['sharp', 'heaviside', 's'] else 1e-3
         for iz in range(len(pk)):
             # d(sigma^2)/dlog10 M
-            derivative = sm.derivative(lambda x: s2_interp(x)[iz],logM_tmp,dx=ddxx,n=1,order=3)
+            #derivative = sm.derivative(lambda x: s2_interp(x)[iz],logM_tmp,dx=ddxx,n=1,order=3)
+            derivative = sm.derivative(lambda x: s2_interp(x)[iz], logM_tmp).df
             log_der.append(derivative)
         # From d(sigma^2)/dlog10 M to -dln(sigma)/dln(M)
         log_der = np.array(log_der)*(-0.5)/sigma2*np.log10(np.e)
@@ -2163,7 +2164,8 @@ class cosmo:
         loge = np.log10(np.e)
         for iz in range(nz):
             s0_int   = si.interp1d(logMtmp, s0[iz],'cubic',bounds_error=False,fill_value='extrapolate')
-            log_der  = sm.derivative(s0_int, logMtmp, dx = 1e-3, n = 1, order = 3)
+            #log_der = sm.derivative(s0_int, logMtmp, dx = 1e-3, n = 1, order = 3)
+            log_der  = sm.derivative(s0_int, logMtmp).df
             dnu_dr   = -3./2.*nu[iz]/Rtmp*loge/s0[iz]*log_der
             V        = self.volume_of_radius(Rtmp, 'th')
             dndR_tmp = f_nu[iz]/V*dnu_dr
@@ -2247,7 +2249,8 @@ class cosmo:
         deriv = np.zeros_like(sigma)
         for iz in range(len(pk)):
             sig_interp = si.interp1d(np.log(R_tmp),np.log(1./sigma[iz]),'cubic',fill_value='extrapolate',bounds_error=False)
-            deriv[iz]  = sm.derivative(sig_interp,np.log(R_tmp),dx=1e-3,n=1,order=3)
+            #deriv[iz]  = sm.derivative(sig_interp,np.log(R_tmp),dx=1e-3,n=1,order=3)
+            deriv[iz]  = sm.derivative(sig_interp,np.log(R_tmp)).df
         # Void size function
         if model == 'Vdn':
             Volume_tmp = 4./3.*np.pi*(R_tmp)**3.
