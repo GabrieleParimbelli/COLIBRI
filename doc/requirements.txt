@@ -1,4 +1,5 @@
 sphinx>=5,<7
+sphinx-rtd-theme
 breathe
 numpy>1.14
 scipy>1

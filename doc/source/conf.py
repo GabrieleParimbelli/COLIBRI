@@ -10,17 +10,16 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import subprocess
-import glob
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath('../../'))
 
 # -- Configuration for ReadTheDocs setup -------------------------------------
 
 # Check if we're running on Read the Docs' servers
 read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
- 
+
 # Sort functions as they are, not in alphabetical order
 autodoc_member_order = 'bysource'
 
@@ -41,22 +40,15 @@ master_doc = 'index'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [ 'sphinx.ext.autodoc',
-               'sphinx.ext.coverage',
-               'sphinx.ext.napoleon',
-               'sphinx.ext.todo',
-               'sphinx.ext.intersphinx',
-               'sphinx.ext.viewcode',
-               'sphinx.ext.autosectionlabel',
-               'breathe']
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.coverage',
+              'sphinx.ext.napoleon',
+              'sphinx.ext.todo',
+              'sphinx.ext.intersphinx',
+              'sphinx.ext.viewcode',
+              'sphinx.ext.autosectionlabel',
+              'breathe']
 
-# Add any Sphinx extension module names here, as strings. They can be                                           
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom                                           
-# ones.                                                                                                         
-#intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
-#                       'numpy': ('https://docs.scipy.org/doc/numpy/', None),
-#                       'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
-#                       'matplotlib': ('https://matplotlib.org/', None)}
 intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
                        'numpy': ('https://numpy.org/doc/stable/', None),
                        'scipy': ('https://docs.scipy.org/doc/scipy/', None),
@@ -73,25 +65,12 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
-# Avoid documentation from these files
-autodoc_mock_imports = ['scipy', 'numpy', 'math', 'classy', 'camb', 'cython', 'fftlog']
-
-# Import Mock classes to avoid import errors on libraries that depend on C modules
-# (this basically avoids that when other files import e.g. `cosmology` the compilation
-#  does not get stuck in some `import numpy` or similar command)
-
-#from unittest.mock import MagicMock
-#class Mock(MagicMock):
-#    @classmethod
-#    def __getattr__(cls, name):
-#        return MagicMock()
-#MOCK_MODULES = ['scipy','numpy','pandas']
-#sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
-
-from unittest import mock
-MOCK_MODULES = ['numpy', 'scipy']
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock.MagicMock()
+# Mock out packages that require compiled C extensions or external data and
+# therefore can't be imported in the docs-build environment. Sphinx's own
+# mock handles submodule imports (e.g. `from scipy.special import ...`)
+# correctly, unlike a plain unittest.mock.MagicMock, so DO NOT also assign
+# mocks into sys.modules manually -- that breaks submodule imports.
+autodoc_mock_imports = ['classy', 'camb', 'cython', 'fftlog']
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -100,10 +79,8 @@ for mod_name in MOCK_MODULES:
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
-#html_theme = 'classic'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-
